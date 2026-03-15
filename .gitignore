@@ -59,5 +59,8 @@ test-results/
 # Chrome automation temp dir
 /tmp/car-tracker-chrome/
 
+# Credentials — never commit
+.env
+
 # Config with sensitive data (keep config.example.yaml in repo instead)
 # config.yaml  ← intentionally not ignored; no secrets in it

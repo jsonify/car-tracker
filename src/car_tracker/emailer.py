@@ -12,7 +12,7 @@ from jinja2 import Environment, FileSystemLoader
 
 from car_tracker.database import VehicleRecord
 
-_ENV_PATH = Path("/Users/Jason/code/rental-car-pricer/.env")
+_ENV_PATH = Path("/Users/Jason/code/car-tracker/.env")
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 

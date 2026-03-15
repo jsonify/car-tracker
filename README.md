@@ -35,7 +35,7 @@ uv run playwright install chromium
 
 ### 3. Configure credentials
 
-Create a `.env` file at `/Users/<you>/code/rental-car-pricer/.env` with your SMTP credentials:
+Create a `.env` file in the project root with your SMTP credentials:
 
 ```env
 SMTP_SERVER=smtp.gmail.com
