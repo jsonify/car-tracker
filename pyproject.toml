@@ -3,7 +3,11 @@ name = "car-tracker"
 version = "0.1.0"
 description = "Costco Travel car rental price scraper"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "jinja2>=3.1.6",
+    "playwright>=1.58.0",
+    "pyyaml>=6.0.3",
+]
 
 [build-system]
 requires = ["hatchling"]
@@ -20,3 +24,10 @@ line-length = 88
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.15.6",
+]
