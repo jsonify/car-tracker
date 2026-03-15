@@ -1,4 +1,63 @@
 
 # Dolt database files (added by bd init)
 .dolt/
+
+# SQLite databases
 *.db
+*.db-shm
+*.db-wal
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# uv
+.python-version
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+*.egg
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+coverage.xml
+
+# Ruff
+.ruff_cache/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Logs
+*.log
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Playwright
+playwright-report/
+test-results/
+
+# Chrome automation temp dir
+/tmp/car-tracker-chrome/
+
+# Config with sensitive data (keep config.example.yaml in repo instead)
+# config.yaml  ← intentionally not ignored; no secrets in it
