@@ -43,8 +43,7 @@
 <table>
   <thead>
     <tr>
-      <th>#</th>
-      <th>Vehicle</th>
+      <th>Vehicle Type</th>
       <th>Total</th>
       <th>Per Day</th>
       <th>Change</th>
@@ -53,7 +52,6 @@
   <tbody>
     {% for v in vehicles %}
     <tr>
-      <td>{{ v.position }}</td>
       <td>{{ v.name }}</td>
       <td>${{ "%.2f"|format(v.total_price) }}</td>
       <td>${{ "%.2f"|format(v.price_per_day) }}</td>
