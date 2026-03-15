@@ -33,6 +33,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
 
+    # Poll iMessage for holding price updates before loading config (best-effort)
+    try:
+        from car_tracker.imessage_config import poll_and_apply
+
+        poll_and_apply(args.config)
+    except Exception as exc:
+        print(f"iMessage config poll skipped: {exc}", file=sys.stderr)
+
     # Load config
     try:
         config = load_config(args.config)
