@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from car_tracker.database import VehicleRecord, init_db, save_run, save_vehicles
+from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
 
 
 @pytest.fixture
@@ -110,3 +110,48 @@ def test_save_vehicles_preserves_order(db: Path) -> None:
     conn = sqlite3.connect(db)
     positions = [r[0] for r in conn.execute("SELECT position FROM vehicles ORDER BY id")]
     assert positions == list(range(1, 6))
+
+
+# ---------------------------------------------------------------------------
+# get_prior_run_vehicles
+# ---------------------------------------------------------------------------
+
+
+def test_get_prior_run_vehicles_no_prior_run(db: Path) -> None:
+    run_id = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run_id, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 50.0)])
+    result = get_prior_run_vehicles(db, run_id, "LAX", "2026-04-01", "2026-04-05")
+    assert result == {}
+
+
+def test_get_prior_run_vehicles_one_prior_run(db: Path) -> None:
+    run1 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run1, [
+        VehicleRecord(1, "Economy Car (Alamo)", 200.0, 50.0),
+        VehicleRecord(2, "Compact Car (Avis)", 250.0, 62.5),
+    ])
+    run2 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 210.0, 52.5)])
+    result = get_prior_run_vehicles(db, run2, "LAX", "2026-04-01", "2026-04-05")
+    assert result == {"Economy Car (Alamo)": 200.0, "Compact Car (Avis)": 250.0}
+
+
+def test_get_prior_run_vehicles_multiple_prior_runs_returns_most_recent(db: Path) -> None:
+    run1 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 100.0, 25.0)])
+    run2 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 150.0, 37.5)])
+    run3 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run3, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 50.0)])
+    result = get_prior_run_vehicles(db, run3, "LAX", "2026-04-01", "2026-04-05")
+    assert result == {"Economy Car (Alamo)": 150.0}
+
+
+def test_get_prior_run_vehicles_different_params_not_returned(db: Path) -> None:
+    run1 = save_run(db, "SFO", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 300.0, 75.0)])
+    run2 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 50.0)])
+    run3 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    result = get_prior_run_vehicles(db, run3, "LAX", "2026-04-01", "2026-04-05")
+    assert result == {"Economy Car (Alamo)": 200.0}

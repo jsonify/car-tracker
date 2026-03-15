@@ -71,6 +71,40 @@ def save_run(
         return cursor.lastrowid  # type: ignore[return-value]
 
 
+def get_prior_run_vehicles(
+    db_path: str | Path,
+    current_run_id: int,
+    pickup_location: str,
+    pickup_date: str,
+    dropoff_date: str,
+) -> dict[str, float]:
+    """Return vehicle name → total_price from the most recent prior run with matching params.
+
+    Returns an empty dict if no prior run exists for the given search parameters.
+    """
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            """
+            SELECT id FROM runs
+            WHERE id < ?
+              AND pickup_location = ?
+              AND pickup_date = ?
+              AND dropoff_date = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (current_run_id, pickup_location, pickup_date, dropoff_date),
+        ).fetchone()
+        if row is None:
+            return {}
+        prior_run_id = row[0]
+        rows = conn.execute(
+            "SELECT name, total_price FROM vehicles WHERE run_id = ?",
+            (prior_run_id,),
+        ).fetchall()
+        return {name: total_price for name, total_price in rows}
+
+
 def save_vehicles(
     db_path: str | Path,
     run_id: int,
