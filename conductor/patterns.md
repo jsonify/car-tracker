@@ -30,5 +30,9 @@ Reusable patterns discovered during development. Read this before starting new w
 - Mock `scrape()` in `__main__` tests to avoid live browser dependency
 - Mock `load_dotenv` in tests to prevent reads from the real `.env` file (from: email_delivery_20260314)
 
+## Database Migrations
+- SQLite `ALTER TABLE ... ADD COLUMN` wrapped in `try/except OperationalError` is idempotent — safe pattern for adding nullable columns to existing DBs (from: holding_price_20260315)
+- `migrate_db()` is called from `init_db()` — existing DBs auto-upgrade on next run with no manual step required (from: holding_price_20260315)
+
 ---
-Last refreshed: 2026-03-15 (from: email_delivery_20260314)
+Last refreshed: 2026-03-15 (from: holding_price_20260315)
