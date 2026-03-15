@@ -22,8 +22,18 @@ def _connect(db_path: str | Path) -> sqlite3.Connection:
     return conn
 
 
+def migrate_db(db_path: str | Path) -> None:
+    """Apply incremental schema migrations. Safe to run on any existing DB."""
+    with _connect(db_path) as conn:
+        # v2: add holding_price column to runs (nullable)
+        try:
+            conn.execute("ALTER TABLE runs ADD COLUMN holding_price REAL")
+        except sqlite3.OperationalError:
+            pass  # column already exists — idempotent
+
+
 def init_db(db_path: str | Path) -> None:
-    """Create tables if they don't already exist."""
+    """Create tables if they don't already exist, then apply migrations."""
     with _connect(db_path) as conn:
         conn.executescript(
             """
@@ -47,6 +57,7 @@ def init_db(db_path: str | Path) -> None:
             );
             """
         )
+    migrate_db(db_path)
 
 
 def save_run(
@@ -56,6 +67,7 @@ def save_run(
     pickup_time: str,
     dropoff_date: str,
     dropoff_time: str,
+    holding_price: float | None = None,
 ) -> int:
     """Insert a run record and return its id."""
     run_at = datetime.now(timezone.utc).isoformat()
@@ -63,10 +75,12 @@ def save_run(
         cursor = conn.execute(
             """
             INSERT INTO runs
-                (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time)
-            VALUES (?, ?, ?, ?, ?, ?)
+                (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
+                 holding_price)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
-            (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time),
+            (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
+             holding_price),
         )
         return cursor.lastrowid  # type: ignore[return-value]
 

@@ -14,6 +14,7 @@ class SearchConfig:
     pickup_time: str
     dropoff_date: str
     dropoff_time: str
+    holding_price: float | None = None
 
     def __post_init__(self) -> None:
         _require_non_empty(self.pickup_location, "search.pickup_location")
@@ -89,12 +90,16 @@ def load_config(path: str | Path = "config.yaml") -> Config:
     except KeyError as exc:
         raise ValueError(f"Config missing required section: {exc}") from exc
 
+    holding_raw = search_raw.get("holding_price")
+    holding_price = float(holding_raw) if holding_raw is not None else None
+
     search = SearchConfig(
         pickup_location=str(search_raw.get("pickup_location", "")),
         pickup_date=str(search_raw.get("pickup_date", "")),
         pickup_time=str(search_raw.get("pickup_time", "")),
         dropoff_date=str(search_raw.get("dropoff_date", "")),
         dropoff_time=str(search_raw.get("dropoff_time", "")),
+        holding_price=holding_price,
     )
     database = DatabaseConfig(path=str(db_raw.get("path", "")))
 

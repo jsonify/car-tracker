@@ -45,6 +45,31 @@ def test_load_valid_config(valid_yaml: Path) -> None:
     assert cfg.search.dropoff_date == "2026-04-05"
     assert cfg.search.dropoff_time == "10:00"
     assert cfg.database.path == "data/results.db"
+    assert cfg.search.holding_price is None
+
+
+def test_holding_price_parsed(tmp_path: Path) -> None:
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        textwrap.dedent("""\
+        search:
+          pickup_location: "LAX"
+          pickup_date: "2026-04-01"
+          pickup_time: "10:00"
+          dropoff_date: "2026-04-05"
+          dropoff_time: "10:00"
+          holding_price: 396.63
+        database:
+          path: "data/results.db"
+        """)
+    )
+    result = load_config(cfg)
+    assert result.search.holding_price == 396.63
+
+
+def test_holding_price_omitted_is_none(valid_yaml: Path) -> None:
+    result = load_config(valid_yaml)
+    assert result.search.holding_price is None
 
 
 # ---------------------------------------------------------------------------

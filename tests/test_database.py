@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
+from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, migrate_db, save_run, save_vehicles
 
 
 @pytest.fixture
@@ -145,6 +145,31 @@ def test_get_prior_run_vehicles_multiple_prior_runs_returns_most_recent(db: Path
     save_vehicles(db, run3, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 50.0)])
     result = get_prior_run_vehicles(db, run3, "LAX", "2026-04-01", "2026-04-05")
     assert result == {"Economy Car (Alamo)": 150.0}
+
+
+def test_migrate_db_idempotent(db: Path) -> None:
+    migrate_db(db)  # first call happens in init_db; second must not raise
+    migrate_db(db)
+
+
+def test_migrate_db_adds_holding_price_column(db: Path) -> None:
+    conn = sqlite3.connect(db)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(runs)")}
+    assert "holding_price" in cols
+
+
+def test_save_run_stores_holding_price(db: Path) -> None:
+    run_id = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00", holding_price=396.63)
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT holding_price FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val == 396.63
+
+
+def test_save_run_null_holding_price(db: Path) -> None:
+    run_id = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT holding_price FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val is None
 
 
 def test_get_prior_run_vehicles_different_params_not_returned(db: Path) -> None:
