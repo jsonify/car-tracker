@@ -23,6 +23,17 @@ Patterns, gotchas, and context discovered during implementation.
 
 <!-- Learnings from implementation will be appended below -->
 
+## [2026-03-14] - Phase 2-3: Email module + wiring
+- **Implemented:** emailer.py, Jinja2 templates, __main__.py integration
+- **Files changed:** src/car_tracker/emailer.py, templates/email_success.html, templates/email_failure.html, src/car_tracker/__main__.py, tests/test_emailer.py, tests/test_main.py
+- **Commit:** 0cd9094
+- **Learnings:**
+  - Patterns: `send_email` marked `# pragma: no cover` — same pattern as browser automation methods
+  - Patterns: Email send failure during success path is caught/logged but doesn't change return code
+  - Gotchas: `load_dotenv()` must be patched in tests or it will try to read the real .env file
+  - Context: Email credentials live at `/Users/Jason/code/rental-car-pricer/.env`, not in this repo
+---
+
 ## [2026-03-14] - Phase 1 Task 1-2: get_prior_run_vehicles
 - **Implemented:** DB function to find most recent prior run with matching pickup_location/pickup_date/dropoff_date
 - **Files changed:** src/car_tracker/database.py, tests/test_database.py

@@ -37,17 +37,17 @@
   - `render_success`: renders table with correct delta markup (▲/▼/New/—)
   - `render_failure`: renders error message and search params
   - `load_email_config`: mock `load_dotenv`; missing required field raises
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Email Module' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Email Module' (Protocol in workflow.md)
 
 ## Phase 3: Wire Into `__main__.py`
 
-- [ ] Task 1: Update `__main__.py` to send email after save
+- [x] Task 1: Update `__main__.py` to send email after save
   - On success: call `get_prior_run_vehicles`, `build_delta`, `render_success`,
     `send_email`
   - On scrape failure (existing except block): call `render_failure`,
     `send_email`
   - Subject strings match spec
-- [ ] Task 2: Update `test_main.py`
+- [x] Task 2: Update `test_main.py`
   - Mock `send_email` in success path; assert called with correct subject
   - Mock `send_email` in failure path; assert failure subject used
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: Wire Into __main__.py' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: Wire Into __main__.py' (Protocol in workflow.md)

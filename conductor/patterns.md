@@ -19,10 +19,16 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Autocomplete timing:** Type slowly (120-280ms/char), wait 2.5-3.5s before clicking suggestion.
 - **SQLite FK enforcement:** Must run `PRAGMA foreign_keys = ON` per connection.
 
+## Architecture
+- Pipeline (full): load_config → init_db → scrape → save_run → save_vehicles → get_prior_run_vehicles → build_delta → render_success → send_email
+- Email credentials loaded from `/Users/Jason/code/rental-car-pricer/.env` via `python-dotenv` — never stored in `config.yaml` or any tracked file (from: email_delivery_20260314)
+
 ## Testing
 - Browser automation methods marked `# pragma: no cover` — they're integration-only
+- I/O-only functions (e.g. `send_email`) also marked `# pragma: no cover` — same rationale (from: email_delivery_20260314)
 - Unit tests cover all pure logic: time conversion, date math, config validation, DB operations
 - Mock `scrape()` in `__main__` tests to avoid live browser dependency
+- Mock `load_dotenv` in tests to prevent reads from the real `.env` file (from: email_delivery_20260314)
 
 ---
-Last refreshed: 2026-03-15 (from: mvp_scraper_20260314)
+Last refreshed: 2026-03-15 (from: email_delivery_20260314)
