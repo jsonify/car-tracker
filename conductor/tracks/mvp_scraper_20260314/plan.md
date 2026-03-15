@@ -2,24 +2,24 @@
 
 ## Phase 1: Project Scaffolding
 
-- [ ] Task: Initialize uv project (`pyproject.toml`, `src/car_tracker/` layout)
-- [ ] Task: Add dependencies (playwright, pyyaml, jinja2) to `pyproject.toml`
-- [ ] Task: Create `config.yaml` with sample search parameters
-- [ ] Task: Create `src/car_tracker/__main__.py` with CLI argument parsing (`--debug`, `--config`)
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Project Scaffolding' (Protocol in workflow.md)
+- [x] Task: Initialize uv project (`pyproject.toml`, `src/car_tracker/` layout)
+- [x] Task: Add dependencies (playwright, pyyaml, jinja2) to `pyproject.toml`
+- [x] Task: Create `config.yaml` with sample search parameters
+- [x] Task: Create `src/car_tracker/__main__.py` with CLI argument parsing (`--debug`, `--config`)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Project Scaffolding' (Protocol in workflow.md)
 
 ## Phase 2: Config Loader
 
-- [ ] Task: Implement `config.py` — load and validate `config.yaml` using dataclasses
-- [ ] Task: Write tests for config loading (valid config, missing fields, bad types)
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Config Loader' (Protocol in workflow.md)
+- [x] Task: Implement `config.py` — load and validate `config.yaml` using dataclasses
+- [x] Task: Write tests for config loading (valid config, missing fields, bad types)
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Config Loader' (Protocol in workflow.md)
 
 ## Phase 3: SQLite Storage Layer
 
-- [ ] Task: Implement `database.py` — create `runs` and `vehicles` tables on first run
-- [ ] Task: Implement `save_run()` — insert a run record and return `run_id`
-- [ ] Task: Implement `save_vehicles()` — bulk insert vehicle records for a run
-- [ ] Task: Write tests for database layer (schema creation, insert, foreign key)
+- [x] Task: Implement `database.py` — create `runs` and `vehicles` tables on first run
+- [x] Task: Implement `save_run()` — insert a run record and return `run_id`
+- [x] Task: Implement `save_vehicles()` — bulk insert vehicle records for a run
+- [x] Task: Write tests for database layer (schema creation, insert, foreign key)
 - [ ] Task: Conductor - User Manual Verification 'Phase 3: SQLite Storage Layer' (Protocol in workflow.md)
 
 ## Phase 4: Playwright Scraper
