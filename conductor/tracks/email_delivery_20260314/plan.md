@@ -13,11 +13,11 @@
   - One prior run → correct prices returned
   - Multiple prior runs → only most recent returned
   - Different search params → not returned
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Database — Prior Run Query' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Database — Prior Run Query' (Protocol in workflow.md)
 
 ## Phase 2: Email Module
 
-- [ ] Task 1: Create `src/car_tracker/emailer.py`
+- [x] Task 1: Create `src/car_tracker/emailer.py`
   - `load_email_config()` — loads `.env` from
     `/Users/Jason/code/rental-car-pricer/.env` via `python-dotenv`; returns
     dataclass with smtp_server, smtp_port, sender_email, sender_password,
@@ -29,10 +29,10 @@
   - `render_failure(error_msg, config) -> str` — Jinja2 HTML
   - `send_email(subject, html_body, email_cfg)` — smtplib SMTP; marked
     `# pragma: no cover` for SMTP I/O
-- [ ] Task 2: Create Jinja2 templates
+- [x] Task 2: Create Jinja2 templates
   - `src/car_tracker/templates/email_success.html`
   - `src/car_tracker/templates/email_failure.html`
-- [ ] Task 3: Unit tests for `emailer.py`
+- [x] Task 3: Unit tests for `emailer.py`
   - `build_delta`: price increase, decrease, new vehicle, no prior run
   - `render_success`: renders table with correct delta markup (▲/▼/New/—)
   - `render_failure`: renders error message and search params
