@@ -83,7 +83,17 @@ class ChromeManager:  # pragma: no cover
             "--disable-blink-features=AutomationControlled",
         ]
         if not self.debug:
-            args.append("--headless=new")
+            args.extend([
+                "--headless=new",
+                "--window-size=1920,1080",
+                "--disable-gpu",
+                "--hide-scrollbars",
+                "--mute-audio",
+                "--disable-background-networking",
+                "--disable-background-timer-throttling",
+                "--disable-renderer-backgrounding",
+                "--disable-backgrounding-occluded-windows",
+            ])
 
         self._proc = subprocess.Popen(
             args,
