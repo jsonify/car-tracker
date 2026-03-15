@@ -19,3 +19,13 @@ Patterns, gotchas, and context discovered during implementation.
 ---
 
 <!-- Learnings from implementation will be appended below -->
+
+## [2026-03-15] - Phase 1-3: Holding Price Comparison
+- **Implemented:** optional holding_price in config+DB, build_holding_summary, email summary banner, wired into pipeline
+- **Files changed:** config.py, database.py, emailer.py, templates/email_success.html, __main__.py + all tests
+- **Commit:** 534cab9
+- **Learnings:**
+  - Patterns: SQLite `ALTER TABLE ... ADD COLUMN` is idempotent via try/except OperationalError — safe migration pattern
+  - Patterns: `migrate_db()` called from `init_db()` so existing DBs auto-upgrade on next run — no manual migration step needed
+  - Gotchas: `build_holding_summary` returns None for empty vehicles list — guard against division/min errors
+---

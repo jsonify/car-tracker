@@ -10,5 +10,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Holding Price Comparison — track booked price vs current best price and surface savings in email
+## [x] Track: Holding Price Comparison — track booked price vs current best price and surface savings in email
 *Link: [./conductor/tracks/holding_price_20260315/](./conductor/tracks/holding_price_20260315/)*
