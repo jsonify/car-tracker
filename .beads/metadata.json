@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "server",
+  "dolt_database": "car_tracker",
+  "project_id": "c73a70cf-0006-4328-ad15-c69f791bede4"
+}
