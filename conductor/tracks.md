@@ -16,5 +16,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Remote Config Updates via GitHub
+## [x] Track: Remote Config Updates via GitHub
 *Link: [./conductor/tracks/remote_config_20260315/](./conductor/tracks/remote_config_20260315/)*

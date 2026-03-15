@@ -48,5 +48,10 @@ Reusable patterns discovered during development. Read this before starting new w
 - `scripts/` directory needs `__init__.py` to be importable as a package in tests (from: import_history_20260315)
 - Always import from `car_tracker.*` (installed package via uv), never `src.car_tracker.*` — the latter only works with pytest's pythonpath, not when running scripts directly (from: import_history_20260315)
 
+## Shell Scripts / Cron
+- **`timeout` is GNU coreutils — not on macOS.** Never use `timeout` in shell scripts intended for macOS; git fails fast on its own when the network is down. (from: remote_config_20260315)
+- **Use `git pull --rebase` in cron wrappers**, not `--ff-only`. `--ff-only` aborts when local commits exist; `--rebase` handles diverged branches cleanly. (from: remote_config_20260315)
+- **Push all local commits before the first cron run** when the cron job does a `git pull`. Otherwise local/remote diverge and the pull fails. In steady-state the scraper never commits, so future pulls always fast-forward. (from: remote_config_20260315)
+
 ---
-Last refreshed: 2026-03-15 (from: import_history_20260315)
+Last refreshed: 2026-03-15 (from: remote_config_20260315)

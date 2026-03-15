@@ -44,9 +44,9 @@ Based on: spec.md
   - Update crontab: replace direct `python -m car_tracker ...` call with `run.sh`
   - Verify new crontab entry with `crontab -l`
 
-- [ ] Task 2: End-to-end remote test
+- [x] Task 2: End-to-end remote test
   - Edit `config.yaml` directly on GitHub.com (change a holding value)
   - Trigger `run.sh` manually; confirm git pull picks up the change
   - Confirm scraper uses updated config values
 
-- [ ] Task: Conductor - User Manual Verification 'Update Crontab' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Update Crontab' (Protocol in workflow.md)

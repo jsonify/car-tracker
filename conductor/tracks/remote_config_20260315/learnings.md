@@ -21,6 +21,22 @@ Patterns, gotchas, and context discovered during implementation.
   - Gotchas: `timeout` is GNU coreutils — not available on macOS without Homebrew. Removed it; git fails fast on its own when network is down.
   - Patterns: `exec python ...` at end of script replaces the shell process — cleaner than a subshell for cron
   - Patterns: `set -euo pipefail` + non-fatal git pull via `if/else` is the right pattern for best-effort operations in bash
+## [2026-03-15] - Phase 3 Task 1: Replace crontab entry
+- **Implemented:** Updated crontab to call run.sh instead of python directly
+- **Files changed:** crontab (system)
+- **Commit:** n/a
+- **Learnings:**
+  - Patterns: run.sh handles venv activation and logging internally — crontab entry becomes a single clean line
+---
+
+## [2026-03-15] - Phase 3 Task 2: End-to-end remote test
+- **Implemented:** Verified full flow — edit config.yaml on GitHub.com → run.sh pulls → scraper uses updated config
+- **Files changed:** run.sh (fix: --ff-only → --rebase), pushed local commits
+- **Commit:** 25c1505
+- **Learnings:**
+  - Gotchas: `--ff-only` fails when local branch has unpushed commits; `--rebase` handles this correctly
+  - Gotchas: Must push all local implementation commits before the first cron run — otherwise local/remote diverge and pull fails
+  - Patterns: In steady-state (scraper never commits), `git pull --rebase` will always fast-forward cleanly
 ---
 
 ## [2026-03-15] - Phase 2 Task 2: Test wrapper script locally

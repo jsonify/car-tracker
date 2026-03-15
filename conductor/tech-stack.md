@@ -16,6 +16,7 @@
 
 ## Scheduling
 - cron (system-level, twice-weekly via crontab)
+- run.sh (bash) — cron wrapper: git pull to sync remote config changes, then exec scraper
 
 ## Configuration
 - YAML config file (via PyYAML)
