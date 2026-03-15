@@ -65,3 +65,94 @@ class TestParseConfigUpdate:
     def test_case_insensitive(self):
         result = parse_config_update("UPDATE HOLDING PRICE TO 400")
         assert result == {"holding_price": 400.0}
+
+
+# ---------------------------------------------------------------------------
+# apply_config_update tests
+# ---------------------------------------------------------------------------
+
+SAMPLE_CONFIG = {
+    "search": {
+        "pickup_location": "SAN",
+        "pickup_date": "2026-04-02",
+        "pickup_time": "10:00",
+        "dropoff_date": "2026-04-08",
+        "dropoff_time": "10:00",
+        "holding_price": 375.23,
+        "holding_vehicle_type": "Standard Car",
+    },
+    "database": {"path": "data/results.db"},
+}
+
+
+def _write_sample_config(path: Path) -> None:
+    with open(path, "w") as f:
+        yaml.dump(SAMPLE_CONFIG, f, default_flow_style=False, sort_keys=False)
+
+
+class TestApplyConfigUpdate:
+    def test_updates_holding_price_only(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run") as mock_run:
+                result = apply_config_update({"holding_price": 400.0}, cfg)
+            assert result is True
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["search"]["holding_price"] == 400.0
+            # Other fields untouched
+            assert updated["search"]["pickup_location"] == "SAN"
+            assert updated["search"]["holding_vehicle_type"] == "Standard Car"
+
+    def test_updates_holding_vehicle_type_only(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run"):
+                result = apply_config_update({"holding_vehicle_type": "SUV"}, cfg)
+            assert result is True
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["search"]["holding_vehicle_type"] == "SUV"
+            assert updated["search"]["holding_price"] == 375.23
+
+    def test_updates_both_fields(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run"):
+                result = apply_config_update(
+                    {"holding_price": 299.0, "holding_vehicle_type": "Economy Car"}, cfg
+                )
+            assert result is True
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["search"]["holding_price"] == 299.0
+            assert updated["search"]["holding_vehicle_type"] == "Economy Car"
+
+    def test_noop_when_values_match(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run") as mock_run:
+                result = apply_config_update(
+                    {"holding_price": 375.23, "holding_vehicle_type": "Standard Car"}, cfg
+                )
+            assert result is False
+            mock_run.assert_not_called()
+
+    def test_raises_on_missing_config(self):
+        with pytest.raises(FileNotFoundError):
+            apply_config_update({"holding_price": 400.0}, "/nonexistent/path/config.yaml")
+
+    def test_git_commands_called_on_change(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run") as mock_run:
+                apply_config_update({"holding_price": 500.0}, cfg)
+            calls = [c.args[0] for c in mock_run.call_args_list]
+            assert any("git" in str(c) and "add" in str(c) for c in calls)
+            assert any("git" in str(c) and "commit" in str(c) for c in calls)
+            assert any("git" in str(c) and "push" in str(c) for c in calls)
