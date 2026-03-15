@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from scripts.import_history import import_csv, parse_prices, run_already_imported
-from src.car_tracker.database import VehicleRecord
+from car_tracker.database import VehicleRecord
 
 
 # ---------------------------------------------------------------------------

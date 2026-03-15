@@ -5,7 +5,7 @@ import json
 import sqlite3
 from pathlib import Path
 
-from src.car_tracker.database import VehicleRecord, _connect, init_db, save_vehicles
+from car_tracker.database import VehicleRecord, _connect, init_db, save_vehicles
 
 BOOKING_ID = "SAN_04022026_04082026_StandardCar"
 PICKUP_LOCATION = "SAN"
