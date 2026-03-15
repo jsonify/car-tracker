@@ -43,6 +43,40 @@ def load_email_config() -> EmailConfig:
     )
 
 
+def extract_category(name: str) -> str:
+    """Extract vehicle category from 'Category (Brand)' format.
+
+    e.g. 'Economy Car (Alamo)' -> 'Economy Car'
+    Names without a brand suffix are returned unchanged.
+    """
+    idx = name.find(" (")
+    return name[:idx] if idx != -1 else name
+
+
+def best_per_type(vehicles: list[dict]) -> list[dict]:
+    """Collapse vehicles to one row per category, keeping the cheapest.
+
+    Returns rows sorted by total_price ascending. The 'name' field is
+    replaced with the extracted category (brand suffix stripped).
+    """
+    seen: dict[str, dict] = {}
+    for v in vehicles:
+        cat = extract_category(v["name"])
+        if cat not in seen or v["total_price"] < seen[cat]["total_price"]:
+            seen[cat] = {**v, "name": cat}
+    return sorted(seen.values(), key=lambda r: r["total_price"])
+
+
+def best_per_type_prices(vehicles: list[VehicleRecord]) -> dict[str, float]:
+    """Return category → best (lowest) total_price mapping from a list of VehicleRecords."""
+    result: dict[str, float] = {}
+    for v in vehicles:
+        cat = extract_category(v.name)
+        if cat not in result or v.total_price < result[cat]:
+            result[cat] = v.total_price
+    return result
+
+
 def build_delta(
     current: list[VehicleRecord],
     prior: dict[str, float],
@@ -90,17 +124,21 @@ def _jinja_env() -> Environment:
 def build_holding_summary(
     vehicles: list[dict],
     holding_price: float | None,
+    holding_vehicle_type: str | None = None,
 ) -> dict | None:
     """Compute holding price comparison summary.
 
-    Returns None if holding_price is None (not configured).
+    Both holding_price and holding_vehicle_type must be provided (pair rule).
+    Returns None if either is missing, vehicles is empty, or no vehicles
+    match the holding_vehicle_type.
     Returns a dict with holding_price, best_price, savings, is_savings.
     """
-    if holding_price is None:
+    if holding_price is None or holding_vehicle_type is None:
         return None
-    if not vehicles:
+    matching = [v for v in vehicles if v["name"] == holding_vehicle_type]
+    if not matching:
         return None
-    best_price = round(min(v["total_price"] for v in vehicles), 2)
+    best_price = round(min(v["total_price"] for v in matching), 2)
     savings = round(abs(holding_price - best_price), 2)
     return {
         "holding_price": holding_price,
