@@ -1,0 +1,23 @@
+{
+  "track_id": "remote_config_20260315",
+  "type": "feature",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": [],
+  "estimated_hours": null,
+  "created_at": "2026-03-15T00:00:00Z",
+  "updated_at": "2026-03-15T00:00:00Z",
+  "description": "Remote config updates via GitHub — edit config.yaml on GitHub.com, cron job git pulls before each run",
+  "beads_epic": "car-tracker-m41",
+  "beads_tasks": {
+    "phase1": "car-tracker-m41.1",
+    "phase1_task1": "car-tracker-m41.1.1",
+    "phase1_task2": "car-tracker-m41.1.2",
+    "phase2": "car-tracker-m41.2",
+    "phase2_task1": "car-tracker-m41.2.1",
+    "phase2_task2": "car-tracker-m41.2.2",
+    "phase3": "car-tracker-m41.3",
+    "phase3_task1": "car-tracker-m41.3.1",
+    "phase3_task2": "car-tracker-m41.3.2"
+  }
+}
