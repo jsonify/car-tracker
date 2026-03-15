@@ -4,5 +4,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [x] Track: MVP — Scraper, Config & Storage
-*Link: [./tracks/mvp_scraper_20260314/](./tracks/mvp_scraper_20260314/)*
+<!-- archived 2026-03-15: mvp_scraper_20260314 — MVP Scraper, Config & Storage -->
