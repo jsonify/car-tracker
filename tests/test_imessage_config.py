@@ -189,6 +189,17 @@ def test_poll_holding_command_updates_config(config_with_imessage: Path) -> None
     assert '"Economy Car"' in text
 
 
+def test_poll_self_sent_message_updates_config(config_with_imessage: Path) -> None:
+    """Self-sent iMessages (iPhone → own number) appear as is_from_me=1 on Mac."""
+    rows = [(1_000_000, "holding 310.00 Standard Car")]
+    with patch("car_tracker.imessage_config.sqlite3.connect") as mock_connect:
+        mock_connect.return_value = _make_conn(rows)
+        result = poll_and_apply(config_with_imessage)
+    assert result is True
+    text = config_with_imessage.read_text()
+    assert "holding_price: 310" in text
+
+
 def test_poll_non_command_message_returns_false(config_with_imessage: Path) -> None:
     rows = [(1_000_000, "hello there")]
     with patch("car_tracker.imessage_config.sqlite3.connect") as mock_connect:

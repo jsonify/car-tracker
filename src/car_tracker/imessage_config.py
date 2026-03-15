@@ -43,8 +43,10 @@ def read_pending_messages(
     """Return (date, text) for messages received from phone after since_date.
 
     Reads from the macOS Messages SQLite database (read-only).
-    Messages sent from the user's phone to themselves appear as is_from_me=0
-    on the Mac side, with handle.id matching their own phone number.
+    Self-sent iMessages (iPhone → own number) are stored with is_from_me=1
+    on the Mac because iMessage identifies the sender by Apple ID across all
+    devices. We omit the is_from_me filter so both sent and received messages
+    in the self-chat are treated as valid commands.
     """
     conn = sqlite3.connect(f"file:{messages_db}?mode=ro", uri=True)
     try:
@@ -56,7 +58,6 @@ def read_pending_messages(
             JOIN chat_handle_join chj ON cmj.chat_id = chj.chat_id
             JOIN handle h ON chj.handle_id = h.ROWID
             WHERE h.id = ?
-              AND m.is_from_me = 0
               AND m.text IS NOT NULL
               AND m.date > ?
             ORDER BY m.date ASC
