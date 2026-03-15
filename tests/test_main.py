@@ -83,6 +83,7 @@ def test_main_success(valid_config_file: Path, tmp_path: Path):
         mock_config.search.pickup_time = "10:00"
         mock_config.search.dropoff_date = "2026-04-05"
         mock_config.search.dropoff_time = "10:00"
+        mock_config.search.holding_price = 420.00
         mock_load.return_value = mock_config
 
         mock_scrape.return_value = [
@@ -98,6 +99,9 @@ def test_main_success(valid_config_file: Path, tmp_path: Path):
     mock_veh.assert_called_once()
     mock_prior.assert_called_once()
     mock_send.assert_called_once()
+    # Verify holding_price passed to save_run
+    run_kwargs = mock_run.call_args[1]
+    assert run_kwargs["holding_price"] == 420.00
     # Verify success subject format
     subject = mock_send.call_args[0][0]
     assert subject.startswith("Costco Travel Rental Prices —")
@@ -124,6 +128,7 @@ def test_main_scrape_failure_returns_1(valid_config_file: Path):
         mock_config.search.pickup_time = "10:00"
         mock_config.search.dropoff_date = "2026-04-05"
         mock_config.search.dropoff_time = "10:00"
+        mock_config.search.holding_price = None
         mock_load.return_value = mock_config
 
         result = main(["--config", str(valid_config_file)])
@@ -150,6 +155,7 @@ def test_main_scrape_failure_email_error_still_returns_1(valid_config_file: Path
         mock_config.search.pickup_time = "10:00"
         mock_config.search.dropoff_date = "2026-04-05"
         mock_config.search.dropoff_time = "10:00"
+        mock_config.search.holding_price = None
         mock_load.return_value = mock_config
 
         result = main(["--config", str(valid_config_file)])

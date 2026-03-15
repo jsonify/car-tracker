@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
-from car_tracker.emailer import build_delta, load_email_config, render_failure, render_success, send_email
+from car_tracker.emailer import build_delta, build_holding_summary, load_email_config, render_failure, render_success, send_email
 from car_tracker.scraper import scrape
 
 
@@ -76,6 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         pickup_time=s.pickup_time,
         dropoff_date=s.dropoff_date,
         dropoff_time=s.dropoff_time,
+        holding_price=s.holding_price,
     )
     vehicle_records = [
         VehicleRecord(
@@ -91,10 +92,11 @@ def main(argv: list[str] | None = None) -> int:
     # Send success email
     prior = get_prior_run_vehicles(db_path, run_id, s.pickup_location, s.pickup_date, s.dropoff_date)
     rows = build_delta(vehicle_records, prior)
+    holding_summary = build_holding_summary(rows, s.holding_price)
     run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     try:
         email_cfg = load_email_config()
-        html = render_success(rows, config, run_ts)
+        html = render_success(rows, config, run_ts, holding_summary=holding_summary)
         send_email(f"Costco Travel Rental Prices — {subject_base}", html, email_cfg)
         print(f"Email sent: {len(results)} vehicles (run_id={run_id})")
     except Exception as email_exc:
