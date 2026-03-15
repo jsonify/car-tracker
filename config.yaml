@@ -4,7 +4,7 @@ search:
   pickup_time: "10:00"          # HH:MM (24hr)
   dropoff_date: "2026-04-08"    # YYYY-MM-DD
   dropoff_time: "10:00"         # HH:MM (24hr)
-  holding_price: 350.00         # Holding price for the reservation
+  holding_price: 375.23         # Holding price for the reservation
   holding_vehicle_type: "Standard Car"  # Vehicle type to compare holding price against
 
 database:
