@@ -9,3 +9,6 @@ search:
 
 database:
   path: "data/results.db"       # Relative path to SQLite file
+
+imessage:
+  phone_number: "+15039990921"  # your actual number
