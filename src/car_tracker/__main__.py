@@ -3,6 +3,10 @@ from __future__ import annotations
 import argparse
 import sys
 
+from car_tracker.config import load_config
+from car_tracker.database import VehicleRecord, init_db, save_run, save_vehicles
+from car_tracker.scraper import scrape
+
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -26,8 +30,52 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
-    # Pipeline will be wired in Phase 5
-    print(f"Config: {args.config} | Debug: {args.debug}")
+
+    # Load config
+    try:
+        config = load_config(args.config)
+    except (FileNotFoundError, ValueError) as exc:
+        print(f"Configuration error: {exc}", file=sys.stderr)
+        return 1
+
+    db_path = config.database.path
+
+    # Initialise DB (no-op if already exists)
+    init_db(db_path)
+
+    # Run scraper
+    print(
+        f"Scraping: {config.search.pickup_location} | "
+        f"{config.search.pickup_date} {config.search.pickup_time} → "
+        f"{config.search.dropoff_date} {config.search.dropoff_time}"
+    )
+    try:
+        results = scrape(config, debug=args.debug)
+    except Exception as exc:
+        print(f"Scrape failed: {exc}", file=sys.stderr)
+        return 1
+
+    # Save run + vehicles
+    run_id = save_run(
+        db_path,
+        pickup_location=config.search.pickup_location,
+        pickup_date=config.search.pickup_date,
+        pickup_time=config.search.pickup_time,
+        dropoff_date=config.search.dropoff_date,
+        dropoff_time=config.search.dropoff_time,
+    )
+    vehicle_records = [
+        VehicleRecord(
+            position=v.position,
+            name=f"{v.name} ({v.brand})",
+            total_price=v.total_price,
+            price_per_day=v.price_per_day,
+        )
+        for v in results
+    ]
+    save_vehicles(db_path, run_id, vehicle_records)
+
+    print(f"Saved {len(results)} vehicles to {db_path} (run_id={run_id})")
     return 0
 
 

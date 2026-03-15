@@ -29,10 +29,10 @@
 - [x] Task: Implement results extraction — parse vehicle name, total price, price per day
 - [x] Task: Handle error states (timeout, no results, form errors)
 - [x] Task: Write tests for scraper (mock Playwright responses for unit tests)
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: Playwright Scraper' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 4: Playwright Scraper' (Protocol in workflow.md)
 
 ## Phase 5: Integration & Wiring
 
-- [ ] Task: Wire `__main__.py` → load config → run scraper → save to DB
+- [x] Task: Wire `__main__.py` → load config → run scraper → save to DB
 - [ ] Task: End-to-end integration test (live run with `--debug`, verify DB record created)
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Integration & Wiring' (Protocol in workflow.md)
