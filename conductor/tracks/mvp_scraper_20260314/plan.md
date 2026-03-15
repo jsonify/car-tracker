@@ -34,5 +34,5 @@
 ## Phase 5: Integration & Wiring
 
 - [x] Task: Wire `__main__.py` → load config → run scraper → save to DB
-- [ ] Task: End-to-end integration test (live run with `--debug`, verify DB record created)
+- [x] Task: End-to-end integration test (live run with `--debug`, verify DB record created)
 - [ ] Task: Conductor - User Manual Verification 'Phase 5: Integration & Wiring' (Protocol in workflow.md)
