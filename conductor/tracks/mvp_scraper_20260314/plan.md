@@ -35,4 +35,4 @@
 
 - [x] Task: Wire `__main__.py` → load config → run scraper → save to DB
 - [x] Task: End-to-end integration test (live run with `--debug`, verify DB record created)
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Integration & Wiring' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 5: Integration & Wiring' (Protocol in workflow.md)

@@ -1,9 +1,9 @@
 {
   "track_id": "mvp_scraper_20260314",
   "type": "feature",
-  "status": "new",
+  "status": "complete",
   "priority": "high",
   "created_at": "2026-03-14T00:00:00Z",
-  "updated_at": "2026-03-14T00:00:00Z",
+  "updated_at": "2026-03-15T00:00:00Z",
   "description": "MVP — Scraper, Config & Storage: YAML config → Playwright scraper → SQLite storage"
 }
