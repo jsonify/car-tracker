@@ -43,5 +43,10 @@ Reusable patterns discovered during development. Read this before starting new w
 - `get_prior_run_vehicles` returns full names ("Economy Car (Alamo)") — collapse with `extract_category` before using as a category-keyed delta lookup; `best_per_type_prices` works on VehicleRecords, so inline collapse is simpler for the prior dict (from: type_holding_email_20260314)
 - Pipeline (full): load_config → init_db → scrape → save_run → save_vehicles → get_prior_run_vehicles → collapse_prior_to_category → best_per_type(build_delta(...)) → build_holding_summary → render_success → send_email (from: type_holding_email_20260314)
 
+## Scripts / Standalone Tools
+- Add `pythonpath = ["."]` to `[tool.pytest.ini_options]` in `pyproject.toml` to make `scripts/` importable in tests (from: import_history_20260315)
+- `scripts/` directory needs `__init__.py` to be importable as a package in tests (from: import_history_20260315)
+- Always import from `car_tracker.*` (installed package via uv), never `src.car_tracker.*` — the latter only works with pytest's pythonpath, not when running scripts directly (from: import_history_20260315)
+
 ---
-Last refreshed: 2026-03-14 (from: type_holding_email_20260314)
+Last refreshed: 2026-03-15 (from: import_history_20260315)

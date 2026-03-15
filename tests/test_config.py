@@ -245,3 +245,66 @@ def test_empty_pickup_location() -> None:
 def test_empty_database_path() -> None:
     with pytest.raises(ValueError, match="database.path"):
         DatabaseConfig(path="")
+
+
+# ---------------------------------------------------------------------------
+# Config safety — repo config.yaml has no secrets
+# ---------------------------------------------------------------------------
+
+_CREDENTIAL_KEYS = {
+    "password",
+    "secret",
+    "token",
+    "api_key",
+    "apikey",
+    "smtp_password",
+    "smtp_user",
+    "smtp_username",
+    "email_password",
+    "auth",
+}
+
+_REPO_CONFIG = Path(__file__).parent.parent / "config.yaml"
+
+
+def _collect_keys(obj: object) -> set[str]:
+    """Recursively collect all mapping keys from a YAML document."""
+    keys: set[str] = set()
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            keys.add(str(k).lower())
+            keys |= _collect_keys(v)
+    elif isinstance(obj, list):
+        for item in obj:
+            keys |= _collect_keys(item)
+    return keys
+
+
+def test_repo_config_is_parseable_yaml() -> None:
+    """The committed config.yaml must be valid YAML."""
+    import yaml
+
+    raw = _REPO_CONFIG.read_text()
+    doc = yaml.safe_load(raw)
+    assert doc is not None, "config.yaml parsed to None — file may be empty"
+    assert isinstance(doc, dict), "config.yaml must be a YAML mapping at the top level"
+
+
+def test_repo_config_has_no_credential_keys() -> None:
+    """Guard against accidentally committing secrets into config.yaml."""
+    import yaml
+
+    doc = yaml.safe_load(_REPO_CONFIG.read_text())
+    found = _collect_keys(doc) & _CREDENTIAL_KEYS
+    assert not found, (
+        f"Credential-related key(s) found in config.yaml: {sorted(found)}. "
+        "Move secrets to .env instead."
+    )
+
+
+def test_repo_config_loads_via_load_config() -> None:
+    """The committed config.yaml must be accepted by load_config without errors."""
+    cfg = load_config(_REPO_CONFIG)
+    assert isinstance(cfg, Config)
+    assert cfg.search.pickup_location  # non-empty
+    assert cfg.database.path  # non-empty
