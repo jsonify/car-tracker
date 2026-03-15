@@ -1,21 +1,33 @@
 from __future__ import annotations
 
 import asyncio
+import os
 import random
-import re
+import shutil
 import subprocess
+import tempfile
 import time
 from dataclasses import dataclass
 from datetime import date, datetime
+
+# Suppress Playwright's Node.js DEP0169 deprecation warning (url.parse)
+os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from playwright.async_api import Page, async_playwright
 
 from car_tracker.config import Config
 
 COSTCO_RENTAL_URL = "https://www.costcotravel.com/rental-cars"
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds between retries
 CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 CDP_PORT = 9222
 USER_DATA_DIR = "/tmp/car-tracker-chrome"
+_CHROME_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/146.0.0.0 Safari/537.36"
+)
 
 
 # ---------------------------------------------------------------------------
@@ -72,33 +84,61 @@ class ChromeManager:  # pragma: no cover
     def __init__(self, debug: bool = False) -> None:
         self.debug = debug
         self._proc: subprocess.Popen | None = None
+        self._tmp_dir: str | None = None
 
-    def start(self) -> None:
+    def _kill_stale(self) -> None:
+        """Kill any leftover Chrome process listening on CDP_PORT."""
+        try:
+            out = subprocess.check_output(
+                ["lsof", "-ti", f"tcp:{CDP_PORT}"],
+                stderr=subprocess.DEVNULL,
+            )
+            for pid in out.decode().split():
+                subprocess.run(["kill", "-9", pid], stderr=subprocess.DEVNULL)
+            time.sleep(0.5)
+        except subprocess.CalledProcessError:
+            pass  # nothing on that port
+
+    def _build_args(self) -> list[str]:
+        self._tmp_dir = tempfile.mkdtemp(prefix="car-tracker-chrome-")
         args = [
             CHROME_PATH,
             f"--remote-debugging-port={CDP_PORT}",
-            f"--user-data-dir={USER_DATA_DIR}",
+            f"--user-data-dir={self._tmp_dir}",
             "--no-first-run",
             "--no-default-browser-check",
             "--disable-blink-features=AutomationControlled",
+            "--disable-features=AutomationControlled",
         ]
         if not self.debug:
             args.extend([
                 "--headless=new",
                 "--window-size=1920,1080",
+                f"--user-agent={_CHROME_UA}",
                 "--disable-gpu",
                 "--hide-scrollbars",
                 "--mute-audio",
-                "--disable-background-networking",
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
                 "--disable-backgrounding-occluded-windows",
             ])
+        return args
 
+    def is_alive(self) -> bool:
+        """Check if the Chrome process is still running."""
+        if self._proc is None:
+            return False
+        return self._proc.poll() is None
+
+    def start(self) -> None:
+        self._kill_stale()
+        mode = "headed (debug)" if self.debug else "headless"
+        print(f"  Starting Chrome ({mode})...", end=" ", flush=True)
+        self._chrome_log = open("/tmp/car-tracker-chrome-stderr.log", "a")
         self._proc = subprocess.Popen(
-            args,
+            self._build_args(),
             stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stderr=self._chrome_log,
         )
         # Wait for Chrome to be ready
         deadline = time.time() + 15
@@ -106,10 +146,16 @@ class ChromeManager:  # pragma: no cover
             try:
                 import urllib.request
                 urllib.request.urlopen(f"http://127.0.0.1:{CDP_PORT}/json/version", timeout=1)
+                print("ready")
                 return
             except Exception:
                 time.sleep(0.3)
         raise RuntimeError("Chrome did not start in time.")
+
+    def restart(self) -> None:
+        """Stop (if running) and start a fresh Chrome instance."""
+        self.stop()
+        self.start()
 
     def stop(self) -> None:
         if self._proc:
@@ -119,6 +165,9 @@ class ChromeManager:  # pragma: no cover
             except subprocess.TimeoutExpired:
                 self._proc.kill()
             self._proc = None
+        if self._tmp_dir:
+            shutil.rmtree(self._tmp_dir, ignore_errors=True)
+            self._tmp_dir = None
 
 
 # ---------------------------------------------------------------------------
@@ -235,13 +284,20 @@ async def _run_scrape(config: Config) -> list[VehicleResult]:  # pragma: no cove
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
         page = ctx.pages[0] if ctx.pages else await ctx.new_page()
 
+        print("  Loading Costco Travel...", end=" ", flush=True)
         await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
         await _slow_pause(3, 5)
+        print("done")
 
+        print("  Filling search form...", end=" ", flush=True)
         await _fill_search_form(page, config)
+        print("submitted")
 
+        print("  Waiting for results...", end=" ", flush=True)
         results = await _extract_results(page, config)
-        await browser.close()
+        print(f"{len(results)} vehicles found")
+
+        await page.close()
         return results
 
 
@@ -262,7 +318,25 @@ def scrape(config: Config, debug: bool = False) -> list[VehicleResult]:  # pragm
     chrome = ChromeManager(debug=debug)
     chrome.start()
     try:
-        results = asyncio.run(_run_scrape(config))
+        last_err: Exception | None = None
+        for attempt in range(1, MAX_RETRIES + 1):
+            try:
+                results = asyncio.run(_run_scrape(config))
+                break
+            except Exception as exc:
+                last_err = exc
+                if attempt < MAX_RETRIES:
+                    print(f"Attempt {attempt}/{MAX_RETRIES} failed: {exc}")
+                    if not chrome.is_alive():
+                        print("Chrome crashed — restarting...")
+                        chrome.restart()
+                    else:
+                        print(f"Retrying in {RETRY_DELAY}s...")
+                        time.sleep(RETRY_DELAY)
+        else:
+            raise RuntimeError(
+                f"All {MAX_RETRIES} scrape attempts failed. Last error: {last_err}"
+            )
     finally:
         chrome.stop()
 
