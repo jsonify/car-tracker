@@ -30,6 +30,11 @@ def migrate_db(db_path: str | Path) -> None:
             conn.execute("ALTER TABLE runs ADD COLUMN holding_price REAL")
         except sqlite3.OperationalError:
             pass  # column already exists — idempotent
+        # v3: add holding_vehicle_type column to runs (nullable)
+        try:
+            conn.execute("ALTER TABLE runs ADD COLUMN holding_vehicle_type TEXT")
+        except sqlite3.OperationalError:
+            pass  # column already exists — idempotent
 
 
 def init_db(db_path: str | Path) -> None:
@@ -68,6 +73,7 @@ def save_run(
     dropoff_date: str,
     dropoff_time: str,
     holding_price: float | None = None,
+    holding_vehicle_type: str | None = None,
 ) -> int:
     """Insert a run record and return its id."""
     run_at = datetime.now(timezone.utc).isoformat()
@@ -76,11 +82,11 @@ def save_run(
             """
             INSERT INTO runs
                 (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
-                 holding_price)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
+                 holding_price, holding_vehicle_type)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
-             holding_price),
+             holding_price, holding_vehicle_type),
         )
         return cursor.lastrowid  # type: ignore[return-value]
 

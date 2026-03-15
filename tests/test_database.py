@@ -172,6 +172,29 @@ def test_save_run_null_holding_price(db: Path) -> None:
     assert val is None
 
 
+def test_migrate_db_adds_holding_vehicle_type_column(db: Path) -> None:
+    conn = sqlite3.connect(db)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(runs)")}
+    assert "holding_vehicle_type" in cols
+
+
+def test_save_run_stores_holding_vehicle_type(db: Path) -> None:
+    run_id = save_run(
+        db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00",
+        holding_price=396.63, holding_vehicle_type="Economy Car",
+    )
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT holding_vehicle_type FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val == "Economy Car"
+
+
+def test_save_run_null_holding_vehicle_type(db: Path) -> None:
+    run_id = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT holding_vehicle_type FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val is None
+
+
 def test_get_prior_run_vehicles_different_params_not_returned(db: Path) -> None:
     run1 = save_run(db, "SFO", "2026-04-01", "10:00", "2026-04-05", "10:00")
     save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 300.0, 75.0)])
