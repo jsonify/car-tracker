@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # run.sh — cron wrapper for car-tracker
 #
-# 1. git pull (with a 10s timeout) to pick up any config changes made on GitHub.com
+# 1. git pull to pick up any config changes made on GitHub.com
 # 2. Activate the project virtualenv
 # 3. Run the scraper
 #
@@ -19,10 +19,10 @@ TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 # ---------------------------------------------------------------------------
 echo "[$TIMESTAMP] run.sh: starting git pull" >> "$LOG"
 
-if timeout 10 git -C "$REPO_DIR" pull --ff-only >> "$LOG" 2>&1; then
+if git -C "$REPO_DIR" pull --ff-only >> "$LOG" 2>&1; then
     echo "[$TIMESTAMP] run.sh: git pull succeeded" >> "$LOG"
 else
-    echo "[$TIMESTAMP] run.sh: WARNING — git pull failed or timed out; proceeding with local config" >> "$LOG"
+    echo "[$TIMESTAMP] run.sh: WARNING — git pull failed; proceeding with local config" >> "$LOG"
 fi
 
 # ---------------------------------------------------------------------------
