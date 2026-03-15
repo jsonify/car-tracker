@@ -1,10 +1,11 @@
 search:
-  pickup_location: "LAX"        # Airport code or city name
-  pickup_date: "2026-04-01"     # YYYY-MM-DD
+  pickup_location: "SAN"        # Airport code or city name
+  pickup_date: "2026-04-02"     # YYYY-MM-DD
   pickup_time: "10:00"          # HH:MM (24hr)
-  dropoff_date: "2026-04-05"    # YYYY-MM-DD
+  dropoff_date: "2026-04-08"    # YYYY-MM-DD
   dropoff_time: "10:00"         # HH:MM (24hr)
-  holding_price: 396.63         # Holding price for the reservation
+  holding_price: 375.23         # Holding price for the reservation
+  holding_vehicle_type: "Standard Car"  # Vehicle type to compare holding price against
 
 database:
   path: "data/results.db"       # Relative path to SQLite file
