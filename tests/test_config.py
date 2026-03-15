@@ -49,6 +49,55 @@ def test_load_valid_config(valid_yaml: Path) -> None:
 
 
 def test_holding_price_parsed(tmp_path: Path) -> None:
+    """Both holding_price and holding_vehicle_type required for the pair to be active."""
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        textwrap.dedent("""\
+        search:
+          pickup_location: "LAX"
+          pickup_date: "2026-04-01"
+          pickup_time: "10:00"
+          dropoff_date: "2026-04-05"
+          dropoff_time: "10:00"
+          holding_price: 396.63
+          holding_vehicle_type: "Economy Car"
+        database:
+          path: "data/results.db"
+        """)
+    )
+    result = load_config(cfg)
+    assert result.search.holding_price == 396.63
+    assert result.search.holding_vehicle_type == "Economy Car"
+
+
+def test_holding_price_omitted_is_none(valid_yaml: Path) -> None:
+    result = load_config(valid_yaml)
+    assert result.search.holding_price is None
+
+
+def test_holding_pair_both_present(tmp_path: Path) -> None:
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        textwrap.dedent("""\
+        search:
+          pickup_location: "LAX"
+          pickup_date: "2026-04-01"
+          pickup_time: "10:00"
+          dropoff_date: "2026-04-05"
+          dropoff_time: "10:00"
+          holding_price: 396.63
+          holding_vehicle_type: "Economy Car"
+        database:
+          path: "data/results.db"
+        """)
+    )
+    result = load_config(cfg)
+    assert result.search.holding_price == 396.63
+    assert result.search.holding_vehicle_type == "Economy Car"
+
+
+def test_holding_pair_price_only_sets_both_none(tmp_path: Path) -> None:
+    """holding_price without holding_vehicle_type → both set to None."""
     cfg = tmp_path / "config.yaml"
     cfg.write_text(
         textwrap.dedent("""\
@@ -64,12 +113,34 @@ def test_holding_price_parsed(tmp_path: Path) -> None:
         """)
     )
     result = load_config(cfg)
-    assert result.search.holding_price == 396.63
-
-
-def test_holding_price_omitted_is_none(valid_yaml: Path) -> None:
-    result = load_config(valid_yaml)
     assert result.search.holding_price is None
+    assert result.search.holding_vehicle_type is None
+
+
+def test_holding_pair_type_only_sets_both_none(tmp_path: Path) -> None:
+    """holding_vehicle_type without holding_price → both set to None."""
+    cfg = tmp_path / "config.yaml"
+    cfg.write_text(
+        textwrap.dedent("""\
+        search:
+          pickup_location: "LAX"
+          pickup_date: "2026-04-01"
+          pickup_time: "10:00"
+          dropoff_date: "2026-04-05"
+          dropoff_time: "10:00"
+          holding_vehicle_type: "Economy Car"
+        database:
+          path: "data/results.db"
+        """)
+    )
+    result = load_config(cfg)
+    assert result.search.holding_price is None
+    assert result.search.holding_vehicle_type is None
+
+
+def test_holding_vehicle_type_omitted_is_none(valid_yaml: Path) -> None:
+    result = load_config(valid_yaml)
+    assert result.search.holding_vehicle_type is None
 
 
 # ---------------------------------------------------------------------------
