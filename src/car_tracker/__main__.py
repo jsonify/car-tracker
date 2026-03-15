@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
-from car_tracker.emailer import build_delta, build_holding_summary, load_email_config, render_failure, render_success, send_email
+from car_tracker.emailer import best_per_type, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success, send_email
 from car_tracker.scraper import scrape
 
 
@@ -77,6 +77,7 @@ def main(argv: list[str] | None = None) -> int:
         dropoff_date=s.dropoff_date,
         dropoff_time=s.dropoff_time,
         holding_price=s.holding_price,
+        holding_vehicle_type=s.holding_vehicle_type,
     )
     vehicle_records = [
         VehicleRecord(
@@ -89,14 +90,21 @@ def main(argv: list[str] | None = None) -> int:
     ]
     save_vehicles(db_path, run_id, vehicle_records)
 
-    # Send success email
-    prior = get_prior_run_vehicles(db_path, run_id, s.pickup_location, s.pickup_date, s.dropoff_date)
-    rows = build_delta(vehicle_records, prior)
-    holding_summary = build_holding_summary(rows, s.holding_price)
+    # Collapse prior run vehicles to best-per-type (category → best price)
+    prior_raw = get_prior_run_vehicles(db_path, run_id, s.pickup_location, s.pickup_date, s.dropoff_date)
+    prior: dict[str, float] = {}
+    for name, price in prior_raw.items():
+        cat = extract_category(name)
+        if cat not in prior or price < prior[cat]:
+            prior[cat] = price
+
+    # Collapse current vehicles to best-per-type before building delta and email
+    type_rows = best_per_type(build_delta(vehicle_records, prior))
+    holding_summary = build_holding_summary(type_rows, s.holding_price, holding_vehicle_type=s.holding_vehicle_type)
     run_ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
     try:
         email_cfg = load_email_config()
-        html = render_success(rows, config, run_ts, holding_summary=holding_summary)
+        html = render_success(type_rows, config, run_ts, holding_summary=holding_summary)
         send_email(f"Costco Travel Rental Prices — {subject_base}", html, email_cfg)
         print(f"Email sent: {len(results)} vehicles (run_id={run_id})")
     except Exception as email_exc:
