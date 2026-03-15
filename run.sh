@@ -19,7 +19,7 @@ TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
 # ---------------------------------------------------------------------------
 echo "[$TIMESTAMP] run.sh: starting git pull" >> "$LOG"
 
-if git -C "$REPO_DIR" pull --ff-only >> "$LOG" 2>&1; then
+if git -C "$REPO_DIR" pull --rebase >> "$LOG" 2>&1; then
     echo "[$TIMESTAMP] run.sh: git pull succeeded" >> "$LOG"
 else
     echo "[$TIMESTAMP] run.sh: WARNING — git pull failed; proceeding with local config" >> "$LOG"
