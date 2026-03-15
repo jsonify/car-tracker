@@ -4,6 +4,7 @@ search:
   pickup_time: "10:00"          # HH:MM (24hr)
   dropoff_date: "2026-04-05"    # YYYY-MM-DD
   dropoff_time: "10:00"         # HH:MM (24hr)
+  holding_price: 396.63         # Holding price for the reservation
 
 database:
   path: "data/results.db"       # Relative path to SQLite file

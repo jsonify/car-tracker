@@ -1,0 +1,25 @@
+{
+  "track_id": "type_holding_email_20260314",
+  "type": "feature",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": [],
+  "estimated_hours": null,
+  "created_at": "2026-03-14T00:00:00Z",
+  "updated_at": "2026-03-14T00:00:00Z",
+  "description": "Vehicle type holding price & best-per-type email table",
+  "beads_epic": "car-tracker-4qw",
+  "beads_tasks": {
+    "phase1": "car-tracker-4qw.1",
+    "phase1_task1": "car-tracker-4qw.1.1",
+    "phase1_task2": "car-tracker-4qw.1.2",
+    "phase2": "car-tracker-4qw.2",
+    "phase2_task1": "car-tracker-4qw.2.1",
+    "phase2_task2": "car-tracker-4qw.2.2",
+    "phase2_task3": "car-tracker-4qw.2.3",
+    "phase2_task4": "car-tracker-4qw.2.4",
+    "phase3": "car-tracker-4qw.3",
+    "phase3_task1": "car-tracker-4qw.3.1",
+    "phase3_task2": "car-tracker-4qw.3.2"
+  }
+}

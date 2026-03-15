@@ -15,6 +15,8 @@ Personal use — single user running automated price checks.
 - Scrape https://www.costcotravel.com/rental-cars with configurable search parameters
 - Search inputs: pick-up location, pick-up date/time, drop-off date/time
 - Extract all available vehicles and their pricing
+- Collapse results to best (cheapest) price per vehicle category for clean comparison
+- Compare current best price against a configured holding price for a specific vehicle type
 
 ## Delivery
 - Runs on a twice-weekly schedule
@@ -24,7 +26,9 @@ Personal use — single user running automated price checks.
 - Vehicle name / category (e.g. Economy, SUV, Minivan)
 - Total price for the rental period
 - Price per day
+- Price change vs. prior run (per category)
 
 ## Configuration
 - Search parameters stored in a config file (JSON or YAML)
 - Config includes: location, dates, times, email settings, schedule
+- Optional holding price pair: holding_price + holding_vehicle_type for savings tracking
