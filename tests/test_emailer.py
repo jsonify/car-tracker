@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import EmailConfig, build_delta, load_email_config, render_failure, render_success
+from car_tracker.emailer import EmailConfig, build_delta, build_holding_summary, load_email_config, render_failure, render_success
 
 
 # ---------------------------------------------------------------------------
@@ -64,6 +64,50 @@ def test_build_delta_preserves_vehicle_fields() -> None:
 def test_build_delta_order_preserved() -> None:
     result = build_delta(_vehicles(), {})
     assert [r["position"] for r in result] == [1, 2, 3]
+
+
+# ---------------------------------------------------------------------------
+# build_holding_summary
+# ---------------------------------------------------------------------------
+
+
+def test_holding_summary_no_holding_price() -> None:
+    assert build_holding_summary(_vehicles_with_delta(), None) is None
+
+
+def test_holding_summary_savings() -> None:
+    rows = [{"total_price": 371.00}, {"total_price": 400.00}]
+    result = build_holding_summary(rows, 396.63)
+    assert result is not None
+    assert result["holding_price"] == 396.63
+    assert result["best_price"] == 371.00
+    assert result["savings"] == pytest.approx(25.63)
+    assert result["is_savings"] is True
+
+
+def test_holding_summary_no_savings() -> None:
+    rows = [{"total_price": 420.00}, {"total_price": 450.00}]
+    result = build_holding_summary(rows, 396.63)
+    assert result is not None
+    assert result["best_price"] == 420.00
+    assert result["savings"] == pytest.approx(23.37)
+    assert result["is_savings"] is False
+
+
+def test_holding_summary_break_even() -> None:
+    rows = [{"total_price": 396.63}]
+    result = build_holding_summary(rows, 396.63)
+    assert result is not None
+    assert result["savings"] == pytest.approx(0.0)
+    assert result["is_savings"] is False
+
+
+def test_holding_summary_empty_vehicles() -> None:
+    assert build_holding_summary([], 396.63) is None
+
+
+def _vehicles_with_delta() -> list[dict]:
+    return build_delta(_vehicles(), {})
 
 
 # ---------------------------------------------------------------------------
@@ -126,6 +170,28 @@ def test_render_success_empty_vehicles() -> None:
     html = render_success([], _FakeConfig(), "2026-03-14T12:00:00")
     assert isinstance(html, str)
     assert len(html) > 0
+
+
+def test_render_success_shows_savings_summary() -> None:
+    rows = build_delta(_vehicles(), {})
+    summary = build_holding_summary(rows, 500.00)
+    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=summary)
+    assert "500.00" in html
+    assert "Savings" in html
+
+
+def test_render_success_shows_keep_booking_message() -> None:
+    rows = build_delta(_vehicles(), {})
+    summary = build_holding_summary(rows, 100.00)  # holding < best price → no savings
+    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=summary)
+    assert "keep your booking" in html
+
+
+def test_render_success_no_holding_summary_omits_block() -> None:
+    rows = build_delta(_vehicles(), {})
+    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=None)
+    assert "holding price" not in html.lower()
+    assert "keep your booking" not in html
 
 
 # ---------------------------------------------------------------------------

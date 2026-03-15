@@ -87,7 +87,35 @@ def _jinja_env() -> Environment:
     return Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
 
 
-def render_success(vehicles_with_delta: list[dict], config: object, run_ts: str) -> str:
+def build_holding_summary(
+    vehicles: list[dict],
+    holding_price: float | None,
+) -> dict | None:
+    """Compute holding price comparison summary.
+
+    Returns None if holding_price is None (not configured).
+    Returns a dict with holding_price, best_price, savings, is_savings.
+    """
+    if holding_price is None:
+        return None
+    if not vehicles:
+        return None
+    best_price = round(min(v["total_price"] for v in vehicles), 2)
+    savings = round(abs(holding_price - best_price), 2)
+    return {
+        "holding_price": holding_price,
+        "best_price": best_price,
+        "savings": savings,
+        "is_savings": best_price < holding_price,
+    }
+
+
+def render_success(
+    vehicles_with_delta: list[dict],
+    config: object,
+    run_ts: str,
+    holding_summary: dict | None = None,
+) -> str:
     """Render the success HTML email body."""
     env = _jinja_env()
     tmpl = env.get_template("email_success.html")
@@ -95,6 +123,7 @@ def render_success(vehicles_with_delta: list[dict], config: object, run_ts: str)
         vehicles=vehicles_with_delta,
         search=config.search,
         run_ts=run_ts,
+        holding_summary=holding_summary,
     )
 
 

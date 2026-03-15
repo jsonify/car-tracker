@@ -12,6 +12,11 @@
   .new  { color: #7f8c8d; font-style: italic; }
   .dash { color: #aaa; }
   .params { margin-bottom: 16px; font-size: 13px; color: #555; }
+  .holding { margin-bottom: 14px; font-size: 14px; padding: 8px 12px; border-radius: 4px; }
+  .holding-savings { background: #eafaf1; border-left: 4px solid #27ae60; }
+  .holding-ahead   { background: #fef9e7; border-left: 4px solid #f39c12; }
+  .savings-amt { color: #27ae60; font-weight: bold; }
+  .ahead-amt   { color: #e67e22; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -20,6 +25,21 @@
   {{ search.pickup_date }} {{ search.pickup_time }} → {{ search.dropoff_date }} {{ search.dropoff_time }}
   &nbsp;·&nbsp; Run: {{ run_ts }}
 </div>
+{% if holding_summary %}
+  {% if holding_summary.is_savings %}
+  <div class="holding holding-savings">
+    Your holding price: ${{ "%.2f"|format(holding_summary.holding_price) }} &nbsp;·&nbsp;
+    Best current price: ${{ "%.2f"|format(holding_summary.best_price) }} &nbsp;·&nbsp;
+    <span class="savings-amt">Savings: ${{ "%.2f"|format(holding_summary.savings) }}</span>
+  </div>
+  {% else %}
+  <div class="holding holding-ahead">
+    Your holding price: ${{ "%.2f"|format(holding_summary.holding_price) }} &nbsp;·&nbsp;
+    Best current price: ${{ "%.2f"|format(holding_summary.best_price) }} &nbsp;·&nbsp;
+    <span class="ahead-amt">You're ahead by ${{ "%.2f"|format(holding_summary.savings) }} — keep your booking</span>
+  </div>
+  {% endif %}
+{% endif %}
 <table>
   <thead>
     <tr>
