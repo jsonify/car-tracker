@@ -35,7 +35,10 @@ database:
 ---
 
 ## Scraper Behavior
-- Launch Playwright browser (headless unless `--debug`)
+- Launch real Chrome (not Playwright's Chromium) via subprocess with `--remote-debugging-port`
+  - Required: Costco Travel uses Akamai bot detection that blocks Playwright's bundled Chromium
+  - `--debug` flag launches Chrome in headed mode; default is `--headless=new`
+- Connect Playwright to Chrome via CDP (`connect_over_cdp`)
 - Navigate to Costco Travel rental cars URL
 - Fill in search form with config parameters
 - Submit search and wait for results to load

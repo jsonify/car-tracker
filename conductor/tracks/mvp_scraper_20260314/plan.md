@@ -20,15 +20,15 @@
 - [x] Task: Implement `save_run()` — insert a run record and return `run_id`
 - [x] Task: Implement `save_vehicles()` — bulk insert vehicle records for a run
 - [x] Task: Write tests for database layer (schema creation, insert, foreign key)
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: SQLite Storage Layer' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3: SQLite Storage Layer' (Protocol in workflow.md)
 
 ## Phase 4: Playwright Scraper
 
-- [ ] Task: Implement `scraper.py` — launch browser (headless/headed), navigate to Costco Travel
-- [ ] Task: Implement form fill — populate pickup location, dates, and times
-- [ ] Task: Implement results extraction — parse vehicle name, total price, price per day
-- [ ] Task: Handle error states (timeout, no results, form errors)
-- [ ] Task: Write tests for scraper (mock Playwright responses for unit tests)
+- [x] Task: Implement `scraper.py` — launch browser (headless/headed), navigate to Costco Travel
+- [x] Task: Implement form fill — populate pickup location, dates, and times
+- [x] Task: Implement results extraction — parse vehicle name, total price, price per day
+- [x] Task: Handle error states (timeout, no results, form errors)
+- [x] Task: Write tests for scraper (mock Playwright responses for unit tests)
 - [ ] Task: Conductor - User Manual Verification 'Phase 4: Playwright Scraper' (Protocol in workflow.md)
 
 ## Phase 5: Integration & Wiring
