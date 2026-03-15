@@ -3,18 +3,18 @@
 ## Phase 1: Config + Database
 <!-- execution: parallel -->
 
-- [ ] Task 1: Add `holding_price` to `SearchConfig` in `config.py`
+- [x] Task 1: Add `holding_price` to `SearchConfig` in `config.py`
   <!-- files: src/car_tracker/config.py -->
   - Optional field, default `None`, type `float | None`
   - No validation required (any positive float is valid)
-- [ ] Task 2: DB migration + update `save_run`
+- [x] Task 2: DB migration + update `save_run`
   <!-- files: src/car_tracker/database.py -->
   - Add `migrate_db(db_path)` function that runs:
     `ALTER TABLE runs ADD COLUMN holding_price REAL`
     safely (no-op if column already exists)
   - Call `migrate_db` from `init_db` so it's automatic
   - Add `holding_price: float | None = None` param to `save_run`
-- [ ] Task 3: Unit tests for config and DB changes
+- [x] Task 3: Unit tests for config and DB changes
   <!-- files: tests/test_config.py, tests/test_database.py -->
   <!-- depends: task1, task2 -->
   - Config: `holding_price` present → parsed as float; omitted → None
