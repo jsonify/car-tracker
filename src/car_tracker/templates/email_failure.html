@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; }
+  .params { margin-bottom: 16px; font-size: 13px; color: #555; }
+  .error  { color: #c0392b; margin-top: 12px; }
+</style>
+</head>
+<body>
+<div class="params">
+  <strong>{{ search.pickup_location }}</strong> &nbsp;·&nbsp;
+  {{ search.pickup_date }} {{ search.pickup_time }} → {{ search.dropoff_date }} {{ search.dropoff_time }}
+</div>
+<p class="error"><strong>Scrape failed:</strong> {{ error_msg }}</p>
+</body>
+</html>
