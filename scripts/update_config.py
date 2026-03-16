@@ -132,6 +132,11 @@ def apply_config_update(updates: dict, config_path: str | Path = "config.yaml") 
         check=True,
     )
     subprocess.run(
+        ["git", "pull", "--rebase"],
+        cwd=repo_dir,
+        check=True,
+    )
+    subprocess.run(
         ["git", "push"],
         cwd=repo_dir,
         check=True,

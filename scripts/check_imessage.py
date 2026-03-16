@@ -10,10 +10,54 @@ Requires Full Disk Access granted to Terminal in macOS System Settings.
 
 import argparse
 import json
+import re
 import sqlite3
 from pathlib import Path
 
 from scripts.update_config import apply_config_update, parse_config_update
+
+# Known TypedStream class/key names that precede the actual message text.
+_STREAMTYPED_METADATA = frozenset({
+    "streamtyped",
+    "NSAttributedString",
+    "NSMutableAttributedString",
+    "NSObject",
+    "NSString",
+    "NSMutableString",
+    "NSDictionary",
+    "__kIMMessagePartAttributeName",
+    "NSNumber",
+    "NSValue",
+    "NSColor",
+    "NSFont",
+    "NSParagraphStyle",
+})
+
+
+def _text_from_attributed_body(blob: bytes) -> str | None:
+    """Extract plain text from an attributedBody TypedStream blob.
+
+    macOS stores message content in a binary TypedStream (NSAttributedString
+    archive) when the plain ``text`` column is NULL. The message string is the
+    first printable-ASCII run that is not a known TypedStream metadata token.
+
+    TypedStream encodes strings as ``"+" + <1-byte-length> + <text>``. When the
+    length byte is itself printable ASCII the regex captures all three together,
+    so we strip the two-character prefix in that case.
+    """
+    for raw in re.findall(rb"[ -~]+", blob):
+        candidate = raw.decode("ascii", errors="ignore").strip()
+        if not candidate or candidate in _STREAMTYPED_METADATA:
+            continue
+        # Skip single/double-character TypedStream artifacts (@, iI, +, &, …)
+        if len(candidate) <= 2:
+            continue
+        # Strip length prefix when it's printable: "+" + length_char + text
+        if candidate.startswith("+"):
+            candidate = candidate[2:]
+        if candidate and len(candidate) > 2:
+            return candidate
+    return None
 
 DEFAULT_DB = Path.home() / "Library" / "Messages" / "chat.db"
 DEFAULT_STATE = Path("data/imessage_state.json")
@@ -27,7 +71,8 @@ def read_pending_messages(
     """Return messages from chat.db with rowid > last processed rowid.
 
     Creates ``state_path`` (with ``last_rowid=0``) if it does not exist.
-    Skips messages with NULL text.
+    Falls back to decoding ``attributedBody`` when ``text`` is NULL (macOS
+    Ventura+ stores message content there instead).
     Returns a list of ``(rowid, text)`` tuples ordered by rowid ascending.
     """
     db_path = Path(db_path)
@@ -43,13 +88,20 @@ def read_pending_messages(
     conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
     try:
         rows = conn.execute(
-            "SELECT rowid, text FROM message WHERE rowid > ? AND text IS NOT NULL ORDER BY rowid ASC",
+            "SELECT rowid, text, attributedBody FROM message"
+            " WHERE rowid > ? AND (text IS NOT NULL OR attributedBody IS NOT NULL)"
+            " ORDER BY rowid ASC",
             (last_rowid,),
         ).fetchall()
     finally:
         conn.close()
 
-    return [(rowid, text) for rowid, text in rows]
+    result = []
+    for rowid, text, attributed_body in rows:
+        resolved = text if text is not None else _text_from_attributed_body(attributed_body)
+        if resolved:
+            result.append((rowid, resolved))
+    return result
 
 
 def main(
