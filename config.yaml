@@ -1,14 +1,12 @@
 search:
-  pickup_location: "SAN"        # Airport code or city name
-  pickup_date: "2026-04-02"     # YYYY-MM-DD
-  pickup_time: "10:00"          # HH:MM (24hr)
-  dropoff_date: "2026-04-08"    # YYYY-MM-DD
-  dropoff_time: "10:00"         # HH:MM (24hr)
-  holding_price: 375.23         # Holding price for the reservation
-  holding_vehicle_type: "Standard Car"  # Vehicle type to compare holding price against
-
+  pickup_location: SAN
+  pickup_date: '2026-04-02'
+  pickup_time: '10:00'
+  dropoff_date: '2026-04-08'
+  dropoff_time: '10:00'
+  holding_price: 375.0
+  holding_vehicle_type: Standard Car
 database:
-  path: "data/results.db"       # Relative path to SQLite file
-
+  path: data/results.db
 imessage:
-  phone_number: "+15039990921"  # your actual number
+  phone_number: '+15039990921'
