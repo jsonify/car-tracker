@@ -15,3 +15,8 @@ This file tracks all major tracks for the project.
 <!-- archived 2026-03-15: import_history_20260315 — Import Historical Price Data from CSV -->
 
 <!-- archived 2026-03-15: remote_config_20260315 — Remote Config Updates via GitHub -->
+
+---
+
+## [~] Track: Remote Config Updates via iMessage
+*Link: [./conductor/tracks/imessage_config_20260315/](./conductor/tracks/imessage_config_20260315/)*
