@@ -90,7 +90,7 @@ class ChromeManager:  # pragma: no cover
         """Kill any leftover Chrome process listening on CDP_PORT."""
         try:
             out = subprocess.check_output(
-                ["lsof", "-ti", f"tcp:{CDP_PORT}"],
+                ["/usr/sbin/lsof", "-ti", f"tcp:{CDP_PORT}"],
                 stderr=subprocess.DEVNULL,
             )
             for pid in out.decode().split():
