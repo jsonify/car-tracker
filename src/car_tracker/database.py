@@ -35,6 +35,11 @@ def migrate_db(db_path: str | Path) -> None:
             conn.execute("ALTER TABLE runs ADD COLUMN holding_vehicle_type TEXT")
         except sqlite3.OperationalError:
             pass  # column already exists — idempotent
+        # v4: add booking_name column to runs (NOT NULL with empty-string default)
+        try:
+            conn.execute("ALTER TABLE runs ADD COLUMN booking_name TEXT NOT NULL DEFAULT ''")
+        except sqlite3.OperationalError:
+            pass  # column already exists — idempotent
 
 
 def init_db(db_path: str | Path) -> None:
@@ -74,6 +79,7 @@ def save_run(
     dropoff_time: str,
     holding_price: float | None = None,
     holding_vehicle_type: str | None = None,
+    booking_name: str = "",
 ) -> int:
     """Insert a run record and return its id."""
     run_at = datetime.now(timezone.utc).isoformat()
@@ -82,11 +88,11 @@ def save_run(
             """
             INSERT INTO runs
                 (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
-                 holding_price, holding_vehicle_type)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                 holding_price, holding_vehicle_type, booking_name)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (run_at, pickup_location, pickup_date, pickup_time, dropoff_date, dropoff_time,
-             holding_price, holding_vehicle_type),
+             holding_price, holding_vehicle_type, booking_name),
         )
         return cursor.lastrowid  # type: ignore[return-value]
 
@@ -97,6 +103,7 @@ def get_prior_run_vehicles(
     pickup_location: str,
     pickup_date: str,
     dropoff_date: str,
+    booking_name: str = "",
 ) -> dict[str, float]:
     """Return vehicle name → total_price from the most recent prior run with matching params.
 
@@ -110,10 +117,11 @@ def get_prior_run_vehicles(
               AND pickup_location = ?
               AND pickup_date = ?
               AND dropoff_date = ?
+              AND booking_name = ?
             ORDER BY id DESC
             LIMIT 1
             """,
-            (current_run_id, pickup_location, pickup_date, dropoff_date),
+            (current_run_id, pickup_location, pickup_date, dropoff_date, booking_name),
         ).fetchone()
         if row is None:
             return {}

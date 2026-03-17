@@ -203,3 +203,75 @@ def test_get_prior_run_vehicles_different_params_not_returned(db: Path) -> None:
     run3 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
     result = get_prior_run_vehicles(db, run3, "LAX", "2026-04-01", "2026-04-05")
     assert result == {"Economy Car (Alamo)": 200.0}
+
+
+# ---------------------------------------------------------------------------
+# booking_name column (v4 migration)
+# ---------------------------------------------------------------------------
+
+
+def test_migrate_db_adds_booking_name_column(db: Path) -> None:
+    conn = sqlite3.connect(db)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(runs)")}
+    assert "booking_name" in cols
+
+
+def test_migrate_db_booking_name_column_idempotent(db: Path) -> None:
+    migrate_db(db)  # should not raise even if column already exists
+    migrate_db(db)
+
+
+def test_save_run_stores_booking_name(db: Path) -> None:
+    run_id = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="hawaii",
+    )
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT booking_name FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val == "hawaii"
+
+
+def test_save_run_default_booking_name_is_empty(db: Path) -> None:
+    run_id = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    conn = sqlite3.connect(db)
+    val = conn.execute("SELECT booking_name FROM runs WHERE id=?", (run_id,)).fetchone()[0]
+    assert val == ""
+
+
+def test_get_prior_run_vehicles_scoped_by_booking_name(db: Path) -> None:
+    """Prior run lookup must match booking_name — different bookings don't cross-contaminate."""
+    run1 = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="hawaii",
+    )
+    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 450.0, 64.29)])
+
+    run2 = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="vegas",
+    )
+    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 300.0, 42.86)])
+
+    # Current run for hawaii — prior should only see run1, not run2
+    run3 = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="hawaii",
+    )
+    result = get_prior_run_vehicles(db, run3, "HNL", "2026-05-01", "2026-05-08", booking_name="hawaii")
+    assert result == {"Economy Car (Alamo)": 450.0}
+
+
+def test_get_prior_run_vehicles_different_booking_names_isolated(db: Path) -> None:
+    """No prior run for this booking_name returns empty dict."""
+    run1 = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="hawaii",
+    )
+    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 450.0, 64.29)])
+
+    run2 = save_run(
+        db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00",
+        booking_name="vegas",
+    )
+    result = get_prior_run_vehicles(db, run2, "HNL", "2026-05-01", "2026-05-08", booking_name="vegas")
+    assert result == {}
