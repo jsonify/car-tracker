@@ -15,7 +15,7 @@ os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from playwright.async_api import Page, async_playwright
 
-from car_tracker.config import Config
+from car_tracker.config import AppConfig as Config
 
 COSTCO_RENTAL_URL = "https://www.costcotravel.com/rental-cars"
 MAX_RETRIES = 3

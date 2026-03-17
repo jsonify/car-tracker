@@ -27,5 +27,10 @@
 ## Dependency Management
 - uv (fast Python package manager + project tool)
 
+## Remote Config Updates
+- `scripts/check_imessage.py` — reads `~/Library/Messages/chat.db`, parses natural-language
+  holding price commands, patches `config.yaml`, commits and pushes via subprocess
+- Triggered via macOS Shortcut, cron, or automatically by `run.sh` before each scraper run
+
 ## Environment
 - Runs locally on macOS

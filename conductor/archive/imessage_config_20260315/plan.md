@@ -63,17 +63,17 @@
   - Prints summary of changes applied (or "no changes")
   - Safe to run repeatedly (idempotent)
 
-- [ ] Task 4: Conductor - User Manual Verification 'Phase 3: iMessage Integration'
+- [x] Task 4: Conductor - User Manual Verification 'Phase 3: iMessage Integration'
 
 ---
 
 ## Phase 4: Documentation
 <!-- execution: sequential -->
 
-- [ ] Task 1: Create `docs/imessage_shortcut_setup.md`
+- [x] Task 1: Create `docs/imessage_shortcut_setup.md` <!-- commit: 1e72e1a -->
   - macOS Full Disk Access setup (Terminal / app)
   - How to create a macOS Shortcut that runs `scripts/check_imessage.py`
   - How to set up a cron job as an alternative trigger
   - Example messages that work
 
-- [ ] Task 2: Conductor - User Manual Verification 'Phase 4: Documentation'
+- [x] Task 2: Conductor - User Manual Verification 'Phase 4: Documentation'

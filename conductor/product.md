@@ -32,3 +32,6 @@ Personal use — single user running automated price checks.
 - Search parameters stored in a config file (JSON or YAML)
 - Config includes: location, dates, times, email settings, schedule
 - Optional holding price pair: holding_price + holding_vehicle_type for savings tracking
+- Config can be updated remotely via iMessage — send a natural-language message
+  (e.g. "update holding price to 375") to update holding fields; changes are
+  auto-committed and pushed so the next cron run picks them up automatically
