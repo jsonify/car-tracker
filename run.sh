@@ -2,8 +2,9 @@
 # run.sh — cron wrapper for car-tracker
 #
 # 1. git pull to pick up any config changes made on GitHub.com
-# 2. Activate the project virtualenv
-# 3. Run the scraper
+# 2. check_imessage — apply any pending iMessage config commands, commit & push
+# 3. Activate the project virtualenv
+# 4. Run the scraper
 #
 # If git pull fails for any reason, a warning is logged and the scraper runs
 # with the existing local config — the run is never aborted due to a pull failure.
@@ -26,8 +27,18 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 2. Activate venv + run scraper
+# 2. check_imessage — apply any pending iMessage config commands (best-effort)
 # ---------------------------------------------------------------------------
 source "$REPO_DIR/.venv/bin/activate"
 
+echo "[$TIMESTAMP] run.sh: checking iMessage for config updates" >> "$LOG"
+if python -m scripts.check_imessage --config "$REPO_DIR/config.yaml" >> "$LOG" 2>&1; then
+    echo "[$TIMESTAMP] run.sh: iMessage check complete" >> "$LOG"
+else
+    echo "[$TIMESTAMP] run.sh: WARNING — iMessage check failed; proceeding with existing config" >> "$LOG"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. Run scraper
+# ---------------------------------------------------------------------------
 exec python -m car_tracker --config "$REPO_DIR/config.yaml"
