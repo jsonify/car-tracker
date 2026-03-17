@@ -75,7 +75,7 @@
 
 ## Phase 6: Documentation
 
-- [x] Task 1: Update README.md <!-- commit: next -->
+- [x] Task 1: Update README.md <!-- commit: 10a7d86 -->
   - Replace single-booking `config.yaml` example with multi-booking `bookings:` list example
   - Document iMessage `update holding` command with name and index examples
   - Update "How It Works" section to reflect multi-booking run behavior
