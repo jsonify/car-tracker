@@ -6,6 +6,7 @@ from datetime import datetime, timezone
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
+from car_tracker.discord_notifier import load_webhook_url, notify_failure, notify_success
 from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success, send_email
 from car_tracker.scraper import scrape
 
@@ -56,9 +57,10 @@ def main(argv: list[str] | None = None) -> int:
             results = scrape(booking, debug=args.debug)
         except Exception as exc:
             print(f"Scrape failed for '{booking.name}': {exc}", file=sys.stderr)
+            error_str = str(exc)
             try:
                 email_cfg = load_email_config()
-                html = render_failure(str(exc), booking)
+                html = render_failure(error_str, booking)
                 subject = (
                     f"Costco Travel Scrape Failed — {booking.name} "
                     f"{booking.pickup_date} to {booking.dropoff_date}"
@@ -70,6 +72,13 @@ def main(argv: list[str] | None = None) -> int:
                     f"Also failed to send failure email for '{booking.name}': {email_exc}",
                     file=sys.stderr,
                 )
+            webhook_url = load_webhook_url()
+            if webhook_url:
+                try:
+                    notify_failure(booking, error_str, webhook_url)
+                    print(f"Discord failure notification sent for '{booking.name}'.")
+                except Exception as discord_exc:
+                    print(f"Failed to send Discord failure notification: {discord_exc}", file=sys.stderr)
             continue
 
         # Save run + vehicles
@@ -128,6 +137,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"Email sent ({len(sections)} booking(s))")
     except Exception as email_exc:
         print(f"Failed to send email: {email_exc}", file=sys.stderr)
+
+    # Send Discord webhook notification (best-effort)
+    webhook_url = load_webhook_url()
+    if webhook_url:
+        try:
+            notify_success(sections, run_ts, webhook_url)
+            print(f"Discord notification sent ({len(sections)} booking(s))")
+        except Exception as discord_exc:
+            print(f"Failed to send Discord notification: {discord_exc}", file=sys.stderr)
 
     return 0
 

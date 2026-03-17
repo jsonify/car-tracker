@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Costco Travel car rental price scraper"
 requires-python = ">=3.11"
 dependencies = [
+    "discord.py>=2.3.2",
     "jinja2>=3.1.6",
     "nodriver>=0.48.1",
     "playwright>=1.58.0",

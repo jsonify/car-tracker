@@ -133,6 +133,63 @@ def get_prior_run_vehicles(
         return {name: total_price for name, total_price in rows}
 
 
+def get_latest_run_vehicles(
+    db_path: str | Path,
+    booking_name: str,
+) -> tuple[str | None, list[VehicleRecord]]:
+    """Return (run_at, vehicles) for the most recent run of a booking.
+
+    Returns (None, []) if no runs exist for the booking.
+    """
+    with _connect(db_path) as conn:
+        row = conn.execute(
+            """
+            SELECT id, run_at FROM runs
+            WHERE booking_name = ?
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (booking_name,),
+        ).fetchone()
+        if row is None:
+            return None, []
+        run_id, run_at = row
+        rows = conn.execute(
+            "SELECT position, name, total_price, price_per_day FROM vehicles WHERE run_id = ? ORDER BY total_price ASC",
+            (run_id,),
+        ).fetchall()
+        vehicles = [VehicleRecord(position=r[0], name=r[1], total_price=r[2], price_per_day=r[3]) for r in rows]
+        return run_at, vehicles
+
+
+def get_price_history(
+    db_path: str | Path,
+    booking_name: str,
+    vehicle_type: str,
+    limit: int = 10,
+) -> list[tuple[str, float]]:
+    """Return (run_at, best_price) tuples for vehicle_type across recent runs, most recent first.
+
+    Matches vehicles whose name starts with vehicle_type (category prefix match).
+    Returns an empty list if no data found.
+    """
+    with _connect(db_path) as conn:
+        rows = conn.execute(
+            """
+            SELECT r.run_at, MIN(v.total_price) as best_price
+            FROM runs r
+            JOIN vehicles v ON v.run_id = r.id
+            WHERE r.booking_name = ?
+              AND (v.name = ? OR v.name LIKE ?)
+            GROUP BY r.id, r.run_at
+            ORDER BY r.id DESC
+            LIMIT ?
+            """,
+            (booking_name, vehicle_type, f"{vehicle_type} (%", limit),
+        ).fetchall()
+        return [(run_at, best_price) for run_at, best_price in rows]
+
+
 def save_vehicles(
     db_path: str | Path,
     run_id: int,
