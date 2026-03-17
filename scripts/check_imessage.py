@@ -125,7 +125,11 @@ def main(
         updates = parse_config_update(text)
         if not updates:
             continue
-        changed = apply_config_update(updates, config_path)
+        try:
+            changed = apply_config_update(updates, config_path)
+        except ValueError as exc:
+            print(f"Invalid update in message {rowid}: {exc}")
+            continue
         if changed:
             applied += 1
             print(f"Applied update from message {rowid}: {updates}")
