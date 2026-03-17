@@ -10,10 +10,19 @@ from pathlib import Path
 from dotenv import load_dotenv
 from jinja2 import Environment, FileSystemLoader
 
+from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
 
 _ENV_PATH = Path("/Users/jasonrueckert/code/car-tracker/.env")
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+@dataclass
+class BookingSection:
+    """Per-booking data bundle for email rendering."""
+    booking: BookingConfig
+    vehicles: list[dict]
+    holding_summary: dict | None
 
 
 @dataclass
@@ -148,31 +157,18 @@ def build_holding_summary(
     }
 
 
-def render_success(
-    vehicles_with_delta: list[dict],
-    config: object,
-    run_ts: str,
-    holding_summary: dict | None = None,
-) -> str:
-    """Render the success HTML email body."""
+def render_success(sections: list[BookingSection], run_ts: str) -> str:
+    """Render the success HTML email body with one section per booking."""
     env = _jinja_env()
     tmpl = env.get_template("email_success.html")
-    return tmpl.render(
-        vehicles=vehicles_with_delta,
-        search=config.search,
-        run_ts=run_ts,
-        holding_summary=holding_summary,
-    )
+    return tmpl.render(sections=sections, run_ts=run_ts)
 
 
-def render_failure(error_msg: str, config: object) -> str:
+def render_failure(error_msg: str, booking: BookingConfig) -> str:
     """Render the failure HTML email body."""
     env = _jinja_env()
     tmpl = env.get_template("email_failure.html")
-    return tmpl.render(
-        error_msg=error_msg,
-        search=config.search,
-    )
+    return tmpl.render(error_msg=error_msg, booking=booking)
 
 
 def send_email(subject: str, html_body: str, email_cfg: EmailConfig) -> None:  # pragma: no cover

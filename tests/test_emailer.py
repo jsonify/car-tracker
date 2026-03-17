@@ -5,8 +5,9 @@ from unittest.mock import patch
 
 import pytest
 
+from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success
+from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success
 
 
 # ---------------------------------------------------------------------------
@@ -230,63 +231,80 @@ def _vehicles_with_delta() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# render_success helpers
+# ---------------------------------------------------------------------------
+
+
+def _fake_booking() -> BookingConfig:
+    return BookingConfig(
+        name="test",
+        pickup_location="LAX",
+        pickup_date="2026-04-01",
+        pickup_time="10:00",
+        dropoff_date="2026-04-05",
+        dropoff_time="10:00",
+    )
+
+
+def _fake_section(vehicles: list[dict], holding_summary: dict | None = None) -> BookingSection:
+    return BookingSection(booking=_fake_booking(), vehicles=vehicles, holding_summary=holding_summary)
+
+
+# ---------------------------------------------------------------------------
 # render_success
 # ---------------------------------------------------------------------------
 
 
-class _FakeConfig:
-    class search:
-        pickup_location = "LAX"
-        pickup_date = "2026-04-01"
-        pickup_time = "10:00"
-        dropoff_date = "2026-04-05"
-        dropoff_time = "10:00"
-
-
 def test_render_success_contains_search_params() -> None:
     rows = build_delta(_vehicles(), {})
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "LAX" in html
     assert "2026-04-01" in html
     assert "2026-04-05" in html
 
 
+def test_render_success_contains_booking_name() -> None:
+    rows = build_delta(_vehicles(), {})
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
+    assert "test" in html
+
+
 def test_render_success_contains_vehicles() -> None:
     rows = build_delta(_vehicles(), {})
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "Economy Car (Alamo)" in html
     assert "210" in html
 
 
 def test_render_success_no_prior_shows_dash() -> None:
     rows = build_delta(_vehicles(), {})
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "—" in html
 
 
 def test_render_success_price_increase_shows_up_arrow() -> None:
     prior = {"Economy Car (Alamo)": 200.0, "Compact Car (Avis)": 240.0, "Full-Size SUV (Enterprise)": 400.0}
     rows = build_delta(_vehicles(), prior)
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "▲" in html
 
 
 def test_render_success_price_decrease_shows_down_arrow() -> None:
     prior = {"Economy Car (Alamo)": 220.0, "Compact Car (Avis)": 240.0, "Full-Size SUV (Enterprise)": 400.0}
     rows = build_delta(_vehicles(), prior)
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "▼" in html
 
 
 def test_render_success_new_vehicle_shows_new() -> None:
     prior = {"Economy Car (Alamo)": 200.0}
     rows = build_delta(_vehicles(), prior)
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "New" in html
 
 
 def test_render_success_empty_vehicles() -> None:
-    html = render_success([], _FakeConfig(), "2026-03-14T12:00:00")
+    html = render_success([_fake_section([])], "2026-03-14T12:00:00")
     assert isinstance(html, str)
     assert len(html) > 0
 
@@ -294,7 +312,7 @@ def test_render_success_empty_vehicles() -> None:
 def test_render_success_shows_savings_summary() -> None:
     rows = best_per_type(build_delta(_vehicles(), {}))
     summary = build_holding_summary(rows, 500.00, holding_vehicle_type="Economy Car")
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=summary)
+    html = render_success([_fake_section(rows, holding_summary=summary)], "2026-03-14T12:00:00")
     assert "500.00" in html
     assert "Savings" in html
 
@@ -302,15 +320,62 @@ def test_render_success_shows_savings_summary() -> None:
 def test_render_success_shows_keep_booking_message() -> None:
     rows = best_per_type(build_delta(_vehicles(), {}))
     summary = build_holding_summary(rows, 100.00, holding_vehicle_type="Economy Car")
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=summary)
+    html = render_success([_fake_section(rows, holding_summary=summary)], "2026-03-14T12:00:00")
     assert "keep your booking" in html
 
 
 def test_render_success_no_holding_summary_omits_block() -> None:
     rows = build_delta(_vehicles(), {})
-    html = render_success(rows, _FakeConfig(), "2026-03-14T12:00:00", holding_summary=None)
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
     assert "holding price" not in html.lower()
     assert "keep your booking" not in html
+
+
+def test_render_success_two_bookings_both_appear() -> None:
+    """Combined email renders a section for each booking."""
+    booking1 = BookingConfig(
+        name="hawaii", pickup_location="HNL",
+        pickup_date="2026-05-01", pickup_time="10:00",
+        dropoff_date="2026-05-08", dropoff_time="10:00",
+    )
+    booking2 = BookingConfig(
+        name="vegas", pickup_location="LAS",
+        pickup_date="2026-06-01", pickup_time="10:00",
+        dropoff_date="2026-06-05", dropoff_time="10:00",
+    )
+    rows = build_delta(_vehicles(), {})
+    sections = [
+        BookingSection(booking=booking1, vehicles=rows, holding_summary=None),
+        BookingSection(booking=booking2, vehicles=rows, holding_summary=None),
+    ]
+    html = render_success(sections, "2026-03-14T12:00:00")
+    assert "hawaii" in html
+    assert "HNL" in html
+    assert "vegas" in html
+    assert "LAS" in html
+
+
+def test_render_success_per_booking_holding_summary_isolated() -> None:
+    """Only the booking with a holding summary shows the holding block."""
+    booking1 = BookingConfig(
+        name="hawaii", pickup_location="HNL",
+        pickup_date="2026-05-01", pickup_time="10:00",
+        dropoff_date="2026-05-08", dropoff_time="10:00",
+    )
+    booking2 = BookingConfig(
+        name="vegas", pickup_location="LAS",
+        pickup_date="2026-06-01", pickup_time="10:00",
+        dropoff_date="2026-06-05", dropoff_time="10:00",
+    )
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    summary = build_holding_summary(rows, 500.00, holding_vehicle_type="Economy Car")
+    sections = [
+        BookingSection(booking=booking1, vehicles=rows, holding_summary=summary),
+        BookingSection(booking=booking2, vehicles=rows, holding_summary=None),
+    ]
+    html = render_success(sections, "2026-03-14T12:00:00")
+    assert "Savings" in html  # hawaii has holding summary
+    assert html.count("holding price") == 1  # only one section shows it
 
 
 # ---------------------------------------------------------------------------
@@ -319,12 +384,12 @@ def test_render_success_no_holding_summary_omits_block() -> None:
 
 
 def test_render_failure_contains_error() -> None:
-    html = render_failure("Connection timed out", _FakeConfig())
+    html = render_failure("Connection timed out", _fake_booking())
     assert "Connection timed out" in html
 
 
 def test_render_failure_contains_search_params() -> None:
-    html = render_failure("oops", _FakeConfig())
+    html = render_failure("oops", _fake_booking())
     assert "LAX" in html
     assert "2026-04-01" in html
 

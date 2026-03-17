@@ -15,7 +15,7 @@ os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from playwright.async_api import Page, async_playwright
 
-from car_tracker.config import AppConfig as Config
+from car_tracker.config import BookingConfig
 
 COSTCO_RENTAL_URL = "https://www.costcotravel.com/rental-cars"
 MAX_RETRIES = 3
@@ -201,14 +201,12 @@ def _to_mmddyyyy(iso_date: str) -> str:
     return d.strftime("%m/%d/%Y")
 
 
-async def _fill_search_form(page: Page, config: Config) -> None:  # pragma: no cover
+async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # pragma: no cover
     """Fill and submit the Costco Travel rental car search form."""
-    s = config.search
-
     # Location autocomplete
     await page.click("#pickupLocationTextWidget")
     await _slow_pause()
-    location = s.pickup_location
+    location = booking.pickup_location
     for ch in location:
         await page.type(
             "#pickupLocationTextWidget",
@@ -230,29 +228,29 @@ async def _fill_search_form(page: Page, config: Config) -> None:  # pragma: no c
     await _slow_pause()
 
     # Dates (MM/DD/YYYY format for form)
-    await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(s.pickup_date))
+    await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(booking.pickup_date))
     await _slow_pause(0.5, 1.0)
-    await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(s.dropoff_date))
+    await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date))
     await _slow_pause(0.5, 1.0)
 
     # Times
-    await page.select_option("#pickupTimeWidget", label=to_12h(s.pickup_time))
+    await page.select_option("#pickupTimeWidget", label=to_12h(booking.pickup_time))
     await _slow_pause(0.3, 0.7)
-    await page.select_option("#dropoffTimeWidget", label=to_12h(s.dropoff_time))
+    await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
     # Submit
     await page.locator("#findMyCarButton").click()
 
 
-async def _extract_results(page: Page, config: Config) -> list[VehicleResult]:  # pragma: no cover
+async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
     # Wait for at least one result card
     await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
     await _slow_pause(2.0, 3.0)
 
     cards = await page.locator(".car-result-card").all()
-    num_days = days_between(config.search.pickup_date, config.search.dropoff_date)
+    num_days = days_between(booking.pickup_date, booking.dropoff_date)
 
     results: list[VehicleResult] = []
     for i, card in enumerate(cards, start=1):
@@ -278,7 +276,7 @@ async def _extract_results(page: Page, config: Config) -> list[VehicleResult]:  
     return results
 
 
-async def _run_scrape(config: Config) -> list[VehicleResult]:  # pragma: no cover
+async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
@@ -290,24 +288,24 @@ async def _run_scrape(config: Config) -> list[VehicleResult]:  # pragma: no cove
         print("done")
 
         print("  Filling search form...", end=" ", flush=True)
-        await _fill_search_form(page, config)
+        await _fill_search_form(page, booking)
         print("submitted")
 
         print("  Waiting for results...", end=" ", flush=True)
-        results = await _extract_results(page, config)
+        results = await _extract_results(page, booking)
         print(f"{len(results)} vehicles found")
 
         await page.close()
         return results
 
 
-def scrape(config: Config, debug: bool = False) -> list[VehicleResult]:  # pragma: no cover
+def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]:  # pragma: no cover
     """
     Launch Chrome, scrape Costco Travel rental cars, and return results.
 
     Args:
-        config: Loaded and validated Config object.
-        debug:  If True, Chrome launches in headed (visible) mode.
+        booking: The BookingConfig to scrape.
+        debug:   If True, Chrome launches in headed (visible) mode.
 
     Returns:
         List of VehicleResult in the order they appear on the page.
@@ -321,7 +319,7 @@ def scrape(config: Config, debug: bool = False) -> list[VehicleResult]:  # pragm
         last_err: Exception | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                results = asyncio.run(_run_scrape(config))
+                results = asyncio.run(_run_scrape(booking))
                 break
             except Exception as exc:
                 last_err = exc

@@ -4,73 +4,81 @@
 <meta charset="UTF-8">
 <style>
   body { font-family: Arial, sans-serif; font-size: 14px; color: #222; }
-  table { border-collapse: collapse; width: 100%; }
+  table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
   th { background: #f0f0f0; text-align: left; padding: 6px 10px; border-bottom: 2px solid #ccc; }
   td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
   .up   { color: #c0392b; }
   .down { color: #27ae60; }
   .new  { color: #7f8c8d; font-style: italic; }
   .dash { color: #aaa; }
-  .params { margin-bottom: 16px; font-size: 13px; color: #555; }
+  .booking-section { margin-bottom: 32px; }
+  .booking-header { font-size: 16px; font-weight: bold; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+  .params { margin-bottom: 12px; font-size: 13px; color: #555; }
   .holding { margin-bottom: 14px; font-size: 14px; padding: 8px 12px; border-radius: 4px; }
   .holding-savings { background: #eafaf1; border-left: 4px solid #27ae60; }
   .holding-ahead   { background: #fef9e7; border-left: 4px solid #f39c12; }
   .savings-amt { color: #27ae60; font-weight: bold; }
   .ahead-amt   { color: #e67e22; font-weight: bold; }
+  .run-ts { font-size: 12px; color: #888; margin-bottom: 20px; }
 </style>
 </head>
 <body>
-<div class="params">
-  <strong>{{ search.pickup_location }}</strong> &nbsp;·&nbsp;
-  {{ search.pickup_date }} {{ search.pickup_time }} → {{ search.dropoff_date }} {{ search.dropoff_time }}
-  &nbsp;·&nbsp; Run: {{ run_ts }}
-</div>
-{% if holding_summary %}
-  {% if holding_summary.is_savings %}
-  <div class="holding holding-savings">
-    Your holding price: ${{ "%.2f"|format(holding_summary.holding_price) }} &nbsp;·&nbsp;
-    Best current price: ${{ "%.2f"|format(holding_summary.best_price) }} &nbsp;·&nbsp;
-    <span class="savings-amt">Savings: ${{ "%.2f"|format(holding_summary.savings) }}</span>
+<div class="run-ts">Run: {{ run_ts }}</div>
+{% for section in sections %}
+<div class="booking-section">
+  <div class="booking-header">{{ section.booking.name }}</div>
+  <div class="params">
+    <strong>{{ section.booking.pickup_location }}</strong> &nbsp;·&nbsp;
+    {{ section.booking.pickup_date }} {{ section.booking.pickup_time }} → {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}
   </div>
-  {% else %}
-  <div class="holding holding-ahead">
-    Your holding price: ${{ "%.2f"|format(holding_summary.holding_price) }} &nbsp;·&nbsp;
-    Best current price: ${{ "%.2f"|format(holding_summary.best_price) }} &nbsp;·&nbsp;
-    <span class="ahead-amt">You're ahead by ${{ "%.2f"|format(holding_summary.savings) }} — keep your booking</span>
-  </div>
+  {% if section.holding_summary %}
+    {% if section.holding_summary.is_savings %}
+    <div class="holding holding-savings">
+      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
+      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
+      <span class="savings-amt">Savings: ${{ "%.2f"|format(section.holding_summary.savings) }}</span>
+    </div>
+    {% else %}
+    <div class="holding holding-ahead">
+      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
+      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
+      <span class="ahead-amt">You're ahead by ${{ "%.2f"|format(section.holding_summary.savings) }} — keep your booking</span>
+    </div>
+    {% endif %}
   {% endif %}
-{% endif %}
-<table>
-  <thead>
-    <tr>
-      <th>Vehicle Type</th>
-      <th>Total</th>
-      <th>Per Day</th>
-      <th>Change</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for v in vehicles %}
-    <tr>
-      <td>{{ v.name }}</td>
-      <td>${{ "%.2f"|format(v.total_price) }}</td>
-      <td>${{ "%.2f"|format(v.price_per_day) }}</td>
-      <td>
-        {% if v.is_new %}
-          <span class="new">New</span>
-        {% elif v.delta is none %}
-          <span class="dash">—</span>
-        {% elif v.delta > 0 %}
-          <span class="up">▲ ${{ "%.2f"|format(v.delta) }}</span>
-        {% elif v.delta < 0 %}
-          <span class="down">▼ ${{ "%.2f"|format(v.delta | abs) }}</span>
-        {% else %}
-          <span class="dash">—</span>
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
+  <table>
+    <thead>
+      <tr>
+        <th>Vehicle Type</th>
+        <th>Total</th>
+        <th>Per Day</th>
+        <th>Change</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for v in section.vehicles %}
+      <tr>
+        <td>{{ v.name }}</td>
+        <td>${{ "%.2f"|format(v.total_price) }}</td>
+        <td>${{ "%.2f"|format(v.price_per_day) }}</td>
+        <td>
+          {% if v.is_new %}
+            <span class="new">New</span>
+          {% elif v.delta is none %}
+            <span class="dash">—</span>
+          {% elif v.delta > 0 %}
+            <span class="up">▲ ${{ "%.2f"|format(v.delta) }}</span>
+          {% elif v.delta < 0 %}
+            <span class="down">▼ ${{ "%.2f"|format(v.delta | abs) }}</span>
+          {% else %}
+            <span class="dash">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endfor %}
 </body>
 </html>
