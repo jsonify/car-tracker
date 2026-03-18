@@ -23,3 +23,8 @@ This file tracks all major tracks for the project.
 <!-- archived 2026-03-17: multi_booking_20260316 — Multiple Bookings Support -->
 
 <!-- archived 2026-03-17: imessage_booking_mgmt_20260316 — iMessage Booking Management —create and list bookings via iMessage commands -->
+
+---
+
+## [x] Track: Booking Countdown & Expiration
+*Link: [./conductor/tracks/booking_lifecycle_20260317/](./conductor/tracks/booking_lifecycle_20260317/)*

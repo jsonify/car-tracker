@@ -19,7 +19,7 @@
     - If `section.countdown_days == 0`: `Today is your booking day!`
   - Add `.countdown` CSS class with appropriate styling
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 1' (Protocol in workflow.md)
 
 ## Phase 2: Booking Expiration & Config
 <!-- execution: sequential -->
@@ -40,27 +40,27 @@
     - If any removed: write updated YAML back, git add + commit + push (pattern from `scripts/update_config.py`)
     - Return list of removed bookings (empty list = nothing expired)
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 2' (Protocol in workflow.md)
 
 ## Phase 3: Integration & Monitoring Paused Notification
 <!-- execution: sequential -->
 <!-- depends: phase1, phase2 -->
 
-- [ ] Task 1: Write tests for state flag and monitoring paused email
+- [x] Task 1: Write tests for state flag and monitoring paused email
   - `tests/test_emailer.py`: test `render_monitoring_paused()` returns non-empty HTML
   - `tests/test_main.py`: test no-bookings path sends paused notification once, skips on second run
 
-- [ ] Task 2: Add `monitoring_paused_notified` to state management
+- [x] Task 2: Add `monitoring_paused_notified` to state management
   - New helpers: `read_app_state(state_path) -> dict` and `write_app_state(state_path, state: dict)`
   - Add `monitoring_paused_notified: bool` key (defaults to `False`)
   - Add tests in `tests/test_check_imessage.py` or new `tests/test_app_state.py`
 
-- [ ] Task 3: Add `render_monitoring_paused()` in `emailer.py` + template
+- [x] Task 3: Add `render_monitoring_paused()` in `emailer.py` + template
   - New Jinja2 template `email_monitoring_paused.html`
   - Simple HTML: subject "Costco Travel — Monitoring Paused", body explains no active bookings
   - `render_monitoring_paused() -> str` function in `emailer.py`
 
-- [ ] Task 4: Update `__main__.py` — full integration
+- [x] Task 4: Update `__main__.py` — full integration
   - Compute `today = date.today()`
   - Call `remove_expired_bookings(config_path, today)` — modifies config if needed
   - Reload config after expiration (`load_config` again) to get fresh bookings list
@@ -71,4 +71,4 @@
     - If `monitoring_paused_notified` is True: reset to False, write state
     - For each booking: compute `countdown_days = days_until_booking(booking.pickup_date, today)`, pass into `BookingSection`
 
-- [ ] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)
+- [x] Task: Conductor - User Manual Verification 'Phase 3' (Protocol in workflow.md)

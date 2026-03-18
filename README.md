@@ -1,16 +1,18 @@
 # Costco Travel Car Tracker
 
-A scheduled scraping tool that monitors Costco Travel rental car prices across multiple bookings and delivers results via email. Runs on a configurable schedule and tracks price changes over time, with optional holding price comparison per booking.
+A scheduled scraping tool that monitors Costco Travel rental car prices across multiple bookings and delivers results via email. Runs on a configurable schedule and tracks price changes over time, with optional holding price comparison per booking. Bookings are automatically removed when their pick-up date passes, and monitoring pauses with a one-time notification when no bookings remain.
 
 ## How It Works
 
-1. Launches a real Chrome browser via CDP (to bypass bot detection)
-2. Iterates over all configured bookings in order, scraping each independently
-3. Saves results to a local SQLite database tagged by booking name
-4. Collapses results to the best (cheapest) price per vehicle category
-5. Compares against the previous run to show price deltas
-6. Optionally compares against a holding price for a specific vehicle type
-7. Sends a single HTML email with one section per booking
+1. Removes any bookings whose pick-up date has already passed from `config.yaml` and pushes the change to git
+2. If no bookings remain, sends a one-time "monitoring paused" notification email and exits — no further emails until a new booking is added
+3. Launches a real Chrome browser via CDP (to bypass bot detection)
+4. Iterates over all active bookings in order, scraping each independently
+5. Saves results to a local SQLite database tagged by booking name
+6. Collapses results to the best (cheapest) price per vehicle category
+7. Compares against the previous run to show price deltas
+8. Optionally compares against a holding price for a specific vehicle type
+9. Sends a single HTML email with one section per booking, including a countdown to each booking's pick-up date
 
 ## Requirements
 
@@ -106,11 +108,16 @@ uv run python -m car_tracker --debug
 Each run sends a single HTML email containing one section per booking. Each section shows:
 
 - The booking name and search parameters (location, dates)
+- A countdown line: **"X days until your booking"** (or **"Today is your booking day!"** on pick-up day)
 - A table of all vehicle categories and their best (cheapest) price
 - Price change vs. the previous run (up/down arrows with delta)
 - A holding price summary banner (if configured) showing how much you'd save vs. your current reservation
 
 On scrape failure for a booking, a failure notification email is sent for that booking individually and the run continues with remaining bookings.
+
+### Booking expiration and monitoring pause
+
+After a booking's pick-up date passes, it is automatically removed from `config.yaml` on the next run and the change is committed and pushed to git. If the last booking expires (or the bookings list is otherwise empty), a single **"Monitoring Paused"** notification email is sent — subsequent runs are silent until a new booking is added, at which point monitoring resumes automatically.
 
 ## Remote Config Updates via iMessage
 
@@ -162,11 +169,13 @@ Add:
 car-tracker/
 ├── config.yaml              # Bookings list and database path
 ├── src/car_tracker/
-│   ├── __main__.py          # Entry point: iterates bookings, sends combined email
+│   ├── __main__.py          # Entry point: expires bookings, iterates active ones, sends email
 │   ├── config.py            # Config loading and validation (AppConfig, BookingConfig)
+│   ├── lifecycle.py         # Booking expiration: removes past bookings from config.yaml + git push
+│   ├── state.py             # App state helpers: read/write data/imessage_state.json
 │   ├── scraper.py           # Playwright browser automation
 │   ├── database.py          # SQLite storage (booking_name-scoped)
-│   ├── emailer.py           # Email rendering and delivery
+│   ├── emailer.py           # Email rendering and delivery (incl. countdown + monitoring paused)
 │   └── templates/           # Jinja2 HTML email templates
 ├── scripts/
 │   ├── check_imessage.py    # Poll iMessage for remote config update commands

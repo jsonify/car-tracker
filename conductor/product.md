@@ -17,6 +17,8 @@ Personal use — single user running automated price checks.
 - Extract all available vehicles and their pricing
 - Collapse results to best (cheapest) price per vehicle category for clean comparison
 - Compare current best price against a configured holding price for a specific vehicle type
+- Countdown to pick-up date shown in each booking's email banner ("X days" or "Today is your booking day!")
+- Expired bookings automatically removed from config after pick-up date passes; monitoring pauses with a one-time notification when no bookings remain
 
 ## Delivery
 - Runs on a twice-weekly schedule

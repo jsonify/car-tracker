@@ -63,5 +63,10 @@ Reusable patterns discovered during development. Read this before starting new w
 - **osascript service lookup:** Use `of (first service whose service type is iMessage)` — NOT `of service "SMS"`. The hardcoded `"SMS"` service name returns `-10002 Invalid key form` on macOS. (from: imessage_booking_mgmt_20260316)
 - **Phone number format:** osascript requires E.164 format with country code: `+15039990921`, not `5039990921`. (from: imessage_booking_mgmt_20260316)
 
+## State Management
+- **JSON state merging:** `{**DEFAULTS, **data}` in state readers safely adds new keys to an existing state file without overwriting prior values — new consumers get their defaults, existing keys are preserved. (from: booking_lifecycle_20260317)
+- **Pre-step mutation before config load:** Call mutating operations (e.g. expiration, git ops) that modify the config file BEFORE calling `load_config`, so the loaded config reflects current reality. Wrap in `try/except FileNotFoundError: pass` — `load_config` surfaces the proper user-facing error for a truly missing file. (from: booking_lifecycle_20260317)
+- **State file path:** `data/imessage_state.json` is shared between `scripts/check_imessage.py` (manages `last_rowid`) and `__main__.py` (manages `monitoring_paused_notified`) — both use `read_app_state`/`write_app_state` from `car_tracker.state` to merge-read and full-write so neither clobbers the other's key. (from: booking_lifecycle_20260317)
+
 ---
-Last refreshed: 2026-03-16 (from: imessage_config_20260315)
+Last refreshed: 2026-03-17 (from: booking_lifecycle_20260317)

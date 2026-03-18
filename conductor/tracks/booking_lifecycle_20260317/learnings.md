@@ -30,3 +30,11 @@ Patterns, gotchas, and context discovered during implementation.
 - `lifecycle.py` follows the same pair-validation pattern as `config.py` for holding fields — both fields must be present for either to be non-None.
 - The `subprocess.run` mock target must match the module where it's imported: `@patch("car_tracker.lifecycle.subprocess.run")`, not `subprocess.run`.
 - 42 tests pass in target files; 5 pre-existing failures in `test_check_imessage.py` (missing `attributedBody` column in test DB) are unrelated.
+
+## Phase 3 Implementation (2026-03-17)
+
+- `data/imessage_state.json` already existed with `{"last_rowid": 35366}` — new `state.py` merges defaults so the existing key is preserved; `monitoring_paused_notified` is added transparently on first read.
+- `remove_expired_bookings` is called BEFORE `load_config` in `__main__.py` so the reloaded config reflects the post-expiration state. Wrap in `try/except FileNotFoundError` so missing-config tests still surface the proper `load_config` error.
+- Existing `test_main_*` tests passed without modification: fixture configs use future pickup dates (no-op expiration) and `monitoring_paused_notified` defaults to False (no extra write).
+- `BookingSection.countdown_days = 0` default means the "Today is your booking day!" branch renders in pre-existing render tests, but since no assertion targets that line, all tests continue passing.
+- 217 tests pass across the full suite; 5 pre-existing failures in `test_check_imessage.py` are unrelated.
