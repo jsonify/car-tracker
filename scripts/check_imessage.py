@@ -14,7 +14,14 @@ import re
 import sqlite3
 from pathlib import Path
 
-from scripts.update_config import apply_config_update, parse_config_update
+from scripts.update_config import (
+    apply_config_update,
+    list_bookings_reply,
+    parse_config_update,
+    send_imessage,
+)
+
+import yaml
 
 # Known TypedStream class/key names that precede the actual message text.
 _STREAMTYPED_METADATA = frozenset({
@@ -104,6 +111,16 @@ def read_pending_messages(
     return result
 
 
+def _get_phone(config_path: str | Path) -> str | None:
+    """Return the configured iMessage phone number, or None if not set."""
+    try:
+        with open(config_path) as f:
+            cfg = yaml.safe_load(f)
+        return cfg.get("imessage", {}).get("phone_number")
+    except Exception:
+        return None
+
+
 def main(
     db_path: str | Path = DEFAULT_DB,
     state_path: str | Path = DEFAULT_STATE,
@@ -117,6 +134,7 @@ def main(
         print("No new messages.")
         return
 
+    phone = _get_phone(config_path)
     max_rowid = 0
     applied = 0
 
@@ -125,14 +143,48 @@ def main(
         updates = parse_config_update(text)
         if not updates:
             continue
+
+        action = updates.get("action")
+
+        # list bookings — reply without modifying config
+        if action == "list_bookings":
+            try:
+                with open(config_path) as f:
+                    cfg = yaml.safe_load(f)
+                reply = list_bookings_reply(cfg.get("bookings", []))
+                print(f"Replying to list bookings request (message {rowid})")
+                if phone:
+                    try:
+                        send_imessage(phone, reply)
+                    except Exception as exc:
+                        print(f"iMessage reply failed: {exc}")
+                else:
+                    print(reply)
+            except Exception as exc:
+                print(f"Error handling list bookings (message {rowid}): {exc}")
+            continue
+
+        # add booking or update holding — apply config change
         try:
             changed = apply_config_update(updates, config_path)
         except ValueError as exc:
-            print(f"Invalid update in message {rowid}: {exc}")
+            err_msg = str(exc)
+            print(f"Invalid update in message {rowid}: {err_msg}")
+            if phone:
+                try:
+                    send_imessage(phone, f"Error: {err_msg}")
+                except Exception:
+                    pass
             continue
+
         if changed:
             applied += 1
             print(f"Applied update from message {rowid}: {updates}")
+            if action == "add_booking" and phone:
+                try:
+                    send_imessage(phone, f"Added booking '{updates['name']}'")
+                except Exception as exc:
+                    print(f"iMessage reply failed: {exc}")
         else:
             print(f"No-op (values unchanged) from message {rowid}: {updates}")
 
