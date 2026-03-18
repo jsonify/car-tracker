@@ -179,6 +179,13 @@ def render_success(sections: list[BookingSection], run_ts: str) -> str:
     return tmpl.render(sections=sections, run_ts=run_ts)
 
 
+def render_monitoring_paused() -> str:
+    """Render the monitoring paused notification HTML email body."""
+    env = _jinja_env()
+    tmpl = env.get_template("email_monitoring_paused.html")
+    return tmpl.render()
+
+
 def render_failure(error_msg: str, booking: BookingConfig) -> str:
     """Render the failure HTML email body."""
     env = _jinja_env()

@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import argparse
 import sys
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
+from pathlib import Path
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
-from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success, send_email
+from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
+from car_tracker.lifecycle import remove_expired_bookings
 from car_tracker.scraper import scrape
+from car_tracker.state import read_app_state, write_app_state
+
+_STATE_PATH = Path("data/imessage_state.json")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -32,13 +37,44 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
+    config_path = Path(args.config)
+    today = date.today()
 
-    # Load config
+    # Expire bookings whose pickup_date has passed
+    try:
+        remove_expired_bookings(config_path, today)
+    except FileNotFoundError:
+        pass  # config doesn't exist — load_config below will surface the proper error
+
+    # Load config (may now have fewer or zero bookings)
     try:
         config = load_config(args.config)
     except (FileNotFoundError, ValueError) as exc:
         print(f"Configuration error: {exc}", file=sys.stderr)
         return 1
+
+    # Handle empty bookings — monitoring paused
+    if not config.bookings:
+        state = read_app_state(_STATE_PATH)
+        if not state.get("monitoring_paused_notified", False):
+            try:
+                email_cfg = load_email_config()
+                html = render_monitoring_paused()
+                send_email("Costco Travel — Monitoring Paused", html, email_cfg)
+                print("Monitoring paused notification sent.")
+            except Exception as exc:
+                print(f"Failed to send monitoring paused email: {exc}", file=sys.stderr)
+            state["monitoring_paused_notified"] = True
+            write_app_state(_STATE_PATH, state)
+        else:
+            print("No active bookings. Monitoring paused (notification already sent).")
+        return 0
+
+    # Bookings exist — reset paused flag if it was previously set
+    state = read_app_state(_STATE_PATH)
+    if state.get("monitoring_paused_notified", False):
+        state["monitoring_paused_notified"] = False
+        write_app_state(_STATE_PATH, state)
 
     db_path = config.database.path
     init_db(db_path)
@@ -111,8 +147,10 @@ def main(argv: list[str] | None = None) -> int:
         holding_summary = build_holding_summary(
             type_rows, booking.holding_price, holding_vehicle_type=booking.holding_vehicle_type
         )
+        countdown_days = days_until_booking(booking.pickup_date, today)
         sections.append(BookingSection(
-            booking=booking, vehicles=type_rows, holding_summary=holding_summary
+            booking=booking, vehicles=type_rows, holding_summary=holding_summary,
+            countdown_days=countdown_days,
         ))
         print(f"Saved {len(results)} vehicles for '{booking.name}' (run_id={run_id})")
 
