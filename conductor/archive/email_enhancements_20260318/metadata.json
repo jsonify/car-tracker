@@ -1,0 +1,28 @@
+{
+  "track_id": "email_enhancements_20260318",
+  "type": "feature",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": [],
+  "estimated_hours": 1,
+  "created_at": "2026-03-18T00:00:00Z",
+  "updated_at": "2026-03-18T00:00:00Z",
+  "description": "Enhance email with holding row highlight, SVG sparkline trend column, and smart subject line with holding price comparison"
+  "beads_epic": "car-tracker-8le",
+  "beads_tasks": {
+    "phase1": "car-tracker-8le.1",
+    "phase1_task1": "car-tracker-8le.1.1",
+    "phase1_task2": "car-tracker-8le.1.2",
+    "phase2": "car-tracker-8le.2",
+    "phase2_task1": "car-tracker-8le.2.1",
+    "phase2_task2": "car-tracker-8le.2.2",
+    "phase3": "car-tracker-8le.3",
+    "phase3_task1": "car-tracker-8le.3.1",
+    "phase3_task2": "car-tracker-8le.3.2",
+    "phase3_task3": "car-tracker-8le.3.3",
+    "phase4": "car-tracker-8le.4",
+    "phase4_task1": "car-tracker-8le.4.1",
+    "phase4_task2": "car-tracker-8le.4.2",
+    "phase4_task3": "car-tracker-8le.4.3"
+  }
+}

@@ -19,6 +19,9 @@ Personal use — single user running automated price checks.
 - Compare current best price against a configured holding price for a specific vehicle type
 - Countdown to pick-up date shown in each booking's email banner ("X days" or "Today is your booking day!")
 - Expired bookings automatically removed from config after pick-up date passes; monitoring pauses with a one-time notification when no bookings remain
+- Email subject line reflects holding comparison per booking: ✅ savings or ⚠️ over holding with current price and delta
+- Inline SVG sparklines in email show price trend history per vehicle category
+- Holding vehicle type row highlighted in the email table for quick identification
 
 ## Delivery
 - Runs on a twice-weekly schedule

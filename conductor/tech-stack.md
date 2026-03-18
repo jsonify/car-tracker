@@ -32,5 +32,8 @@
   holding price commands, patches `config.yaml`, commits and pushes via subprocess
 - Triggered via macOS Shortcut, cron, or automatically by `run.sh` before each scraper run
 
+## SVG Sparklines
+- Pure Python inline SVG generation (no external library) — embedded in Jinja2 HTML email templates
+
 ## Environment
 - Runs locally on macOS

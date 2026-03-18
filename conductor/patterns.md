@@ -68,5 +68,15 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Pre-step mutation before config load:** Call mutating operations (e.g. expiration, git ops) that modify the config file BEFORE calling `load_config`, so the loaded config reflects current reality. Wrap in `try/except FileNotFoundError: pass` — `load_config` surfaces the proper user-facing error for a truly missing file. (from: booking_lifecycle_20260317)
 - **State file path:** `data/imessage_state.json` is shared between `scripts/check_imessage.py` (manages `last_rowid`) and `__main__.py` (manages `monitoring_paused_notified`) — both use `read_app_state`/`write_app_state` from `car_tracker.state` to merge-read and full-write so neither clobbers the other's key. (from: booking_lifecycle_20260317)
 
+## Email / Jinja2
+- **Expose Python functions to Jinja2 templates via `env.globals["fn_name"] = fn` in `_jinja_env()`** — avoids threading extra context through every render call; use `| safe` filter in the template when the function returns raw HTML/SVG. (from: email_enhancements_20260318)
+
+## Circular Import Avoidance
+- **Deferred import inside function body to break circular imports** — if `database.py` needs a helper from `emailer.py` (e.g. `extract_category`), import it inside the function rather than at module level to prevent circular import errors. (from: email_enhancements_20260318)
+
+## Testing
+- **Assert `<tr class="cls-name"` not `"cls-name" not in html`** — CSS class names defined in a `<style>` block appear in the full HTML string; asserting the class name is absent will always fail. Target actual element usage with the full attribute string. (from: email_enhancements_20260318)
+- **New `__main__` DB functions need their own mock in `test_main.py`** — `init_db` is mocked in unit tests so no tables exist; any new DB function called in the booking loop must also be patched (e.g. `patch("car_tracker.__main__.get_category_price_history", return_value={})`). (from: email_enhancements_20260318)
+
 ---
-Last refreshed: 2026-03-17 (from: booking_lifecycle_20260317)
+Last refreshed: 2026-03-18 (from: email_enhancements_20260318)
