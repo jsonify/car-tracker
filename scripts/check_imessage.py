@@ -96,7 +96,8 @@ def read_pending_messages(
     try:
         rows = conn.execute(
             "SELECT rowid, text, attributedBody FROM message"
-            " WHERE rowid > ? AND (text IS NOT NULL OR attributedBody IS NOT NULL)"
+            " WHERE rowid > ? AND is_from_me = 0"
+            " AND (text IS NOT NULL OR attributedBody IS NOT NULL)"
             " ORDER BY rowid ASC",
             (last_rowid,),
         ).fetchall()

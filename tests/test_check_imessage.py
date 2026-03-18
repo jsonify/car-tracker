@@ -23,7 +23,7 @@ def _make_fake_chat_db(path: Path, messages: list[tuple[int, str]]) -> None:
         "CREATE TABLE message (rowid INTEGER PRIMARY KEY, text TEXT, is_from_me INTEGER)"
     )
     conn.executemany(
-        "INSERT INTO message (rowid, text, is_from_me) VALUES (?, ?, 1)", messages
+        "INSERT INTO message (rowid, text, is_from_me) VALUES (?, ?, 0)", messages
     )
     conn.commit()
     conn.close()
