@@ -40,6 +40,22 @@ def migrate_db(db_path: str | Path) -> None:
             conn.execute("ALTER TABLE runs ADD COLUMN booking_name TEXT NOT NULL DEFAULT ''")
         except sqlite3.OperationalError:
             pass  # column already exists — idempotent
+        # v5: add brand column to vehicles; backfill from "Category (Brand)" name values
+        try:
+            conn.execute("ALTER TABLE vehicles ADD COLUMN brand TEXT")
+        except sqlite3.OperationalError:
+            pass  # column already exists — idempotent
+        rows = conn.execute(
+            "SELECT id, name FROM vehicles WHERE name LIKE '% (%)'"
+        ).fetchall()
+        for row_id, name in rows:
+            paren = name.find(" (")
+            category = name[:paren]
+            brand = name[paren + 2 : -1]
+            conn.execute(
+                "UPDATE vehicles SET name = ?, brand = ? WHERE id = ?",
+                (category, brand, row_id),
+            )
 
 
 def init_db(db_path: str | Path) -> None:

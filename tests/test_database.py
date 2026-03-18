@@ -334,3 +334,81 @@ def test_get_category_price_history_isolated_by_booking_name(db: Path) -> None:
     save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 40.0)])
     result = get_category_price_history(db, "hawaii")
     assert result == {"Economy Car": [380.0]}
+
+
+# ---------------------------------------------------------------------------
+# v5 migration: brand column + backfill
+# ---------------------------------------------------------------------------
+
+
+def _seed_dirty_vehicle(db_path: Path, run_id: int, name: str, total_price: float) -> None:
+    """Insert a vehicle row directly (bypassing save_vehicles) to simulate pre-migration data."""
+    import sqlite3 as _sqlite3
+    conn = _sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO vehicles (run_id, position, name, total_price, price_per_day) VALUES (?, ?, ?, ?, ?)",
+        (run_id, 1, name, total_price, total_price / 4),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_migrate_db_adds_brand_column(db: Path) -> None:
+    conn = sqlite3.connect(db)
+    cols = {row[1] for row in conn.execute("PRAGMA table_info(vehicles)")}
+    assert "brand" in cols
+
+
+def test_migrate_db_strips_brand_suffix_from_name(tmp_path: Path) -> None:
+    """Dirty rows seeded before migrate_db get name/brand split correctly."""
+    db_path = tmp_path / "pre_migration.db"
+    # Build a DB without the brand column by calling init_db on a fresh path,
+    # but we can't easily avoid migrate_db running. Instead, seed dirty rows
+    # AFTER init_db (simulating legacy data left in DB before v5 ran) and
+    # run migrate_db again — it must clean them because the UPDATE re-fires.
+    init_db(db_path)
+    run_id = save_run(db_path, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    _seed_dirty_vehicle(db_path, run_id, "Economy Car (Alamo)", 200.0)
+    # Re-run migration to pick up the newly inserted dirty row.
+    migrate_db(db_path)
+    conn = sqlite3.connect(db_path)
+    row = conn.execute("SELECT name, brand FROM vehicles WHERE run_id = ?", (run_id,)).fetchone()
+    assert row == ("Economy Car", "Alamo")
+
+
+def test_migrate_db_brand_migration_idempotent(tmp_path: Path) -> None:
+    """Running migrate_db twice on an already-clean DB must not raise or corrupt data."""
+    db_path = tmp_path / "idempotent_brand.db"
+    init_db(db_path)
+    run_id = save_run(db_path, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    _seed_dirty_vehicle(db_path, run_id, "Economy Car (Alamo)", 200.0)
+    migrate_db(db_path)
+    migrate_db(db_path)  # second run — must be a no-op
+    conn = sqlite3.connect(db_path)
+    row = conn.execute("SELECT name, brand FROM vehicles WHERE run_id = ?", (run_id,)).fetchone()
+    assert row == ("Economy Car", "Alamo")
+
+
+def test_migrate_db_clean_names_untouched(tmp_path: Path) -> None:
+    """Rows without a brand suffix must not be modified by the v5 migration."""
+    db_path = tmp_path / "clean_names.db"
+    init_db(db_path)
+    run_id = save_run(db_path, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    _seed_dirty_vehicle(db_path, run_id, "Economy Car", 200.0)
+    migrate_db(db_path)
+    conn = sqlite3.connect(db_path)
+    row = conn.execute("SELECT name, brand FROM vehicles WHERE run_id = ?", (run_id,)).fetchone()
+    assert row == ("Economy Car", None)
+
+
+def test_migrate_db_multiple_dirty_rows_all_cleaned(tmp_path: Path) -> None:
+    """All dirty rows in the table get cleaned in one migrate_db call."""
+    db_path = tmp_path / "multi_dirty.db"
+    init_db(db_path)
+    run_id = save_run(db_path, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    _seed_dirty_vehicle(db_path, run_id, "Economy Car (Alamo)", 200.0)
+    _seed_dirty_vehicle(db_path, run_id, "Full-Size SUV (Budget)", 350.0)
+    migrate_db(db_path)
+    conn = sqlite3.connect(db_path)
+    rows = conn.execute("SELECT name, brand FROM vehicles WHERE run_id = ? ORDER BY id", (run_id,)).fetchall()
+    assert rows == [("Economy Car", "Alamo"), ("Full-Size SUV", "Budget")]
