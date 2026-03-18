@@ -7,7 +7,7 @@ from pathlib import Path
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
-from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
+from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, days_until_booking, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
 from car_tracker.lifecycle import remove_expired_bookings
 from car_tracker.scraper import scrape
 from car_tracker.state import read_app_state, write_app_state
@@ -131,17 +131,11 @@ def main(argv: list[str] | None = None) -> int:
         ]
         save_vehicles(db_path, run_id, vehicle_records)
 
-        # Collapse prior run vehicles to best-per-type (category → best price)
-        prior_raw = get_prior_run_vehicles(
+        prior = get_prior_run_vehicles(
             db_path, run_id,
             booking.pickup_location, booking.pickup_date, booking.dropoff_date,
             booking_name=booking.name,
         )
-        prior: dict[str, float] = {}
-        for name, price in prior_raw.items():
-            cat = extract_category(name)
-            if cat not in prior or price < prior[cat]:
-                prior[cat] = price
 
         type_rows = best_per_type(build_delta(vehicle_records, prior))
         holding_summary = build_holding_summary(

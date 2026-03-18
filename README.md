@@ -14,6 +14,54 @@ A scheduled scraping tool that monitors Costco Travel rental car prices across m
 8. Optionally compares against a holding price for a specific vehicle type
 9. Sends a single HTML email with one section per booking, including a countdown to each booking's pick-up date
 
+## Adding a New Booking
+
+When you sign up for a new Costco Travel reservation and want to start tracking it:
+
+### 1. Add it to `config.yaml` (or via iMessage)
+
+**Direct edit** (takes effect immediately on the next run):
+```yaml
+bookings:
+  - name: vegas_june
+    pickup_location: "LAS"
+    pickup_date: "2026-06-10"
+    pickup_time: "12:00"
+    dropoff_date: "2026-06-15"
+    dropoff_time: "12:00"
+    holding_price: 350.00          # Optional: your current locked-in price
+    holding_vehicle_type: "Standard Car"
+```
+
+**Via iMessage** (if you're away from your machine):
+```
+add booking vegas_june LAS 2026-06-10 12:00 2026-06-15 12:00
+```
+
+### 2. Does adding a booking trigger a run?
+
+**No.** Adding a booking — whether via config edit or iMessage — does not automatically trigger a scrape. The system is schedule-driven, not event-driven.
+
+To run immediately after adding:
+
+```bash
+uv run python -m scripts.check_imessage && uv run python -m car_tracker
+```
+
+Or skip the iMessage check if you edited `config.yaml` directly:
+
+```bash
+uv run python -m car_tracker
+```
+
+### 3. What happens on the next scheduled run
+
+1. `check_imessage.py` fires first — picks up any pending iMessage commands and applies them to `config.yaml`
+2. `car_tracker` scrapes prices for all active bookings and emails results
+3. Your new booking appears as a section in the email with current prices, deltas vs. the prior run, and a countdown to pick-up
+
+After that, every scheduled run monitors your booking automatically until its pick-up date passes, at which point it's removed from `config.yaml` and monitoring pauses if no bookings remain.
+
 ## Requirements
 
 - Python 3.11+
