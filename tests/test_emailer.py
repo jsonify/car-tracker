@@ -9,7 +9,7 @@ from datetime import date
 
 from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, build_subject, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success
+from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, build_subject, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_sparkline, render_success
 
 
 # ---------------------------------------------------------------------------
@@ -468,6 +468,49 @@ def test_render_monitoring_paused_returns_html() -> None:
     html = render_monitoring_paused()
     assert "<html" in html.lower()
     assert len(html) > 100
+
+
+# ---------------------------------------------------------------------------
+# render_sparkline
+# ---------------------------------------------------------------------------
+
+
+def test_render_sparkline_returns_svg_string() -> None:
+    result = render_sparkline([100.0, 200.0, 150.0])
+    assert result.startswith("<svg")
+    assert result.endswith("</svg>")
+
+
+def test_render_sparkline_single_point_renders_circle() -> None:
+    result = render_sparkline([100.0])
+    assert "<circle" in result
+    assert "<polyline" not in result
+
+
+def test_render_sparkline_multiple_points_renders_polyline() -> None:
+    result = render_sparkline([100.0, 200.0])
+    assert "<polyline" in result
+    assert "<circle" not in result
+
+
+def test_render_sparkline_three_points_renders_polyline() -> None:
+    result = render_sparkline([100.0, 150.0, 80.0])
+    assert "<polyline" in result
+
+
+def test_render_sparkline_all_same_price_no_crash() -> None:
+    result = render_sparkline([200.0, 200.0, 200.0])
+    assert "<svg" in result
+
+
+def test_render_sparkline_circle_centered_for_single_point() -> None:
+    result = render_sparkline([100.0])
+    assert 'cx="30"' in result  # center of 60px wide viewport
+
+
+def test_render_sparkline_empty_list_returns_empty_svg() -> None:
+    result = render_sparkline([])
+    assert "<svg" in result
 
 
 def test_render_monitoring_paused_contains_paused_text() -> None:

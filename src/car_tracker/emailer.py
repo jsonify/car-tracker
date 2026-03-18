@@ -172,6 +172,46 @@ def build_holding_summary(
     }
 
 
+def render_sparkline(prices: list[float]) -> str:
+    """Render an inline SVG sparkline for a price history list.
+
+    Viewport: 60×20px.
+    - Empty list: returns an empty SVG element.
+    - 1 price: renders a centered dot (single reading indicator).
+    - 2+ prices: renders a polyline connecting normalized price points.
+    """
+    width, height = 60, 20
+    pad = 2  # vertical padding so line doesn't clip at edges
+
+    if not prices:
+        return f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg"></svg>'
+
+    if len(prices) == 1:
+        cx, cy = width // 2, height // 2
+        return (
+            f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">'
+            f'<circle cx="{cx}" cy="{cy}" r="2" fill="#555"/>'
+            f'</svg>'
+        )
+
+    min_p, max_p = min(prices), max(prices)
+    price_range = max_p - min_p if max_p != min_p else 1.0
+
+    def _x(i: int) -> float:
+        return pad + i * (width - 2 * pad) / (len(prices) - 1)
+
+    def _y(p: float) -> float:
+        # Invert: higher price → lower y (top of SVG)
+        return pad + (1 - (p - min_p) / price_range) * (height - 2 * pad)
+
+    points = " ".join(f"{_x(i):.1f},{_y(p):.1f}" for i, p in enumerate(prices))
+    return (
+        f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">'
+        f'<polyline points="{points}" fill="none" stroke="#555" stroke-width="1.5"/>'
+        f'</svg>'
+    )
+
+
 def build_subject(sections: list[BookingSection]) -> str:
     """Build a smart email subject line reflecting holding price status per booking.
 
