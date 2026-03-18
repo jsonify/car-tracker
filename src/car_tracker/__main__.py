@@ -7,7 +7,7 @@ from pathlib import Path
 
 from car_tracker.config import load_config
 from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
-from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, days_until_booking, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
+from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, build_subject, days_until_booking, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
 from car_tracker.lifecycle import remove_expired_bookings
 from car_tracker.scraper import scrape
 from car_tracker.state import read_app_state, write_app_state
@@ -155,8 +155,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         email_cfg = load_email_config()
         html = render_success(sections, run_ts)
-        booking_labels = ", ".join(s.booking.name for s in sections)
-        send_email(f"Costco Travel Rental Prices — {booking_labels}", html, email_cfg)
+        send_email(build_subject(sections), html, email_cfg)
         print(f"Email sent ({len(sections)} booking(s))")
     except Exception as email_exc:
         print(f"Failed to send email: {email_exc}", file=sys.stderr)

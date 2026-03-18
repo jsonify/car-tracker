@@ -172,6 +172,33 @@ def build_holding_summary(
     }
 
 
+def build_subject(sections: list[BookingSection]) -> str:
+    """Build a smart email subject line reflecting holding price status per booking.
+
+    Format per booking:
+    - Saving:       ✅ SAN_APRIL $393.07 (saving $24.98 vs holding)
+    - Over holding: ⚠️ SAN_APRIL $417.05 (over holding +$23.98)
+    - No holding:   SAN_APRIL
+
+    Multiple bookings are joined with ' · '.
+    """
+    parts = []
+    for section in sections:
+        name = section.booking.name.upper()
+        hs = section.holding_summary
+        if hs is None:
+            parts.append(name)
+        elif hs["is_savings"]:
+            parts.append(
+                f"✅ {name} ${hs['best_price']:.2f} (saving ${hs['savings']:.2f} vs holding)"
+            )
+        else:
+            parts.append(
+                f"⚠️ {name} ${hs['best_price']:.2f} (over holding +${hs['savings']:.2f})"
+            )
+    return " · ".join(parts)
+
+
 def render_success(sections: list[BookingSection], run_ts: str) -> str:
     """Render the success HTML email body with one section per booking."""
     env = _jinja_env()

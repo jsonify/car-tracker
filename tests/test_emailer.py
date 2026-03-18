@@ -9,7 +9,7 @@ from datetime import date
 
 from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success
+from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, build_subject, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success
 
 
 # ---------------------------------------------------------------------------
@@ -473,3 +473,94 @@ def test_render_monitoring_paused_returns_html() -> None:
 def test_render_monitoring_paused_contains_paused_text() -> None:
     html = render_monitoring_paused()
     assert "paused" in html.lower() or "no active bookings" in html.lower() or "monitoring" in html.lower()
+
+
+# ---------------------------------------------------------------------------
+# build_subject
+# ---------------------------------------------------------------------------
+
+
+def _section_with_savings(name: str, best_price: float, holding_price: float) -> BookingSection:
+    savings = round(abs(holding_price - best_price), 2)
+    return BookingSection(
+        booking=BookingConfig(
+            name=name, pickup_location="LAX",
+            pickup_date="2026-04-01", pickup_time="10:00",
+            dropoff_date="2026-04-05", dropoff_time="10:00",
+        ),
+        vehicles=[],
+        holding_summary={
+            "holding_price": holding_price,
+            "best_price": best_price,
+            "savings": savings,
+            "is_savings": best_price < holding_price,
+        },
+    )
+
+
+def _section_no_holding(name: str) -> BookingSection:
+    return BookingSection(
+        booking=BookingConfig(
+            name=name, pickup_location="LAX",
+            pickup_date="2026-04-01", pickup_time="10:00",
+            dropoff_date="2026-04-05", dropoff_time="10:00",
+        ),
+        vehicles=[],
+        holding_summary=None,
+    )
+
+
+def test_build_subject_savings_prefix() -> None:
+    section = _section_with_savings("san_april", 393.07, 417.05)
+    assert build_subject([section]).startswith("✅")
+
+
+def test_build_subject_over_holding_prefix() -> None:
+    section = _section_with_savings("san_april", 417.05, 393.07)
+    assert build_subject([section]).startswith("⚠️")
+
+
+def test_build_subject_no_holding_name_only() -> None:
+    section = _section_no_holding("san_april")
+    subject = build_subject([section])
+    assert subject == "SAN_APRIL"
+
+
+def test_build_subject_name_uppercased() -> None:
+    section = _section_with_savings("san_april", 393.07, 417.05)
+    assert "SAN_APRIL" in build_subject([section])
+
+
+def test_build_subject_savings_format() -> None:
+    section = _section_with_savings("san_april", 393.07, 417.05)
+    subject = build_subject([section])
+    assert "$393.07" in subject
+    assert "saving" in subject
+    assert "$23.98" in subject
+
+
+def test_build_subject_over_holding_format() -> None:
+    section = _section_with_savings("san_april", 417.05, 393.07)
+    subject = build_subject([section])
+    assert "$417.05" in subject
+    assert "over holding" in subject
+    assert "$23.98" in subject
+
+
+def test_build_subject_multi_booking_separator() -> None:
+    s1 = _section_with_savings("san_april", 393.07, 417.05)
+    s2 = _section_no_holding("hawaii_july")
+    subject = build_subject([s1, s2])
+    assert " · " in subject
+    assert "SAN_APRIL" in subject
+    assert "HAWAII_JULY" in subject
+
+
+def test_build_subject_multi_booking_order() -> None:
+    s1 = _section_with_savings("san_april", 393.07, 417.05)
+    s2 = _section_with_savings("hawaii_july", 312.00, 357.00)
+    subject = build_subject([s1, s2])
+    parts = subject.split(" · ")
+    assert len(parts) == 2
+    assert "SAN_APRIL" in parts[0]
+    assert "HAWAII_JULY" in parts[1]

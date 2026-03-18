@@ -129,10 +129,9 @@ def test_main_success(valid_config_file: Path, tmp_path: Path):
     assert run_kwargs["holding_price"] == 420.00
     assert run_kwargs["holding_vehicle_type"] == "Economy Car"
     assert run_kwargs["booking_name"] == "san"
-    # Verify success subject contains booking name
+    # Verify success subject uses build_subject format (uppercased name)
     subject = mock_send.call_args[0][0]
-    assert subject.startswith("Costco Travel Rental Prices —")
-    assert "san" in subject
+    assert "SAN" in subject
     # Verify vehicle records created with correct format
     records = mock_veh.call_args[0][2]
     assert len(records) == 2
@@ -167,8 +166,8 @@ def test_main_iterates_all_bookings(valid_config_file: Path, tmp_path: Path):
     assert mock_scrape.call_count == 2
     mock_send.assert_called_once()  # single combined email
     subject = mock_send.call_args[0][0]
-    assert "hawaii" in subject
-    assert "vegas" in subject
+    assert "HAWAII" in subject
+    assert "VEGAS" in subject
 
 
 def test_main_saves_booking_name_per_run(valid_config_file: Path, tmp_path: Path):
