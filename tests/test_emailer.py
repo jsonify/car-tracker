@@ -358,6 +358,69 @@ def test_render_success_no_holding_summary_omits_block() -> None:
     assert "keep your booking" not in html
 
 
+def test_render_success_contains_trend_column_header() -> None:
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
+    assert "Trend" in html
+
+
+def test_render_success_sparkline_svg_present() -> None:
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    section = BookingSection(
+        booking=_fake_booking(), vehicles=rows, holding_summary=None,
+        price_history={"Economy Car": [210.0, 195.0, 205.0]},
+    )
+    html = render_success([section], "2026-03-14T12:00:00")
+    assert "<svg" in html
+    assert "<polyline" in html
+
+
+def test_render_success_sparkline_dot_for_single_point() -> None:
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    section = BookingSection(
+        booking=_fake_booking(), vehicles=rows, holding_summary=None,
+        price_history={"Economy Car": [210.0]},
+    )
+    html = render_success([section], "2026-03-14T12:00:00")
+    assert "<circle" in html
+
+
+def test_render_success_holding_row_savings_class() -> None:
+    booking = BookingConfig(
+        name="test", pickup_location="LAX",
+        pickup_date="2026-04-01", pickup_time="10:00",
+        dropoff_date="2026-04-05", dropoff_time="10:00",
+        holding_price=500.00, holding_vehicle_type="Economy Car",
+    )
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    summary = build_holding_summary(rows, 500.00, holding_vehicle_type="Economy Car")
+    section = BookingSection(booking=booking, vehicles=rows, holding_summary=summary)
+    html = render_success([section], "2026-03-14T12:00:00")
+    assert "holding-row-savings" in html
+
+
+def test_render_success_holding_row_ahead_class() -> None:
+    booking = BookingConfig(
+        name="test", pickup_location="LAX",
+        pickup_date="2026-04-01", pickup_time="10:00",
+        dropoff_date="2026-04-05", dropoff_time="10:00",
+        holding_price=100.00, holding_vehicle_type="Economy Car",
+    )
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    summary = build_holding_summary(rows, 100.00, holding_vehicle_type="Economy Car")
+    section = BookingSection(booking=booking, vehicles=rows, holding_summary=summary)
+    html = render_success([section], "2026-03-14T12:00:00")
+    assert "holding-row-ahead" in html
+
+
+def test_render_success_no_holding_no_row_highlight() -> None:
+    rows = best_per_type(build_delta(_vehicles(), {}))
+    html = render_success([_fake_section(rows)], "2026-03-14T12:00:00")
+    # CSS class names appear in <style>; assert no <tr> element carries them
+    assert '<tr class="holding-row-savings"' not in html
+    assert '<tr class="holding-row-ahead"' not in html
+
+
 def test_render_success_two_bookings_both_appear() -> None:
     """Combined email renders a section for each booking."""
     booking1 = BookingConfig(

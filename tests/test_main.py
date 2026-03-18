@@ -106,6 +106,7 @@ def test_main_success(valid_config_file: Path, tmp_path: Path):
          patch("car_tracker.__main__.save_run", return_value=1) as mock_run, \
          patch("car_tracker.__main__.save_vehicles") as mock_veh, \
          patch("car_tracker.__main__.get_prior_run_vehicles", return_value={}) as mock_prior, \
+         patch("car_tracker.__main__.get_category_price_history", return_value={}), \
          patch("car_tracker.__main__.scrape") as mock_scrape, \
          patch("car_tracker.__main__.load_email_config"), \
          patch("car_tracker.__main__.send_email") as mock_send:
@@ -150,6 +151,7 @@ def test_main_iterates_all_bookings(valid_config_file: Path, tmp_path: Path):
          patch("car_tracker.__main__.save_run", return_value=1), \
          patch("car_tracker.__main__.save_vehicles"), \
          patch("car_tracker.__main__.get_prior_run_vehicles", return_value={}), \
+         patch("car_tracker.__main__.get_category_price_history", return_value={}), \
          patch("car_tracker.__main__.scrape") as mock_scrape, \
          patch("car_tracker.__main__.load_email_config"), \
          patch("car_tracker.__main__.send_email") as mock_send:
@@ -180,6 +182,7 @@ def test_main_saves_booking_name_per_run(valid_config_file: Path, tmp_path: Path
          patch("car_tracker.__main__.save_run", return_value=1) as mock_run, \
          patch("car_tracker.__main__.save_vehicles"), \
          patch("car_tracker.__main__.get_prior_run_vehicles", return_value={}), \
+         patch("car_tracker.__main__.get_category_price_history", return_value={}), \
          patch("car_tracker.__main__.scrape") as mock_scrape, \
          patch("car_tracker.__main__.load_email_config"), \
          patch("car_tracker.__main__.send_email"):
@@ -295,6 +298,7 @@ def test_main_resets_paused_flag_when_bookings_exist(valid_config_file: Path, tm
          patch("car_tracker.__main__.save_run", return_value=1), \
          patch("car_tracker.__main__.save_vehicles"), \
          patch("car_tracker.__main__.get_prior_run_vehicles", return_value={}), \
+         patch("car_tracker.__main__.get_category_price_history", return_value={}), \
          patch("car_tracker.__main__.scrape") as mock_scrape, \
          patch("car_tracker.__main__.load_email_config"), \
          patch("car_tracker.__main__.send_email"):

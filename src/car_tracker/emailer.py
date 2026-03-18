@@ -25,6 +25,7 @@ class BookingSection:
     vehicles: list[dict]
     holding_summary: dict | None
     countdown_days: int = 0
+    price_history: dict[str, list[float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -142,7 +143,9 @@ def build_delta(
 
 
 def _jinja_env() -> Environment:
-    return Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
+    env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
+    env.globals["render_sparkline"] = render_sparkline
+    return env
 
 
 def build_holding_summary(

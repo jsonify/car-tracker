@@ -21,6 +21,9 @@
   .savings-amt { color: #27ae60; font-weight: bold; }
   .ahead-amt   { color: #e67e22; font-weight: bold; }
   .run-ts { font-size: 12px; color: #888; margin-bottom: 20px; }
+  .holding-row-savings { background: #eafaf1; }
+  .holding-row-ahead   { background: #fef9e7; }
+  .trend td { vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -55,11 +58,22 @@
         <th>Total</th>
         <th>Per Day</th>
         <th>Change</th>
+        <th>Trend</th>
       </tr>
     </thead>
     <tbody>
       {% for v in section.vehicles %}
-      <tr>
+      {% set is_holding_row = section.booking.holding_vehicle_type == v.name %}
+      {% if is_holding_row and section.holding_summary %}
+        {% if section.holding_summary.is_savings %}
+          {% set row_class = "holding-row-savings" %}
+        {% else %}
+          {% set row_class = "holding-row-ahead" %}
+        {% endif %}
+      {% else %}
+        {% set row_class = "" %}
+      {% endif %}
+      <tr class="{{ row_class }}">
         <td>{{ v.name }}</td>
         <td>${{ "%.2f"|format(v.total_price) }}</td>
         <td>${{ "%.2f"|format(v.price_per_day) }}</td>
@@ -76,6 +90,7 @@
             <span class="dash">—</span>
           {% endif %}
         </td>
+        <td>{{ render_sparkline(section.price_history.get(v.name, [])) | safe }}</td>
       </tr>
       {% endfor %}
     </tbody>
