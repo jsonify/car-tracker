@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import os
 import smtplib
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from pathlib import Path
@@ -23,6 +24,7 @@ class BookingSection:
     booking: BookingConfig
     vehicles: list[dict]
     holding_summary: dict | None
+    countdown_days: int = 0
 
 
 @dataclass
@@ -32,6 +34,19 @@ class EmailConfig:
     sender_email: str
     sender_password: str
     recipient_email: str
+
+
+def days_until_booking(pickup_date: str, today: date) -> int:
+    """Return the number of days until the pickup date.
+
+    Args:
+        pickup_date: ISO-format date string (YYYY-MM-DD).
+        today:       The reference date (typically ``date.today()``).
+
+    Returns:
+        Positive int if pickup is in the future, 0 if today, negative if past.
+    """
+    return (date.fromisoformat(pickup_date) - today).days
 
 
 def load_email_config() -> EmailConfig:

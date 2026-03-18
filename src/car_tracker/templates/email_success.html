@@ -13,6 +13,7 @@
   .dash { color: #aaa; }
   .booking-section { margin-bottom: 32px; }
   .booking-header { font-size: 16px; font-weight: bold; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
+  .countdown { font-size: 13px; color: #555; margin-top: 4px; margin-bottom: 6px; }
   .params { margin-bottom: 12px; font-size: 13px; color: #555; }
   .holding { margin-bottom: 14px; font-size: 14px; padding: 8px 12px; border-radius: 4px; }
   .holding-savings { background: #eafaf1; border-left: 4px solid #27ae60; }
@@ -27,6 +28,7 @@
 {% for section in sections %}
 <div class="booking-section">
   <div class="booking-header">{{ section.booking.name }}</div>
+  {% if section.countdown_days > 0 %}<div class="countdown">{{ section.countdown_days }} days until your booking</div>{% elif section.countdown_days == 0 %}<div class="countdown">Today is your booking day!</div>{% endif %}
   <div class="params">
     <strong>{{ section.booking.pickup_location }}</strong> &nbsp;·&nbsp;
     {{ section.booking.pickup_date }} {{ section.booking.pickup_time }} → {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}

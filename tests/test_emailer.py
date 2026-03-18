@@ -5,9 +5,36 @@ from unittest.mock import patch
 
 import pytest
 
+from datetime import date
+
 from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, extract_category, load_email_config, render_failure, render_success
+from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_success
+
+
+# ---------------------------------------------------------------------------
+# days_until_booking
+# ---------------------------------------------------------------------------
+
+
+def test_days_until_booking_future_date() -> None:
+    today = date(2026, 3, 17)
+    assert days_until_booking("2026-04-01", today) == 15
+
+
+def test_days_until_booking_today_returns_zero() -> None:
+    today = date(2026, 3, 17)
+    assert days_until_booking("2026-03-17", today) == 0
+
+
+def test_days_until_booking_past_date_returns_negative() -> None:
+    today = date(2026, 3, 17)
+    assert days_until_booking("2026-03-10", today) == -7
+
+
+def test_days_until_booking_one_day_away() -> None:
+    today = date(2026, 3, 17)
+    assert days_until_booking("2026-03-18", today) == 1
 
 
 # ---------------------------------------------------------------------------
