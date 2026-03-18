@@ -123,7 +123,8 @@ def main(argv: list[str] | None = None) -> int:
         vehicle_records = [
             VehicleRecord(
                 position=v.position,
-                name=f"{v.name} ({v.brand})",
+                name=v.name,
+                brand=v.brand,
                 total_price=v.total_price,
                 price_per_day=v.price_per_day,
             )

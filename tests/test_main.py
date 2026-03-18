@@ -133,10 +133,12 @@ def test_main_success(valid_config_file: Path, tmp_path: Path):
     # Verify success subject uses build_subject format (uppercased name)
     subject = mock_send.call_args[0][0]
     assert "SAN" in subject
-    # Verify vehicle records created with correct format
+    # Verify vehicle records created with clean name and separate brand
     records = mock_veh.call_args[0][2]
     assert len(records) == 2
-    assert records[0].name == "Economy Car (Alamo)"
+    assert records[0].name == "Economy Car"
+    assert records[0].brand == "Alamo"
+    assert " (" not in records[0].name
     assert records[0].total_price == 396.63
 
 

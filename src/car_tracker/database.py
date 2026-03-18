@@ -12,6 +12,7 @@ class VehicleRecord:
     name: str
     total_price: float
     price_per_day: float
+    brand: str | None = None
 
 
 def _connect(db_path: str | Path) -> sqlite3.Connection:
@@ -199,14 +200,14 @@ def save_vehicles(
 ) -> None:
     """Bulk insert vehicle records for a given run."""
     rows = [
-        (run_id, v.position, v.name, v.total_price, v.price_per_day)
+        (run_id, v.position, v.name, v.total_price, v.price_per_day, v.brand)
         for v in vehicles
     ]
     with _connect(db_path) as conn:
         conn.executemany(
             """
-            INSERT INTO vehicles (run_id, position, name, total_price, price_per_day)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO vehicles (run_id, position, name, total_price, price_per_day, brand)
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             rows,
         )
