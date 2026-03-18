@@ -25,5 +25,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [ ] Track: iMessage Booking Management — create and list bookings via iMessage commands
+## [x] Track: iMessage Booking Management — create and list bookings via iMessage commands
 *Link: [./conductor/tracks/imessage_booking_mgmt_20260316/](./conductor/tracks/imessage_booking_mgmt_20260316/)*

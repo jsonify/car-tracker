@@ -56,6 +56,8 @@ Reusable patterns discovered during development. Read this before starting new w
 ## iMessage Integration
 - **`attributedBody` TypedStream fallback:** macOS Ventura+ stores message content in `attributedBody` when `text` is NULL. Extract with `re.findall(rb"[ -~]+", blob)`, skip known TypedStream metadata tokens (see `_STREAMTYPED_METADATA` frozenset in `scripts/check_imessage.py`). (from: imessage_config_20260315)
 - **iMessage state tracking:** Use `data/imessage_state.json` with a `last_rowid` key to track the highest processed `rowid` from `chat.db`. Safe to reset to `0` to reprocess all messages. Connect read-only: `sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)`. (from: imessage_config_20260315)
+- **osascript service lookup:** Use `of (first service whose service type is iMessage)` — NOT `of service "SMS"`. The hardcoded `"SMS"` service name returns `-10002 Invalid key form` on macOS. (from: imessage_booking_mgmt_20260316)
+- **Phone number format:** osascript requires E.164 format with country code: `+15039990921`, not `5039990921`. (from: imessage_booking_mgmt_20260316)
 
 ---
 Last refreshed: 2026-03-16 (from: imessage_config_20260315)
