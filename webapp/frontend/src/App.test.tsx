@@ -8,8 +8,14 @@ describe('App', () => {
     expect(screen.getByTestId('app-root')).toBeInTheDocument()
   })
 
-  it('shows loading message', () => {
+  it('renders sidebar with Car Tracker title', () => {
     render(<App />)
-    expect(screen.getByText(/loading/i)).toBeInTheDocument()
+    expect(screen.getByText('Car Tracker')).toBeInTheDocument()
+  })
+
+  it('renders sidebar navigation links', () => {
+    render(<App />)
+    expect(screen.getByRole('navigation')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /bookings/i })).toBeInTheDocument()
   })
 })
