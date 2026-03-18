@@ -85,5 +85,22 @@ Reusable patterns discovered during development. Read this before starting new w
 ## Testing
 - **Seed pre-migration data with raw SQL:** When testing DB migrations, bypass `save_vehicles` and insert dirty rows directly via `sqlite3.connect` to simulate data written before the migration existed. (from: db_brand_cleanup_20260318)
 
+## FastAPI / Backend Patterns
+- **Shared uv venv for webapp backend:** Add `fastapi` and `uvicorn[standard]` to root `pyproject.toml`; the backend imports `car_tracker.*` directly without packaging complexity. (from: react_webapp_20260318)
+- **FastAPI TestClient requires `httpx`:** Add `httpx>=0.28` to dev dependencies — it's a peer dep for `starlette.testclient`. (from: react_webapp_20260318)
+- **Test isolation via env var:** Use a `CAR_TRACKER_CONFIG` env var (read via `os.getenv()`) in routers that read config files; set it in tests via `monkeypatch.setenv` to point to a tmp fixture file. (from: react_webapp_20260318)
+- **SQL sort column whitelist:** Build a `_SORT_COLS: frozenset` and check before interpolating into f-string SQL — prevents injection without parameterized column names. (from: react_webapp_20260318)
+
+## React / Frontend Patterns
+- **Tailwind v4 setup:** `@import "tailwindcss"` in `index.css` + `@tailwindcss/vite` plugin in `vite.config.ts` — no `tailwind.config.js` needed. (from: react_webapp_20260318)
+- **Loading/error/empty guard pattern:** All pages follow `if (loading) return <LoadingSpinner>; if (error) return <div className="text-red-400">; if (!data || data.length === 0) return <EmptyState>` before rendering content. (from: react_webapp_20260318)
+- **NavLink active state:** Use `className={({ isActive }) => isActive ? 'active-class' : 'base-class'}` for sidebar nav links. (from: react_webapp_20260318)
+- **Test selector specificity:** When multiple elements share the same text (nav link + page h1), use `getByRole('link', { name: /text/i })` or `getByRole('heading')` instead of `getByText`. (from: react_webapp_20260318)
+- **Pure utility modules for testability:** Extract all business logic into side-effect-free utility modules (countdown, volatility, chartData, tableUtils) — they're easily unit-tested without DOM setup. (from: react_webapp_20260318)
+- **Recharts responsive chart:** Wrap `<LineChart>` in `<ResponsiveContainer width="100%" height={300}>`. Use `<ReferenceLine y={holdingPrice}>` for horizontal threshold lines. (from: react_webapp_20260318)
+
+## Startup Scripts
+- **Parallel process startup with cleanup:** Use `trap cleanup EXIT INT TERM` + background `&` + store PIDs + `wait` for clean concurrent server launch in shell scripts. Run backend from project root via `uv run uvicorn webapp.backend.main:app`. (from: react_webapp_20260318)
+
 ---
-Last refreshed: 2026-03-18 (from: db_brand_cleanup_20260318)
+Last refreshed: 2026-03-18 (from: react_webapp_20260318)

@@ -35,5 +35,16 @@
 ## SVG Sparklines
 - Pure Python inline SVG generation (no external library) — embedded in Jinja2 HTML email templates
 
+## Web Dashboard (webapp/)
+- FastAPI (Python async REST API framework)
+- uvicorn (ASGI server)
+- React 19 + Vite + TypeScript (frontend)
+- Tailwind CSS v4 (dark-mode styling)
+- React Router v6 (client-side routing)
+- Recharts (interactive price charts)
+- axios (typed HTTP client)
+- Vitest + React Testing Library (frontend unit tests)
+- httpx (FastAPI TestClient peer dep)
+
 ## Environment
 - Runs locally on macOS
