@@ -90,7 +90,7 @@
             <span class="dash">—</span>
           {% endif %}
         </td>
-        <td>{{ render_sparkline(section.price_history.get(v.name, [])) | safe }}</td>
+        <td>{{ render_sparkline(section.price_history.get(extract_category(v.name), [])) | safe }}</td>
       </tr>
       {% endfor %}
     </tbody>

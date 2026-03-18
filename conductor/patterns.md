@@ -3,7 +3,7 @@
 Reusable patterns discovered during development. Read this before starting new work.
 
 ## Code Conventions
-- Vehicle name stored as "Category (Brand)" e.g. "Economy Car (Alamo)"
+- Vehicle name stored as clean category only e.g. "Economy Car"; brand stored separately in `vehicles.brand` column (formerly "Category (Brand)" — fixed in db_brand_cleanup_20260318)
 - Date format in config/DB: YYYY-MM-DD; form needs MM/DD/YYYY conversion
 - Time format in config: HH:MM (24h); form needs 12h ("10:00 AM") conversion
 
@@ -78,5 +78,12 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Assert `<tr class="cls-name"` not `"cls-name" not in html`** — CSS class names defined in a `<style>` block appear in the full HTML string; asserting the class name is absent will always fail. Target actual element usage with the full attribute string. (from: email_enhancements_20260318)
 - **New `__main__` DB functions need their own mock in `test_main.py`** — `init_db` is mocked in unit tests so no tables exist; any new DB function called in the booking loop must also be patched (e.g. `patch("car_tracker.__main__.get_category_price_history", return_value={})`). (from: email_enhancements_20260318)
 
+## Database Migrations (continued)
+- **Migration UPDATE idempotency via pattern match:** UPDATE rows WHERE name LIKE '% (%)' is self-limiting — once cleaned, rows no longer match the pattern on re-run. No explicit "already migrated" flag needed. (from: db_brand_cleanup_20260318)
+- **`extract_category` in `get_category_price_history` is a safety net:** Now that names are stored clean, the call is redundant for new data but protects against any legacy rows that survived migration. Keep it. (from: db_brand_cleanup_20260318)
+
+## Testing
+- **Seed pre-migration data with raw SQL:** When testing DB migrations, bypass `save_vehicles` and insert dirty rows directly via `sqlite3.connect` to simulate data written before the migration existed. (from: db_brand_cleanup_20260318)
+
 ---
-Last refreshed: 2026-03-18 (from: email_enhancements_20260318)
+Last refreshed: 2026-03-18 (from: db_brand_cleanup_20260318)

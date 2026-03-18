@@ -145,6 +145,7 @@ def build_delta(
 def _jinja_env() -> Environment:
     env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
     env.globals["render_sparkline"] = render_sparkline
+    env.globals["extract_category"] = extract_category
     return env
 
 

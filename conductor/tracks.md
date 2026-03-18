@@ -27,3 +27,5 @@ This file tracks all major tracks for the project.
 <!-- archived 2026-03-17: booking_lifecycle_20260317 — Booking Countdown & Expiration —countdown in email banner, auto-expiration of past bookings, monitoring paused notification -->
 
 <!-- archived 2026-03-18: email_enhancements_20260318 — Email Enhancements — Holding row highlight, SVG sparkline trend column, smart subject line with ✅/⚠️ emoji and holding price delta -->
+
+<!-- archived 2026-03-18: db_brand_cleanup_20260318 — Strip Brand Names from Vehicle Type in Database -->

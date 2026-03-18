@@ -1,0 +1,22 @@
+{
+  "track_id": "db_brand_cleanup_20260318",
+  "type": "chore",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": [],
+  "estimated_hours": 1,
+  "created_at": "2026-03-18T00:00:00Z",
+  "updated_at": "2026-03-18T00:00:00Z",
+  "description": "Audit and clean brand/company names from vehicle type values in the database; add brand column; guard write layer",
+  "beads_epic": "car-tracker-3e9",
+  "beads_tasks": {
+    "phase1": "car-tracker-3e9.1",
+    "phase1_task1": "car-tracker-3e9.1.1",
+    "phase1_task2": "car-tracker-3e9.1.2",
+    "phase2": "car-tracker-3e9.2",
+    "phase2_task1": "car-tracker-3e9.2.1",
+    "phase2_task2": "car-tracker-3e9.2.2",
+    "phase2_task3": "car-tracker-3e9.2.3",
+    "phase2_task4": "car-tracker-3e9.2.4"
+  }
+}
