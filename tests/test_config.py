@@ -303,11 +303,13 @@ def test_missing_bookings_section(tmp_path: Path) -> None:
         load_config(cfg)
 
 
-def test_empty_bookings_list_raises(tmp_path: Path) -> None:
+def test_empty_bookings_list_is_allowed(tmp_path: Path) -> None:
+    """load_config accepts bookings: [] — expiration logic may leave the list empty."""
     cfg = tmp_path / "config.yaml"
     cfg.write_text("bookings: []\ndatabase:\n  path: data/results.db\n")
-    with pytest.raises(ConfigError, match="non-empty"):
-        load_config(cfg)
+    result = load_config(cfg)
+    assert isinstance(result, AppConfig)
+    assert result.bookings == []
 
 
 def test_duplicate_booking_names_raises(tmp_path: Path) -> None:
