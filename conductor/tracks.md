@@ -20,10 +20,6 @@ This file tracks all major tracks for the project.
 
 <!-- archived 2026-03-16: imessage_config_20260315 — Remote Config Updates via iMessage -->
 
-## [x] Track: Multiple Bookings Support
-*Link: [./conductor/tracks/multi_booking_20260316/](./conductor/tracks/multi_booking_20260316/)*
+<!-- archived 2026-03-17: multi_booking_20260316 — Multiple Bookings Support -->
 
----
-
-## [x] Track: iMessage Booking Management — create and list bookings via iMessage commands
-*Link: [./conductor/tracks/imessage_booking_mgmt_20260316/](./conductor/tracks/imessage_booking_mgmt_20260316/)*
+<!-- archived 2026-03-17: imessage_booking_mgmt_20260316 — iMessage Booking Management —create and list bookings via iMessage commands -->

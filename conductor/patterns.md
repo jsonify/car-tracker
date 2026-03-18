@@ -53,6 +53,10 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Use `git pull --rebase` in cron wrappers**, not `--ff-only`. `--ff-only` aborts when local commits exist; `--rebase` handles diverged branches cleanly. (from: remote_config_20260315)
 - **Push all local commits before the first cron run** when the cron job does a `git pull`. Otherwise local/remote diverge and the pull fails. In steady-state the scraper never commits, so future pulls always fast-forward. (from: remote_config_20260315)
 
+## iMessage / Config Command Dispatch
+- `parse_config_update` returns a dict; `apply_config_update` dispatches on its keys — the standard pattern for adding new iMessage command types: parse returns `{"action": "..."}`, apply branches on `action`. (from: imessage_booking_mgmt_20260316, archived 2026-03-17)
+- Booking identifier resolved by name or 1-based index via `_resolve_booking()` — pass the second token from the command, try name match first, then `int(token) - 1` index. Raise `ValueError` with a clear message on no match. (from: multi_booking_20260316, archived 2026-03-17)
+
 ## iMessage Integration
 - **`attributedBody` TypedStream fallback:** macOS Ventura+ stores message content in `attributedBody` when `text` is NULL. Extract with `re.findall(rb"[ -~]+", blob)`, skip known TypedStream metadata tokens (see `_STREAMTYPED_METADATA` frozenset in `scripts/check_imessage.py`). (from: imessage_config_20260315)
 - **iMessage state tracking:** Use `data/imessage_state.json` with a `last_rowid` key to track the highest processed `rowid` from `chat.db`. Safe to reset to `0` to reprocess all messages. Connect read-only: `sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)`. (from: imessage_config_20260315)
