@@ -130,8 +130,10 @@ def load_config(path: str | Path = "config.yaml") -> AppConfig:
         raise ConfigError("Config missing required 'database' section.")
 
     bookings_raw = raw["bookings"]
-    if not isinstance(bookings_raw, list) or len(bookings_raw) == 0:
-        raise ConfigError("'bookings' must be a non-empty list.")
+    if bookings_raw is None:
+        bookings_raw = []
+    if not isinstance(bookings_raw, list):
+        raise ConfigError("'bookings' must be a list.")
 
     bookings: list[BookingConfig] = []
     for i, b in enumerate(bookings_raw):
