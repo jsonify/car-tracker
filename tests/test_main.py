@@ -237,3 +237,78 @@ def test_main_scrape_failure_email_error_still_returns_1(valid_config_file: Path
         result = main(["--config", str(valid_config_file)])
 
     assert result == 1
+
+
+# ---------------------------------------------------------------------------
+# Empty bookings — monitoring paused notification
+# ---------------------------------------------------------------------------
+
+
+def test_main_no_bookings_sends_paused_notification_once(valid_config_file: Path):
+    with patch("car_tracker.__main__.remove_expired_bookings"), \
+         patch("car_tracker.__main__.load_config") as mock_load, \
+         patch("car_tracker.__main__.read_app_state", return_value={"monitoring_paused_notified": False}), \
+         patch("car_tracker.__main__.write_app_state") as mock_write, \
+         patch("car_tracker.__main__.load_email_config"), \
+         patch("car_tracker.__main__.send_email") as mock_send:
+
+        mock_config = MagicMock()
+        mock_config.bookings = []
+        mock_load.return_value = mock_config
+
+        result = main(["--config", str(valid_config_file)])
+
+    assert result == 0
+    mock_send.assert_called_once()
+    subject = mock_send.call_args[0][0]
+    assert "Monitoring Paused" in subject
+    mock_write.assert_called_once()
+    written_state = mock_write.call_args[0][1]
+    assert written_state["monitoring_paused_notified"] is True
+
+
+def test_main_no_bookings_skips_email_if_already_notified(valid_config_file: Path):
+    with patch("car_tracker.__main__.remove_expired_bookings"), \
+         patch("car_tracker.__main__.load_config") as mock_load, \
+         patch("car_tracker.__main__.read_app_state", return_value={"monitoring_paused_notified": True}), \
+         patch("car_tracker.__main__.write_app_state"), \
+         patch("car_tracker.__main__.send_email") as mock_send:
+
+        mock_config = MagicMock()
+        mock_config.bookings = []
+        mock_load.return_value = mock_config
+
+        result = main(["--config", str(valid_config_file)])
+
+    assert result == 0
+    mock_send.assert_not_called()
+
+
+def test_main_resets_paused_flag_when_bookings_exist(valid_config_file: Path, tmp_path: Path):
+    db_path = str(tmp_path / "results.db")
+    booking = _make_booking_mock()
+
+    with patch("car_tracker.__main__.remove_expired_bookings"), \
+         patch("car_tracker.__main__.load_config") as mock_load, \
+         patch("car_tracker.__main__.read_app_state", return_value={"monitoring_paused_notified": True}), \
+         patch("car_tracker.__main__.write_app_state") as mock_write, \
+         patch("car_tracker.__main__.init_db"), \
+         patch("car_tracker.__main__.save_run", return_value=1), \
+         patch("car_tracker.__main__.save_vehicles"), \
+         patch("car_tracker.__main__.get_prior_run_vehicles", return_value={}), \
+         patch("car_tracker.__main__.scrape") as mock_scrape, \
+         patch("car_tracker.__main__.load_email_config"), \
+         patch("car_tracker.__main__.send_email"):
+
+        mock_config = MagicMock()
+        mock_config.database.path = db_path
+        mock_config.bookings = [booking]
+        mock_load.return_value = mock_config
+        mock_scrape.return_value = _FAKE_RESULTS
+
+        result = main(["--config", str(valid_config_file)])
+
+    assert result == 0
+    mock_write.assert_called_once()
+    written_state = mock_write.call_args[0][1]
+    assert written_state["monitoring_paused_notified"] is False

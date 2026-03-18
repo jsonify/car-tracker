@@ -9,7 +9,7 @@ from datetime import date
 
 from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
-from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_success
+from car_tracker.emailer import BookingSection, EmailConfig, best_per_type, best_per_type_prices, build_delta, build_holding_summary, days_until_booking, extract_category, load_email_config, render_failure, render_monitoring_paused, render_success
 
 
 # ---------------------------------------------------------------------------
@@ -457,3 +457,19 @@ def test_load_email_config_missing_field_raises() -> None:
     with patch("car_tracker.emailer.load_dotenv"), patch.dict(os.environ, clean_env, clear=True):
         with pytest.raises(ValueError, match="SENDER_PASSWORD"):
             load_email_config()
+
+
+# ---------------------------------------------------------------------------
+# render_monitoring_paused
+# ---------------------------------------------------------------------------
+
+
+def test_render_monitoring_paused_returns_html() -> None:
+    html = render_monitoring_paused()
+    assert "<html" in html.lower()
+    assert len(html) > 100
+
+
+def test_render_monitoring_paused_contains_paused_text() -> None:
+    html = render_monitoring_paused()
+    assert "paused" in html.lower() or "no active bookings" in html.lower() or "monitoring" in html.lower()
