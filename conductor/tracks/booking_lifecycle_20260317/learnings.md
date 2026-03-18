@@ -22,3 +22,11 @@ Patterns, gotchas, and context discovered during implementation.
 - The `dataclass` import was already present; only added `field` (for completeness) and `date` from `datetime` to the emailer imports.
 - Jinja2 template `{% elif section.countdown_days == 0 %}` correctly handles the today case since `countdown_days` defaults to 0 — all existing render tests still pass because the "Today is your booking day!" line is rendered but not asserted against in pre-existing tests.
 - All 46 tests pass; 4 new `days_until_booking` tests cover future, today, past, and one-day-away cases.
+
+## Phase 2 Implementation (2026-03-17)
+
+- The `_write_config` test helper must use `yaml.dump()` to produce valid YAML; using `textwrap.dedent` + `textwrap.indent` for YAML blocks produces indentation that yaml parser rejects with `expected '<document start>'`.
+- `load_config` empty-bookings relaxation: changing `if not isinstance(bookings_raw, list) or len(bookings_raw) == 0:` to `if bookings_raw is None: bookings_raw = []; if not isinstance(bookings_raw, list):` handles both `bookings:` (YAML null → None) and `bookings: []` (empty list).
+- `lifecycle.py` follows the same pair-validation pattern as `config.py` for holding fields — both fields must be present for either to be non-None.
+- The `subprocess.run` mock target must match the module where it's imported: `@patch("car_tracker.lifecycle.subprocess.run")`, not `subprocess.run`.
+- 42 tests pass in target files; 5 pre-existing failures in `test_check_imessage.py` (missing `attributedBody` column in test DB) are unrelated.

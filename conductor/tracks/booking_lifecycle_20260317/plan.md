@@ -25,15 +25,15 @@
 <!-- execution: sequential -->
 <!-- depends: -->
 
-- [ ] Task 1: Write tests for `remove_expired_bookings` and empty-bookings config
+- [x] Task 1: Write tests for `remove_expired_bookings` and empty-bookings config
   - `tests/test_lifecycle.py`: test `remove_expired_bookings` filters expired, writes YAML, skips git (mocked), returns removed list
   - `tests/test_config.py`: test `load_config` accepts `bookings: []` without raising
 
-- [ ] Task 2: Relax `load_config` to allow empty bookings list
+- [x] Task 2: Relax `load_config` to allow empty bookings list
   - `src/car_tracker/config.py`: remove `len(bookings_raw) == 0` guard from validation
   - `AppConfig`: handle empty `bookings` gracefully (no `.search` property access when empty)
 
-- [ ] Task 3: Implement `remove_expired_bookings` in `src/car_tracker/lifecycle.py`
+- [x] Task 3: Implement `remove_expired_bookings` in `src/car_tracker/lifecycle.py`
   - New module `lifecycle.py`
   - `remove_expired_bookings(config_path: Path, today: date) -> list[BookingConfig]`
     - Load raw YAML, filter out bookings where `today > pickup_date`
