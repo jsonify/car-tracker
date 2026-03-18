@@ -321,6 +321,6 @@ def send_imessage(phone: str, message: str) -> None:  # pragma: no cover
     """Send an iMessage to ``phone`` via osascript."""
     script = (
         f'tell application "Messages" to send "{message}" '
-        f'to buddy "{phone}" of service "SMS"'
+        f'to buddy "{phone}" of (first service whose service type is iMessage)'
     )
     subprocess.run(["osascript", "-e", script], check=True)
