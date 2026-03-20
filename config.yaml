@@ -5,16 +5,16 @@ bookings:
   pickup_time: '10:00'
   dropoff_date: '2026-04-08'
   dropoff_time: '10:00'
-  holding_price: 375.00
+  holding_price: 380.0
   holding_vehicle_type: Standard Car
 - name: hawaii_july
-  pickup_location: "HNL"
-  pickup_date: "2026-07-22"
-  pickup_time: "09:00"
-  dropoff_date: "2026-07-26"
-  dropoff_time: "22:00"
+  pickup_location: HNL
+  pickup_date: '2026-07-22'
+  pickup_time: 09:00
+  dropoff_date: '2026-07-26'
+  dropoff_time: '22:00'
   holding_price: 388.51
-  holding_vehicle_type: "Fullsize Car"
+  holding_vehicle_type: Fullsize Car
 database:
   path: data/results.db
 imessage:
