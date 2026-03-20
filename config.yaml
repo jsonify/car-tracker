@@ -5,7 +5,7 @@ bookings:
   pickup_time: '10:00'
   dropoff_date: '2026-04-08'
   dropoff_time: '10:00'
-  holding_price: 375.0
+  holding_price: 380.0
   holding_vehicle_type: Standard Car
 - name: hawaii_july
   pickup_location: HNL
