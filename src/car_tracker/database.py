@@ -144,7 +144,7 @@ def get_prior_run_vehicles(
             return {}
         prior_run_id = row[0]
         rows = conn.execute(
-            "SELECT name, total_price FROM vehicles WHERE run_id = ?",
+            "SELECT name, MIN(total_price) FROM vehicles WHERE run_id = ? GROUP BY name",
             (prior_run_id,),
         ).fetchall()
         return {name: total_price for name, total_price in rows}

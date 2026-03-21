@@ -277,6 +277,21 @@ def test_get_prior_run_vehicles_different_booking_names_isolated(db: Path) -> No
     assert result == {}
 
 
+def test_get_prior_run_vehicles_returns_min_price_per_category(db: Path) -> None:
+    """When multiple brands share a category, return the cheapest price (best-vs-best)."""
+    run1 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    save_vehicles(db, run1, [
+        VehicleRecord(1, "Economy Car", 200.0, 50.0, brand="Alamo"),
+        VehicleRecord(2, "Economy Car", 230.0, 57.5, brand="Avis"),  # more expensive, inserted last
+        VehicleRecord(3, "Compact Car", 280.0, 70.0, brand="Avis"),
+        VehicleRecord(4, "Compact Car", 260.0, 65.0, brand="Enterprise"),  # cheapest, inserted last
+    ])
+    run2 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    result = get_prior_run_vehicles(db, run2, "LAX", "2026-04-01", "2026-04-05")
+    # Must return cheapest per category regardless of insertion order
+    assert result == {"Economy Car": 200.0, "Compact Car": 260.0}
+
+
 # ---------------------------------------------------------------------------
 # get_category_price_history
 # ---------------------------------------------------------------------------
