@@ -12,6 +12,8 @@ import argparse
 import json
 import re
 import sqlite3
+import subprocess
+import sys
 from pathlib import Path
 
 from scripts.update_config import (
@@ -146,6 +148,53 @@ def main(
             continue
 
         action = updates.get("action")
+
+        # run car tracker on demand
+        if action == "run_ct":
+            print(f"Running car_tracker on demand (message {rowid})")
+            if phone:
+                try:
+                    send_imessage(phone, "Running car tracker...")
+                except Exception as exc:
+                    print(f"iMessage reply failed: {exc}")
+            try:
+                repo_dir = Path(config_path).parent
+                result = subprocess.run(
+                    [sys.executable, "-m", "car_tracker", "--config", str(config_path)],
+                    cwd=repo_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=300,
+                )
+                if result.returncode == 0:
+                    print("car_tracker completed successfully")
+                    if phone:
+                        try:
+                            send_imessage(phone, "Car tracker run complete.")
+                        except Exception as exc:
+                            print(f"iMessage reply failed: {exc}")
+                else:
+                    print(f"car_tracker failed: {result.stderr}")
+                    if phone:
+                        try:
+                            send_imessage(phone, f"Car tracker failed: {result.stderr[:200]}")
+                        except Exception as exc:
+                            print(f"iMessage reply failed: {exc}")
+            except subprocess.TimeoutExpired:
+                print("car_tracker timed out after 5 minutes")
+                if phone:
+                    try:
+                        send_imessage(phone, "Car tracker timed out after 5 minutes.")
+                    except Exception:
+                        pass
+            except Exception as exc:
+                print(f"Error running car_tracker: {exc}")
+                if phone:
+                    try:
+                        send_imessage(phone, f"Error running car tracker: {exc}")
+                    except Exception:
+                        pass
+            continue
 
         # list bookings — reply without modifying config
         if action == "list_bookings":
