@@ -171,23 +171,72 @@ After a booking's pick-up date passes, it is automatically removed from `config.
 
 You can update a booking's holding price and vehicle type by sending an iMessage from your configured phone number. The `check_imessage` script is designed to run before each scrape (e.g. via cron).
 
-### Command format
+All commands are case-insensitive. Any matching command updates `config.yaml`, commits, and pushes automatically.
+
+> **Ambiguity rule:** Natural-language commands that don't specify a booking name are only applied when there is exactly one booking configured. With multiple bookings and no name, the command is ignored to avoid updating the wrong entry.
+
+### Update holding price and type together (structured)
 
 ```
-update holding <booking_name_or_index> <price> <vehicle_type>
+update holding <name_or_index> <price> <vehicle_type>
 ```
 
-**By booking name:**
 ```
 update holding hawaii_may 380.00 Economy Car
+update holding las_june 175.00 Compact Car
+update holding 1 420.00 Standard Car
+update holding 2 199.00 Economy Car
 ```
 
-**By 1-based index:**
+### Update holding price only
+
 ```
-update holding 2 175.00 Compact Car
+update holding price to 350 for san_april
+set san_april holding price to 350
+update holding price to $299.99 for las_june
 ```
 
-The command updates `config.yaml`, commits, and pushes the change automatically.
+Single-booking shorthand (only works when exactly one booking is configured):
+```
+update holding price to 375
+set holding price to $400.50
+```
+
+### Update holding vehicle type only
+
+```
+update holding type to Standard Car for san_april
+update holding vehicle type to Economy Car for las_june
+set san_april holding type to Standard Car
+set las_june holding vehicle type to SUV
+```
+
+Single-booking shorthand:
+```
+set holding type to SUV
+update holding type to Economy Car
+```
+
+### Add a new booking
+
+```
+add booking <name> <location> <pickup_date> <pickup_time> <dropoff_date> <dropoff_time>
+```
+
+```
+add booking hawaii_may HNL 2026-05-01 10:00 2026-05-08 10:00
+add booking portland PDX 2026-07-01 09:00 2026-07-05 09:00
+```
+
+Dates must be `YYYY-MM-DD` and times `HH:MM` (24hr). The new booking has no holding price until you set one.
+
+### List bookings
+
+```
+list bookings
+```
+
+Returns a numbered list of active bookings with their current holding price and vehicle type.
 
 ### Running the iMessage checker
 
