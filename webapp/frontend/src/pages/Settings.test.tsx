@@ -66,4 +66,20 @@ describe('Settings', () => {
       expect(mockUpdateAlertSettings).toHaveBeenCalled()
     })
   })
+
+  it('shows success message after save', async () => {
+    render(<Settings />)
+    await waitFor(() => screen.getByText('Save Settings'))
+    fireEvent.click(screen.getByText('Save Settings'))
+    await waitFor(() => {
+      expect(screen.getByText('Settings saved successfully.')).toBeInTheDocument()
+    })
+  })
+
+  it('renders target price input with value', async () => {
+    render(<Settings />)
+    await waitFor(() => {
+      expect(screen.getByDisplayValue('250')).toBeInTheDocument()
+    })
+  })
 })

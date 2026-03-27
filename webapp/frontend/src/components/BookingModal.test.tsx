@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import BookingModal from './BookingModal'
 
@@ -79,5 +79,45 @@ describe('BookingModal', () => {
     render(<BookingModal booking={booking} onClose={() => {}} onSave={noop} />)
     const nameInput = screen.getByDisplayValue('Existing')
     expect(nameInput).toBeDisabled()
+  })
+
+  it('calls onSave on submit', async () => {
+    const saveFn = vi.fn(() => Promise.resolve())
+    const closeFn = vi.fn()
+    render(<BookingModal onClose={closeFn} onSave={saveFn} />)
+    fireEvent.submit(screen.getByText('Save').closest('form')!)
+    await waitFor(() => {
+      expect(saveFn).toHaveBeenCalled()
+    })
+  })
+
+  it('shows error on save failure', async () => {
+    const saveFn = vi.fn(() => Promise.reject(new Error('fail')))
+    render(<BookingModal onClose={() => {}} onSave={saveFn} />)
+    fireEvent.submit(screen.getByText('Save').closest('form')!)
+    await waitFor(() => {
+      expect(screen.getByText('Failed to save booking.')).toBeInTheDocument()
+    })
+  })
+
+  it('updates target price via placeholder', () => {
+    render(<BookingModal onClose={() => {}} onSave={noop} />)
+    const targetInput = screen.getByPlaceholderText('250.00')
+    fireEvent.change(targetInput, { target: { value: '200' } })
+    expect(screen.getByDisplayValue('200')).toBeInTheDocument()
+  })
+
+  it('updates city field', () => {
+    render(<BookingModal onClose={() => {}} onSave={noop} />)
+    const cityInput = screen.getByPlaceholderText('San Francisco')
+    fireEvent.change(cityInput, { target: { value: 'Los Angeles' } })
+    expect(screen.getByDisplayValue('Los Angeles')).toBeInTheDocument()
+  })
+
+  it('updates vehicle type field', () => {
+    render(<BookingModal onClose={() => {}} onSave={noop} />)
+    const input = screen.getByPlaceholderText('Economy Car')
+    fireEvent.change(input, { target: { value: 'SUV' } })
+    expect(screen.getByDisplayValue('SUV')).toBeInTheDocument()
   })
 })

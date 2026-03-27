@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Bookings from './Bookings'
 
@@ -63,5 +63,40 @@ describe('Bookings', () => {
     await waitFor(() => {
       expect(screen.getByText('Add Booking')).toBeInTheDocument()
     })
+  })
+
+  it('shows Active badge for future bookings', async () => {
+    render(<Bookings />)
+    await waitFor(() => {
+      expect(screen.getByText('Active')).toBeInTheDocument()
+    })
+  })
+
+  it('shows holding price formatted', async () => {
+    render(<Bookings />)
+    await waitFor(() => {
+      expect(screen.getByText('$300.00')).toBeInTheDocument()
+    })
+  })
+
+  it('opens modal when Add Booking clicked', async () => {
+    render(<Bookings />)
+    await waitFor(() => screen.getByText('Add Booking'))
+    fireEvent.click(screen.getByText('Add Booking'))
+    expect(screen.getByText('Add Booking', { selector: 'h2' })).toBeInTheDocument()
+  })
+
+  it('opens edit modal when Edit clicked', async () => {
+    render(<Bookings />)
+    await waitFor(() => screen.getByText('Edit'))
+    fireEvent.click(screen.getByText('Edit'))
+    expect(screen.getByText('Edit Booking')).toBeInTheDocument()
+  })
+
+  it('shows confirm on first delete click', async () => {
+    render(<Bookings />)
+    await waitFor(() => screen.getByText('Delete'))
+    fireEvent.click(screen.getByText('Delete'))
+    expect(screen.getByText('Confirm?')).toBeInTheDocument()
   })
 })

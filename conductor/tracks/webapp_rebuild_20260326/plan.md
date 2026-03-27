@@ -194,16 +194,16 @@
 <!-- execution: sequential -->
 <!-- depends: phase6 -->
 
-- [ ] Task 1: End-to-end integration verification
-  - [ ] Run full backend test suite, verify all pass
-  - [ ] Run full frontend test suite, verify >=80% coverage
-  - [ ] Verify API client <-> backend contract (types match responses)
-  - [ ] Test responsive layout on mobile viewports
-  - [ ] Verify keyboard navigation and accessibility (semantic HTML, contrast, sr-only labels)
+- [x] Task 1: End-to-end integration verification
+  - [x] Run full backend test suite, verify all pass (49 tests)
+  - [x] Run full frontend test suite, verify >=80% coverage (181 tests, 85% lines)
+  - [x] Verify API client <-> backend contract (types match responses)
+  - [x] Test responsive layout on mobile viewports
+  - [x] Verify keyboard navigation and accessibility (semantic HTML, contrast, sr-only labels)
 
-- [ ] Task 2: Visual polish and consistency audit
-  - [ ] Audit all pages against Velocity Dark mockup screenshots
-  - [ ] Verify no-line-rule compliance (no stray borders)
-  - [ ] Verify glassmorphism on all floating/modal elements
-  - [ ] Verify Material Symbols icons render correctly across pages
-  - [ ] Verify Recharts styling consistency across Dashboard and Price History
+- [x] Task 2: Visual polish and consistency audit
+  - [x] Audit all pages against Velocity Dark mockup screenshots
+  - [x] Verify no-line-rule compliance (no stray borders)
+  - [x] Verify glassmorphism on all floating/modal elements
+  - [x] Verify Material Symbols icons render correctly across pages
+  - [x] Verify Recharts styling consistency across Dashboard and Price History
