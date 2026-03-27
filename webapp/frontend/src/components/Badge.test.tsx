@@ -8,21 +8,39 @@ describe('Badge', () => {
     expect(screen.getByText('Active')).toBeInTheDocument()
   })
 
-  it('applies green variant classes', () => {
-    render(<Badge label="Saving" variant="green" />)
-    const el = screen.getByTestId('badge')
-    expect(el.className).toContain('green')
-  })
-
-  it('applies red variant classes', () => {
-    render(<Badge label="Over" variant="red" />)
-    const el = screen.getByTestId('badge')
-    expect(el.className).toContain('red')
-  })
-
-  it('defaults to gray variant', () => {
+  it('defaults to muted variant', () => {
     render(<Badge label="Default" />)
     const el = screen.getByTestId('badge')
-    expect(el.className).toContain('gray')
+    expect(el.className).toContain('bg-surface-container-highest')
+  })
+
+  it('applies primary variant', () => {
+    render(<Badge label="Hot" variant="primary" />)
+    const el = screen.getByTestId('badge')
+    expect(el.className).toContain('text-primary')
+  })
+
+  it('applies secondary variant', () => {
+    render(<Badge label="Info" variant="secondary" />)
+    const el = screen.getByTestId('badge')
+    expect(el.className).toContain('text-secondary')
+  })
+
+  it('applies tertiary variant', () => {
+    render(<Badge label="Cool" variant="tertiary" />)
+    const el = screen.getByTestId('badge')
+    expect(el.className).toContain('text-tertiary')
+  })
+
+  it('applies error variant', () => {
+    render(<Badge label="Over" variant="error" />)
+    const el = screen.getByTestId('badge')
+    expect(el.className).toContain('text-error')
+  })
+
+  it('renders with rounded-full pill style', () => {
+    render(<Badge label="Pill" />)
+    const el = screen.getByTestId('badge')
+    expect(el).toHaveClass('rounded-full')
   })
 })

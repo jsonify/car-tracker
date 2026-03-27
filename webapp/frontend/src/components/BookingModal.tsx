@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import type { Booking } from '../api/client'
+import Icon from './Icon'
+import ToggleSwitch from './ToggleSwitch'
 
 interface BookingModalProps {
   booking?: Booking | null
@@ -16,6 +18,10 @@ const emptyBooking: Booking = {
   dropoff_time: '',
   holding_price: null,
   holding_vehicle_type: null,
+  city: null,
+  alert_enabled: false,
+  target_price: null,
+  email_notifications: true,
 }
 
 export default function BookingModal({ booking, onClose, onSave }: BookingModalProps) {
@@ -24,10 +30,10 @@ export default function BookingModal({ booking, onClose, onSave }: BookingModalP
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    setForm(booking ? { ...booking } : emptyBooking)
+    setForm(booking ? { ...emptyBooking, ...booking } : emptyBooking)
   }, [booking])
 
-  const set = (key: keyof Booking, value: string | number | null) => {
+  const set = (key: keyof Booking, value: string | number | boolean | null) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
@@ -47,10 +53,15 @@ export default function BookingModal({ booking, onClose, onSave }: BookingModalP
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-      <div className="bg-gray-900 border border-gray-800 rounded-xl w-full max-w-lg p-6 shadow-2xl">
-        <h2 className="text-lg font-semibold text-gray-100 mb-4">
-          {booking ? 'Edit Booking' : 'Add Booking'}
-        </h2>
+      <div className="glass rounded-xl w-full max-w-lg p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-lg font-headline font-black text-on-surface">
+            {booking ? 'Edit Booking' : 'Add Booking'}
+          </h2>
+          <button onClick={onClose} className="text-on-surface-variant hover:text-on-surface transition-colors">
+            <Icon name="close" size={20} />
+          </button>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Field label="Name">
             <input
@@ -61,14 +72,24 @@ export default function BookingModal({ booking, onClose, onSave }: BookingModalP
               disabled={!!booking}
             />
           </Field>
-          <Field label="Pickup Location">
-            <input
-              className="input-field"
-              value={form.pickup_location}
-              onChange={(e) => set('pickup_location', e.target.value)}
-              required
-            />
-          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Pickup Location">
+              <input
+                className="input-field"
+                value={form.pickup_location}
+                onChange={(e) => set('pickup_location', e.target.value)}
+                required
+              />
+            </Field>
+            <Field label="City (optional)">
+              <input
+                className="input-field"
+                value={form.city ?? ''}
+                onChange={(e) => set('city', e.target.value || null)}
+                placeholder="San Francisco"
+              />
+            </Field>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <Field label="Pickup Date (YYYY-MM-DD)">
               <input
@@ -131,7 +152,33 @@ export default function BookingModal({ booking, onClose, onSave }: BookingModalP
               />
             </Field>
           </div>
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Target Price (optional)">
+              <input
+                className="input-field"
+                type="number"
+                step="0.01"
+                value={form.target_price ?? ''}
+                onChange={(e) =>
+                  set('target_price', e.target.value ? parseFloat(e.target.value) : null)
+                }
+                placeholder="250.00"
+              />
+            </Field>
+            <div className="flex flex-col justify-end pb-1 gap-3">
+              <ToggleSwitch
+                checked={form.alert_enabled}
+                onChange={(v) => set('alert_enabled', v)}
+                label="Alerts"
+              />
+              <ToggleSwitch
+                checked={form.email_notifications}
+                onChange={(v) => set('email_notifications', v)}
+                label="Email"
+              />
+            </div>
+          </div>
+          {error && <p className="text-sm text-error">{error}</p>}
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={onClose} className="btn-secondary">
               Cancel
@@ -149,7 +196,7 @@ export default function BookingModal({ booking, onClose, onSave }: BookingModalP
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs text-gray-400 mb-1">{label}</label>
+      <label className="block text-xs font-body text-on-surface-variant mb-1">{label}</label>
       {children}
     </div>
   )
