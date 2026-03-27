@@ -20,10 +20,12 @@ def _make_fake_chat_db(path: Path, messages: list[tuple[int, str]]) -> None:
     """Create a minimal chat.db with a message table."""
     conn = sqlite3.connect(path)
     conn.execute(
-        "CREATE TABLE message (rowid INTEGER PRIMARY KEY, text TEXT, is_from_me INTEGER)"
+        "CREATE TABLE message "
+        "(rowid INTEGER PRIMARY KEY, text TEXT, attributedBody BLOB, is_from_me INTEGER)"
     )
     conn.executemany(
-        "INSERT INTO message (rowid, text, is_from_me) VALUES (?, ?, 0)", messages
+        "INSERT INTO message (rowid, text, attributedBody, is_from_me) VALUES (?, ?, NULL, 0)",
+        messages,
     )
     conn.commit()
     conn.close()

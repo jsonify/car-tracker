@@ -181,9 +181,16 @@ def main(
         if changed:
             applied += 1
             print(f"Applied update from message {rowid}: {updates}")
-            if action == "add_booking" and phone:
+            if phone:
                 try:
-                    send_imessage(phone, f"Added booking '{updates['name']}'")
+                    with open(config_path) as f:
+                        cfg = yaml.safe_load(f)
+                    listing = list_bookings_reply(cfg.get("bookings", []))
+                    if action == "add_booking":
+                        reply = f"Added booking '{updates['name']}'.\n\n{listing}"
+                    else:
+                        reply = f"Updated.\n\n{listing}"
+                    send_imessage(phone, reply)
                 except Exception as exc:
                     print(f"iMessage reply failed: {exc}")
         else:
