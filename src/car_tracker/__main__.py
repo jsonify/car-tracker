@@ -6,7 +6,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 from car_tracker.config import load_config
-from car_tracker.database import VehicleRecord, get_category_price_history, get_prior_run_vehicles, init_db, save_run, save_vehicles
+from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, save_run, save_vehicles
 from car_tracker.emailer import BookingSection, best_per_type, build_delta, build_holding_summary, build_subject, days_until_booking, load_email_config, render_failure, render_monitoring_paused, render_success, send_email
 from car_tracker.lifecycle import remove_expired_bookings
 from car_tracker.scraper import scrape
@@ -143,10 +143,9 @@ def main(argv: list[str] | None = None) -> int:
             type_rows, booking.holding_price, holding_vehicle_type=booking.holding_vehicle_type
         )
         countdown_days = days_until_booking(booking.pickup_date, today)
-        price_history = get_category_price_history(db_path, booking.name)
         sections.append(BookingSection(
             booking=booking, vehicles=type_rows, holding_summary=holding_summary,
-            countdown_days=countdown_days, price_history=price_history,
+            countdown_days=countdown_days,
         ))
         print(f"Saved {len(results)} vehicles for '{booking.name}' (run_id={run_id})")
 

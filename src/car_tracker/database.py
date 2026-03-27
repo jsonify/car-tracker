@@ -144,53 +144,11 @@ def get_prior_run_vehicles(
             return {}
         prior_run_id = row[0]
         rows = conn.execute(
-            "SELECT name, total_price FROM vehicles WHERE run_id = ?",
+            "SELECT name, MIN(total_price) FROM vehicles WHERE run_id = ? GROUP BY name",
             (prior_run_id,),
         ).fetchall()
         return {name: total_price for name, total_price in rows}
 
-
-def get_category_price_history(
-    db_path: str | Path,
-    booking_name: str,
-) -> dict[str, list[float]]:
-    """Return price history per vehicle category for a booking, ordered oldest to newest.
-
-    For each run, the best (lowest) price per category is kept. Categories are
-    derived by stripping the brand suffix from vehicle names via extract_category.
-
-    Returns an empty dict if no runs exist for the given booking_name.
-    """
-    from car_tracker.emailer import extract_category  # avoid circular at module level
-
-    with _connect(db_path) as conn:
-        rows = conn.execute(
-            """
-            SELECT r.id, v.name, v.total_price
-            FROM vehicles v
-            JOIN runs r ON v.run_id = r.id
-            WHERE r.booking_name = ?
-            ORDER BY r.id ASC
-            """,
-            (booking_name,),
-        ).fetchall()
-
-    # Group by run, then collapse to best price per category
-    runs: dict[int, dict[str, float]] = {}
-    for run_id, name, price in rows:
-        cat = extract_category(name)
-        if run_id not in runs:
-            runs[run_id] = {}
-        if cat not in runs[run_id] or price < runs[run_id][cat]:
-            runs[run_id][cat] = price
-
-    # Collect ordered price lists per category
-    history: dict[str, list[float]] = {}
-    for run_prices in runs.values():
-        for cat, price in run_prices.items():
-            history.setdefault(cat, []).append(price)
-
-    return history
 
 
 def save_vehicles(

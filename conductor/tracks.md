@@ -32,3 +32,8 @@ This file tracks all major tracks for the project.
 
 
 <!-- archived 2026-03-18: react_webapp_20260318 — React Web App — Car Tracker Dashboard -->
+
+---
+
+## [~] Track: Fix Change Delta Bug & Remove Trend Column
+*Link: [./conductor/tracks/fix_change_trend_20260321/](./conductor/tracks/fix_change_trend_20260321/)*

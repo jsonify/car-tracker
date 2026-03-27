@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import smtplib
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -25,7 +25,6 @@ class BookingSection:
     vehicles: list[dict]
     holding_summary: dict | None
     countdown_days: int = 0
-    price_history: dict[str, list[float]] = field(default_factory=dict)
 
 
 @dataclass
@@ -143,10 +142,7 @@ def build_delta(
 
 
 def _jinja_env() -> Environment:
-    env = Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
-    env.globals["render_sparkline"] = render_sparkline
-    env.globals["extract_category"] = extract_category
-    return env
+    return Environment(loader=FileSystemLoader(str(_TEMPLATES_DIR)), autoescape=True)
 
 
 def build_holding_summary(
@@ -175,45 +171,6 @@ def build_holding_summary(
         "is_savings": best_price < holding_price,
     }
 
-
-def render_sparkline(prices: list[float]) -> str:
-    """Render an inline SVG sparkline for a price history list.
-
-    Viewport: 60×20px.
-    - Empty list: returns an empty SVG element.
-    - 1 price: renders a centered dot (single reading indicator).
-    - 2+ prices: renders a polyline connecting normalized price points.
-    """
-    width, height = 60, 20
-    pad = 2  # vertical padding so line doesn't clip at edges
-
-    if not prices:
-        return f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg"></svg>'
-
-    if len(prices) == 1:
-        cx, cy = width // 2, height // 2
-        return (
-            f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">'
-            f'<circle cx="{cx}" cy="{cy}" r="2" fill="#555"/>'
-            f'</svg>'
-        )
-
-    min_p, max_p = min(prices), max(prices)
-    price_range = max_p - min_p if max_p != min_p else 1.0
-
-    def _x(i: int) -> float:
-        return pad + i * (width - 2 * pad) / (len(prices) - 1)
-
-    def _y(p: float) -> float:
-        # Invert: higher price → lower y (top of SVG)
-        return pad + (1 - (p - min_p) / price_range) * (height - 2 * pad)
-
-    points = " ".join(f"{_x(i):.1f},{_y(p):.1f}" for i, p in enumerate(prices))
-    return (
-        f'<svg width="{width}" height="{height}" xmlns="http://www.w3.org/2000/svg">'
-        f'<polyline points="{points}" fill="none" stroke="#555" stroke-width="1.5"/>'
-        f'</svg>'
-    )
 
 
 def build_subject(sections: list[BookingSection]) -> str:

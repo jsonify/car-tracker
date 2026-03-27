@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from car_tracker.database import VehicleRecord, get_category_price_history, get_prior_run_vehicles, init_db, migrate_db, save_run, save_vehicles
+from car_tracker.database import VehicleRecord, get_prior_run_vehicles, init_db, migrate_db, save_run, save_vehicles
 
 
 @pytest.fixture
@@ -277,63 +277,20 @@ def test_get_prior_run_vehicles_different_booking_names_isolated(db: Path) -> No
     assert result == {}
 
 
-# ---------------------------------------------------------------------------
-# get_category_price_history
-# ---------------------------------------------------------------------------
-
-
-def test_get_category_price_history_no_runs(db: Path) -> None:
-    result = get_category_price_history(db, "hawaii")
-    assert result == {}
-
-
-def test_get_category_price_history_single_run(db: Path) -> None:
-    run1 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 380.0, 54.29)])
-    result = get_category_price_history(db, "hawaii")
-    assert result == {"Economy Car": [380.0]}
-
-
-def test_get_category_price_history_multiple_runs_ordered_oldest_first(db: Path) -> None:
-    run1 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 380.0, 54.29)])
-    run2 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 360.0, 51.43)])
-    run3 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run3, [VehicleRecord(1, "Economy Car (Alamo)", 395.0, 56.43)])
-    result = get_category_price_history(db, "hawaii")
-    assert result == {"Economy Car": [380.0, 360.0, 395.0]}
-
-
-def test_get_category_price_history_multiple_categories(db: Path) -> None:
-    run1 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
+def test_get_prior_run_vehicles_returns_min_price_per_category(db: Path) -> None:
+    """When multiple brands share a category, return the cheapest price (best-vs-best)."""
+    run1 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
     save_vehicles(db, run1, [
-        VehicleRecord(1, "Economy Car (Alamo)", 380.0, 54.29),
-        VehicleRecord(2, "Standard Car (Avis)", 420.0, 60.0),
+        VehicleRecord(1, "Economy Car", 200.0, 50.0, brand="Alamo"),
+        VehicleRecord(2, "Economy Car", 230.0, 57.5, brand="Avis"),  # more expensive, inserted last
+        VehicleRecord(3, "Compact Car", 280.0, 70.0, brand="Avis"),
+        VehicleRecord(4, "Compact Car", 260.0, 65.0, brand="Enterprise"),  # cheapest, inserted last
     ])
-    result = get_category_price_history(db, "hawaii")
-    assert result == {"Economy Car": [380.0], "Standard Car": [420.0]}
+    run2 = save_run(db, "LAX", "2026-04-01", "10:00", "2026-04-05", "10:00")
+    result = get_prior_run_vehicles(db, run2, "LAX", "2026-04-01", "2026-04-05")
+    # Must return cheapest per category regardless of insertion order
+    assert result == {"Economy Car": 200.0, "Compact Car": 260.0}
 
-
-def test_get_category_price_history_best_price_per_run(db: Path) -> None:
-    """When multiple brands exist for a category in a run, only the cheapest is kept."""
-    run1 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run1, [
-        VehicleRecord(1, "Economy Car (Alamo)", 380.0, 54.29),
-        VehicleRecord(2, "Economy Car (Avis)", 410.0, 58.57),
-    ])
-    result = get_category_price_history(db, "hawaii")
-    assert result == {"Economy Car": [380.0]}
-
-
-def test_get_category_price_history_isolated_by_booking_name(db: Path) -> None:
-    """Data from other booking names must not appear."""
-    run1 = save_run(db, "HNL", "2026-05-01", "10:00", "2026-05-08", "10:00", booking_name="hawaii")
-    save_vehicles(db, run1, [VehicleRecord(1, "Economy Car (Alamo)", 380.0, 54.29)])
-    run2 = save_run(db, "LAS", "2026-06-01", "12:00", "2026-06-06", "12:00", booking_name="vegas")
-    save_vehicles(db, run2, [VehicleRecord(1, "Economy Car (Alamo)", 200.0, 40.0)])
-    result = get_category_price_history(db, "hawaii")
-    assert result == {"Economy Car": [380.0]}
 
 
 # ---------------------------------------------------------------------------
