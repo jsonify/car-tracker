@@ -65,3 +65,4 @@ test-results/
 # Config with sensitive data (keep config.example.yaml in repo instead)
 # config.yaml  ← intentionally not ignored; no secrets in it
 data/price_histories_rows.csv
+data/imessage_state.json
