@@ -6,7 +6,7 @@ bookings:
   dropoff_date: '2026-04-08'
   dropoff_time: '10:00'
   holding_price: 367.89
-  holding_vehicle_type: Economy Car
+  holding_vehicle_type: Standard Car
 - name: hawaii_july
   pickup_location: HNL
   pickup_date: '2026-07-22'
