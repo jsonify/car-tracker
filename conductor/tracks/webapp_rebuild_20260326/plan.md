@@ -135,60 +135,60 @@
 <!-- execution: parallel -->
 <!-- depends: phase3, phase4 -->
 
-- [ ] Task 1: Rebuild Dashboard page
+- [x] Task 1: Rebuild Dashboard page
   <!-- files: webapp/frontend/src/pages/Dashboard.tsx, webapp/frontend/src/pages/Dashboard.test.tsx -->
-  - [ ] Write tests for dashboard sections (stats grid, alerts, upcoming bookings, recent runs)
-  - [ ] Implement hero stats grid (bento layout, 8/4 split) with Recharts aggregate trend
-  - [ ] Active price alerts section with dismiss/action CTAs
-  - [ ] Upcoming bookings rail with countdown badges and urgency colors
-  - [ ] Recent runs summary list
+  - [x] Write tests for dashboard sections (stats grid, alerts, upcoming bookings, recent runs)
+  - [x] Implement hero stats grid (bento layout, 8/4 split) with Recharts aggregate trend
+  - [x] Active price alerts section with dismiss/action CTAs
+  - [x] Upcoming bookings rail with countdown badges and urgency colors
+  - [x] Recent runs summary list
 
-- [ ] Task 2: Rebuild Booking Manager page
+- [x] Task 2: Rebuild Booking Manager page
   <!-- files: webapp/frontend/src/pages/Bookings.tsx, webapp/frontend/src/pages/Bookings.test.tsx -->
-  - [ ] Write tests for reservations table, CRUD, expanded detail, sidebar cards
-  - [ ] Implement reservations table (city, booked vs. current price, savings delta)
-  - [ ] Color-coded savings (tertiary) vs. hikes (error)
-  - [ ] Expandable detail view per booking with city context and mini price chart
-  - [ ] Sidebar contextual cards: savings summary, volatility breakdown
-  - [ ] Status filter tabs: Active, Expired
+  - [x] Write tests for reservations table, CRUD, expanded detail, sidebar cards
+  - [x] Implement reservations table (city, booked vs. current price, savings delta)
+  - [x] Color-coded savings (tertiary) vs. hikes (error)
+  - [x] Expandable detail view per booking with city context and mini price chart
+  - [x] Sidebar contextual cards: savings summary, volatility breakdown
+  - [x] Status filter tabs: Active, Expired
 
-- [ ] Task 3: Restyle Price History page
+- [x] Task 3: Restyle Price History page
   <!-- files: webapp/frontend/src/pages/PriceHistory.tsx, webapp/frontend/src/pages/PriceHistory.test.tsx -->
-  - [ ] Write tests for restyled layout
-  - [ ] Apply Velocity Dark styling to booking selector, chart container, insight cards
-  - [ ] Ensure Recharts uses Velocity Dark theme via restyled PriceChart component
+  - [x] Write tests for restyled layout
+  - [x] Apply Velocity Dark styling to booking selector, chart container, insight cards
+  - [x] Ensure Recharts uses Velocity Dark theme via restyled PriceChart component
 
-- [ ] Task 4: Restyle Vehicles page
+- [x] Task 4: Restyle Vehicles page
   <!-- files: webapp/frontend/src/pages/Vehicles.tsx, webapp/frontend/src/pages/Vehicles.test.tsx -->
-  - [ ] Write tests for restyled table
-  - [ ] Apply Velocity Dark table styling (tonal row alternation, no borders)
-  - [ ] Restyle filter controls and pagination
+  - [x] Write tests for restyled table
+  - [x] Apply Velocity Dark table styling (tonal row alternation, no borders)
+  - [x] Restyle filter controls and pagination
 
-- [ ] Task 5: Restyle Runs Log page
+- [x] Task 5: Restyle Runs Log page
   <!-- files: webapp/frontend/src/pages/Runs.tsx, webapp/frontend/src/pages/Runs.test.tsx -->
-  - [ ] Write tests for restyled expandable rows
-  - [ ] Apply Velocity Dark styling to run rows and nested vehicle table
-  - [ ] Holding vehicle highlight with primary accent
+  - [x] Write tests for restyled expandable rows
+  - [x] Apply Velocity Dark styling to run rows and nested vehicle table
+  - [x] Holding vehicle highlight with primary accent
 
-- [ ] Task 6: Build Settings & Alerts page
+- [x] Task 6: Build Settings & Alerts page
   <!-- files: webapp/frontend/src/pages/Settings.tsx, webapp/frontend/src/pages/Settings.test.tsx -->
-  - [ ] Write tests for alert form, active monitors, toggle switches, system stats
-  - [ ] Implement new alert form (sticky left column): city, dates, target price
-  - [ ] Active monitors list (right column) with per-booking toggles
-  - [ ] System stats footer
-  - [ ] Email preferences section with save button
+  - [x] Write tests for alert form, active monitors, toggle switches, system stats
+  - [x] Implement new alert form (sticky left column): city, dates, target price
+  - [x] Active monitors list (right column) with per-booking toggles
+  - [x] System stats footer
+  - [x] Email preferences section with save button
 
 ## Phase 6: App Shell & Routing
 <!-- execution: sequential -->
 <!-- depends: phase5 -->
 
-- [ ] Task 1: Update App.tsx with new layout and routes
+- [x] Task 1: Update App.tsx with new layout and routes
   <!-- files: webapp/frontend/src/App.tsx, webapp/frontend/src/App.test.tsx, webapp/frontend/src/App.css -->
-  - [ ] Write tests for routing (6 routes) and layout structure
-  - [ ] Integrate rebuilt Sidebar + TopAppBar into app shell
-  - [ ] Add /settings route for Settings & Alerts page
-  - [ ] Replace App.css with Velocity Dark base styles (or remove if index.css covers it)
-  - [ ] Verify all routes render correct pages
+  - [x] Write tests for routing (6 routes) and layout structure
+  - [x] Integrate rebuilt Sidebar + TopAppBar into app shell
+  - [x] Add /settings route for Settings & Alerts page
+  - [x] Replace App.css with Velocity Dark base styles (or remove if index.css covers it)
+  - [x] Verify all routes render correct pages
 
 ## Phase 7: Integration Testing & Polish
 <!-- execution: sequential -->

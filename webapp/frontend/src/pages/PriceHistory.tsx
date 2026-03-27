@@ -4,6 +4,7 @@ import Card from '../components/Card'
 import LoadingSpinner from '../components/LoadingSpinner'
 import EmptyState from '../components/EmptyState'
 import PriceChart from '../components/PriceChart'
+import Icon from '../components/Icon'
 import { buildChartData, getCategoryColors } from '../utils/chartData'
 import { findBestRun, computeSavings } from '../utils/insights'
 
@@ -36,7 +37,7 @@ export default function PriceHistoryPage() {
   }, [selectedBooking])
 
   if (loadingBookings) return <LoadingSpinner label="Loading…" />
-  if (error) return <div className="p-6 text-red-400">{error}</div>
+  if (error) return <div className="p-6 text-error">{error}</div>
 
   const categories = history ? Object.keys(history.categories) : []
   const colors = getCategoryColors(categories)
@@ -63,9 +64,9 @@ export default function PriceHistoryPage() {
   return (
     <div data-testid="page-price-history" className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-gray-100">Price History</h1>
+        <h1 className="text-lg font-headline font-black text-on-surface">Price History</h1>
         <select
-          className="bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-indigo-500"
+          className="input-field w-auto min-w-48"
           value={selectedBooking}
           onChange={(e) => setSelectedBooking(e.target.value)}
         >
@@ -86,6 +87,7 @@ export default function PriceHistoryPage() {
               <EmptyState
                 title="No price data"
                 description="Run the tracker to collect price data."
+                icon="show_chart"
               />
             ) : (
               <PriceChart
@@ -97,59 +99,59 @@ export default function PriceHistoryPage() {
             )}
           </Card>
 
-          <Card title="Insights">
-            <div className="space-y-4">
-              {bestRun && (
-                <div>
-                  <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                    Best Time to Book
-                  </p>
-                  <p className="text-sm text-gray-200">
-                    <span className="text-green-400 font-semibold">{bestRun.date}</span>{' '}—{' '}
-                    {history.holding_vehicle_type} at{' '}
-                    <span className="text-green-400">${bestRun.price.toFixed(2)}</span>
-                  </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Card variant="gradient" title="Best Time to Book">
+              {bestRun ? (
+                <div className="flex items-start gap-3">
+                  <Icon name="star" size={20} className="text-primary mt-0.5" />
+                  <div>
+                    <p className="text-sm font-body text-on-surface">
+                      <span className="text-tertiary font-semibold">{bestRun.date}</span>
+                    </p>
+                    <p className="text-xs font-body text-on-surface-variant mt-1">
+                      {history.holding_vehicle_type} at{' '}
+                      <span className="text-tertiary font-medium">${bestRun.price.toFixed(2)}</span>
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <p className="text-sm font-body text-on-surface-variant">No holding vehicle set.</p>
               )}
-              <div>
-                <p className="text-xs text-gray-500 uppercase tracking-wider mb-1">
-                  Savings Summary
-                </p>
-                {savings !== null ? (
-                  <p className="text-sm text-gray-200">
-                    Current best:{' '}
-                    <span className="text-gray-100 font-medium">
+            </Card>
+
+            <Card variant="gradient" title="Savings Summary">
+              {savings !== null ? (
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-on-surface-variant">Current best</span>
+                    <span className="text-on-surface font-medium">
                       {currentBest !== null ? `$${currentBest.toFixed(2)}` : '—'}
-                    </span>{' '}
-                    vs holding:{' '}
-                    <span className="text-gray-100 font-medium">
-                      {history.holding_price !== null
-                        ? `$${history.holding_price.toFixed(2)}`
-                        : '—'}
-                    </span>{' '}
-                    →{' '}
-                    <span
-                      className={
-                        savings >= 0
-                          ? 'text-green-400 font-semibold'
-                          : 'text-red-400 font-semibold'
-                      }
-                    >
-                      {savings >= 0 ? '+' : ''}${savings.toFixed(2)} savings
                     </span>
-                  </p>
-                ) : (
-                  <p className="text-sm text-gray-500">No holding price set for comparison.</p>
-                )}
-              </div>
-            </div>
-          </Card>
+                  </div>
+                  <div className="flex justify-between text-sm font-body">
+                    <span className="text-on-surface-variant">Holding price</span>
+                    <span className="text-on-surface font-medium">
+                      {history.holding_price !== null ? `$${history.holding_price.toFixed(2)}` : '—'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm font-body pt-2">
+                    <span className="text-on-surface-variant">Savings</span>
+                    <span className={`font-headline font-bold ${savings >= 0 ? 'text-tertiary' : 'text-error'}`}>
+                      {savings >= 0 ? '+' : ''}${savings.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm font-body text-on-surface-variant">No holding price set for comparison.</p>
+              )}
+            </Card>
+          </div>
         </>
       )}
 
       {!loadingHistory && !history && bookings.length === 0 && (
         <EmptyState
-          icon="📈"
+          icon="show_chart"
           title="No bookings"
           description="Add a booking to view price history."
         />
