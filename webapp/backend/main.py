@@ -4,7 +4,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from webapp.backend.routers import analytics, bookings, runs, vehicles
+from webapp.backend.routers import analytics, bookings, runs, settings, vehicles
 
 app = FastAPI(title="Car Tracker Dashboard API", version="1.0.0")
 
@@ -20,6 +20,7 @@ app.include_router(bookings.router, prefix="/bookings", tags=["bookings"])
 app.include_router(runs.router, prefix="/runs", tags=["runs"])
 app.include_router(vehicles.router, prefix="/vehicles", tags=["vehicles"])
 app.include_router(analytics.router, tags=["analytics"])
+app.include_router(settings.router, tags=["settings"])
 
 
 @app.get("/health")

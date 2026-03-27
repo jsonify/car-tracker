@@ -128,3 +128,85 @@ def test_dashboard_volatility(client):
     resp = client.get("/dashboard/summary")
     data = resp.json()
     assert "volatile_categories" in data
+
+
+def test_dashboard_has_total_savings(client):
+    resp = client.get("/dashboard/summary")
+    data = resp.json()
+    assert "total_savings" in data
+    assert isinstance(data["total_savings"], (int, float))
+
+
+def test_dashboard_has_alert_count(client):
+    resp = client.get("/dashboard/summary")
+    data = resp.json()
+    assert "alert_count" in data
+    assert data["alert_count"] == 0  # no alert_enabled in fixture
+
+
+# ---------------------------------------------------------------------------
+# Savings endpoint
+# ---------------------------------------------------------------------------
+
+def test_savings_returns_data(client):
+    resp = client.get("/bookings/san_april/savings")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["booking_name"] == "san_april"
+    assert data["holding_price"] == 375.0
+    # Latest run has Standard Car at 360.0
+    assert data["current_best"] == 360.0
+    assert data["delta"] == 15.0
+    assert data["percentage_change"] is not None
+
+
+def test_savings_unknown_booking(client):
+    resp = client.get("/bookings/no_such/savings")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["holding_price"] is None
+    assert data["current_best"] is None
+    assert data["delta"] is None
+
+
+# ---------------------------------------------------------------------------
+# Volatility endpoint
+# ---------------------------------------------------------------------------
+
+def test_volatility_returns_list(client):
+    resp = client.get("/analytics/volatility")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert isinstance(data, list)
+    assert len(data) >= 1  # at least one category with 2+ runs
+
+
+def test_volatility_has_expected_fields(client):
+    resp = client.get("/analytics/volatility")
+    data = resp.json()
+    item = data[0]
+    assert "booking_name" in item
+    assert "category" in item
+    assert "min_price" in item
+    assert "max_price" in item
+    assert "price_range" in item
+    assert "std_dev" in item
+    assert "trend" in item
+    assert "sample_count" in item
+
+
+def test_volatility_filter_by_booking(client):
+    resp = client.get("/analytics/volatility?booking_name=san_april")
+    data = resp.json()
+    assert all(v["booking_name"] == "san_april" for v in data)
+
+
+def test_volatility_economy_car_values(client):
+    resp = client.get("/analytics/volatility?booking_name=san_april")
+    data = resp.json()
+    economy = next((v for v in data if v["category"] == "Economy Car"), None)
+    assert economy is not None
+    assert economy["min_price"] == 285.0
+    assert economy["max_price"] == 299.0
+    assert economy["price_range"] == 14.0
+    assert economy["sample_count"] == 2

@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import type { ChartPoint } from '../utils/chartData'
+import { colors as tokens, fonts } from '../styles/tokens'
 
 interface PriceChartProps {
   data: ChartPoint[]
@@ -22,30 +23,45 @@ export default function PriceChart({ data, categories, colors, holdingPrice }: P
   return (
     <ResponsiveContainer width="100%" height={320}>
       <LineChart data={data} margin={{ top: 8, right: 20, left: 10, bottom: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+        <CartesianGrid strokeDasharray="3 3" stroke={tokens.outlineVariant} />
         <XAxis
           dataKey="date"
-          tick={{ fill: '#9ca3af', fontSize: 11 }}
+          tick={{ fill: tokens.onSurfaceVariant, fontSize: 11, fontFamily: fonts.body }}
           tickLine={false}
+          stroke={tokens.outlineVariant}
         />
         <YAxis
-          tick={{ fill: '#9ca3af', fontSize: 11 }}
+          tick={{ fill: tokens.onSurfaceVariant, fontSize: 11, fontFamily: fonts.body }}
           tickLine={false}
           axisLine={false}
           tickFormatter={(v) => `$${v}`}
         />
         <Tooltip
-          contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }}
-          labelStyle={{ color: '#9ca3af', fontSize: 12 }}
+          contentStyle={{
+            backgroundColor: tokens.surfaceContainerHigh,
+            border: 'none',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+          }}
+          labelStyle={{ color: tokens.onSurfaceVariant, fontSize: 12, fontFamily: fonts.headline, fontWeight: 700 }}
+          itemStyle={{ color: tokens.onSurface, fontSize: 12, fontFamily: fonts.body }}
           formatter={(value: number) => [`$${value.toFixed(2)}`, undefined]}
         />
-        <Legend wrapperStyle={{ fontSize: 12, color: '#9ca3af' }} />
+        <Legend
+          wrapperStyle={{ fontSize: 12, fontFamily: fonts.body, color: tokens.onSurfaceVariant }}
+        />
         {holdingPrice !== null && (
           <ReferenceLine
             y={holdingPrice}
-            stroke="#fbbf24"
+            stroke={tokens.primary}
             strokeDasharray="4 4"
-            label={{ value: `Holding $${holdingPrice.toFixed(2)}`, fill: '#fbbf24', fontSize: 11, position: 'right' }}
+            label={{
+              value: `Holding $${holdingPrice.toFixed(2)}`,
+              fill: tokens.primary,
+              fontSize: 11,
+              fontFamily: fonts.headline,
+              position: 'right',
+            }}
           />
         )}
         {categories.map((cat) => (

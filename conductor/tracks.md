@@ -37,3 +37,7 @@ This file tracks all major tracks for the project.
 
 ## [~] Track: Fix Change Delta Bug & Remove Trend Column
 *Link: [./conductor/tracks/fix_change_trend_20260321/](./conductor/tracks/fix_change_trend_20260321/)*
+
+---
+
+<!-- archived 2026-03-26: webapp_rebuild_20260326 — Webapp Rebuild — Velocity Dark Design System -->
