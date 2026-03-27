@@ -78,6 +78,32 @@ _BOOKING_NAME_PRICE_PATTERN = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+#   "update holding type to Standard Car for san_april"
+#   "update holding vehicle type to Economy Car for las_june"
+_TYPE_FOR_BOOKING_NAME_PATTERN = re.compile(
+    r"""
+    (?:holding\s+vehicle\s+type|holding\s+type|vehicle\s+type|type)
+    \s+to\s+
+    ([A-Za-z][A-Za-z\s]*?)      # vehicle type (non-greedy, stops before "for")
+    \s+for\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+#   "set san_april holding type to Standard Car"
+#   "set san_april holding vehicle type to Economy Car"
+_BOOKING_NAME_TYPE_PATTERN = re.compile(
+    r"""
+    (?:set|update)\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    \s+
+    (?:holding\s+vehicle\s+type|holding\s+type|vehicle\s+type)\s+to\s+
+    ([A-Za-z][A-Za-z\s]*)       # vehicle type
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
 # ---------------------------------------------------------------------------
 # Structured multi-booking format:
 #   update holding <name_or_index> <price> <vehicle_type>
@@ -191,6 +217,15 @@ def parse_config_update(text: str) -> dict:
             result["holding_price"] = price
         return result
 
+    # New: "set/update booking_name holding [vehicle] type to X"
+    m = _BOOKING_NAME_TYPE_PATTERN.search(text)
+    if m:
+        vehicle_type = m.group(2).strip()
+        result = {"booking_name": m.group(1)}
+        if vehicle_type:
+            result["holding_vehicle_type"] = vehicle_type
+        return result
+
     # New: "price to N for booking_name" — must be checked before _PRICE_FOR_TYPE_PATTERN
     # because that pattern would partially match "san" from "san_april"
     m = _PRICE_FOR_BOOKING_NAME_PATTERN.search(text)
@@ -199,6 +234,15 @@ def parse_config_update(text: str) -> dict:
         price = float(m.group(1))
         if price > 0:
             result["holding_price"] = price
+        return result
+
+    # New: "type to X for booking_name" — must be checked before _TYPE_PATTERN
+    m = _TYPE_FOR_BOOKING_NAME_PATTERN.search(text)
+    if m:
+        vehicle_type = m.group(1).strip()
+        result = {"booking_name": m.group(2)}
+        if vehicle_type:
+            result["holding_vehicle_type"] = vehicle_type
         return result
 
     # Legacy: try combined "price ... for type" pattern

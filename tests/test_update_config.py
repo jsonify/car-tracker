@@ -523,6 +523,30 @@ class TestParseConfigUpdateBookingName:
         result = parse_config_update("SET SAN_APRIL holding price to 350")
         assert result == {"holding_price": 350.0, "booking_name": "SAN_APRIL"}
 
+    # --- type-only with booking name ---
+
+    def test_type_for_booking_name(self):
+        result = parse_config_update("update holding type to Standard Car for san_april")
+        assert result == {"holding_vehicle_type": "Standard Car", "booking_name": "san_april"}
+
+    def test_vehicle_type_for_booking_name(self):
+        result = parse_config_update("update holding vehicle type to Economy Car for las_june")
+        assert result == {"holding_vehicle_type": "Economy Car", "booking_name": "las_june"}
+
+    def test_booking_name_before_holding_type(self):
+        result = parse_config_update("set san_april holding type to Standard Car")
+        assert result == {"holding_vehicle_type": "Standard Car", "booking_name": "san_april"}
+
+    def test_booking_name_before_holding_vehicle_type(self):
+        result = parse_config_update("set las_june holding vehicle type to SUV")
+        assert result == {"holding_vehicle_type": "SUV", "booking_name": "las_june"}
+
+    def test_type_for_vehicle_type_still_works(self):
+        # No underscore in identifier → not treated as booking name
+        result = parse_config_update("set holding type to SUV")
+        assert result == {"holding_vehicle_type": "SUV"}
+        assert "booking_name" not in result
+
 
 # ---------------------------------------------------------------------------
 # apply_config_update tests — booking_name and ambiguity
