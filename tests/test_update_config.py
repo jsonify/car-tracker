@@ -435,6 +435,22 @@ class TestParseConfigUpdateBookingMgmt:
         result = parse_config_update("what are my bookings")
         assert result == {}
 
+    def test_parse_run_ct(self):
+        result = parse_config_update("run ct")
+        assert result == {"action": "run_ct"}
+
+    def test_parse_run_ct_case_insensitive(self):
+        result = parse_config_update("Run CT")
+        assert result == {"action": "run_ct"}
+
+    def test_parse_run_ct_in_sentence(self):
+        result = parse_config_update("please run ct now")
+        assert result == {"action": "run_ct"}
+
+    def test_parse_run_ct_does_not_match_partial(self):
+        result = parse_config_update("run ctrl")
+        assert result == {}
+
 
 # ---------------------------------------------------------------------------
 # list_bookings_reply tests

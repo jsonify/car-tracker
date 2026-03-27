@@ -152,6 +152,8 @@ _ADD_BOOKING_PATTERN = re.compile(
 
 _LIST_BOOKINGS_PATTERN = re.compile(r"list\s+bookings?", re.IGNORECASE)
 
+_RUN_CT_PATTERN = re.compile(r"\brun\s+ct\b", re.IGNORECASE)
+
 
 def parse_config_update(text: str) -> dict:
     """Parse text and return a dict describing the config action to take.
@@ -177,6 +179,10 @@ def parse_config_update(text: str) -> dict:
     """
     if not text:
         return {}
+
+    # run car tracker
+    if _RUN_CT_PATTERN.search(text):
+        return {"action": "run_ct"}
 
     # list bookings
     if _LIST_BOOKINGS_PATTERN.search(text):
