@@ -51,6 +51,59 @@ _PRICE_FOR_TYPE_PATTERN = re.compile(
     re.IGNORECASE | re.VERBOSE,
 )
 
+# Booking-name patterns: booking names are identified by containing an underscore
+# (which distinguishes them from vehicle types like "Standard Car")
+#
+#   "update holding price to 350 for san_april"
+_PRICE_FOR_BOOKING_NAME_PATTERN = re.compile(
+    r"""
+    (?:holding\s+price|price)
+    \s+to\s+
+    \$?(\d+(?:\.\d+)?)          # price
+    \s+for\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+#   "set san_april holding price to 350"
+_BOOKING_NAME_PRICE_PATTERN = re.compile(
+    r"""
+    (?:set|update)\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    \s+
+    holding\s+price\s+to\s+
+    \$?(\d+(?:\.\d+)?)          # price
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+#   "update holding type to Standard Car for san_april"
+#   "update holding vehicle type to Economy Car for las_june"
+_TYPE_FOR_BOOKING_NAME_PATTERN = re.compile(
+    r"""
+    (?:holding\s+vehicle\s+type|holding\s+type|vehicle\s+type|type)
+    \s+to\s+
+    ([A-Za-z][A-Za-z\s]*?)      # vehicle type (non-greedy, stops before "for")
+    \s+for\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+#   "set san_april holding type to Standard Car"
+#   "set san_april holding vehicle type to Economy Car"
+_BOOKING_NAME_TYPE_PATTERN = re.compile(
+    r"""
+    (?:set|update)\s+
+    ([A-Za-z]\w*_\w+)           # booking name (must contain underscore)
+    \s+
+    (?:holding\s+vehicle\s+type|holding\s+type|vehicle\s+type)\s+to\s+
+    ([A-Za-z][A-Za-z\s]*)       # vehicle type
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
 # ---------------------------------------------------------------------------
 # Structured multi-booking format:
 #   update holding <name_or_index> <price> <vehicle_type>
@@ -151,6 +204,43 @@ def parse_config_update(text: str) -> dict:
         result: dict = {"booking_identifier": identifier}
         if price > 0:
             result["holding_price"] = price
+        if vehicle_type:
+            result["holding_vehicle_type"] = vehicle_type
+        return result
+
+    # New: "set/update booking_name holding price to N"
+    m = _BOOKING_NAME_PRICE_PATTERN.search(text)
+    if m:
+        result: dict = {"booking_name": m.group(1)}
+        price = float(m.group(2))
+        if price > 0:
+            result["holding_price"] = price
+        return result
+
+    # New: "set/update booking_name holding [vehicle] type to X"
+    m = _BOOKING_NAME_TYPE_PATTERN.search(text)
+    if m:
+        vehicle_type = m.group(2).strip()
+        result = {"booking_name": m.group(1)}
+        if vehicle_type:
+            result["holding_vehicle_type"] = vehicle_type
+        return result
+
+    # New: "price to N for booking_name" — must be checked before _PRICE_FOR_TYPE_PATTERN
+    # because that pattern would partially match "san" from "san_april"
+    m = _PRICE_FOR_BOOKING_NAME_PATTERN.search(text)
+    if m:
+        result = {"booking_name": m.group(2)}
+        price = float(m.group(1))
+        if price > 0:
+            result["holding_price"] = price
+        return result
+
+    # New: "type to X for booking_name" — must be checked before _TYPE_PATTERN
+    m = _TYPE_FOR_BOOKING_NAME_PATTERN.search(text)
+    if m:
+        vehicle_type = m.group(1).strip()
+        result = {"booking_name": m.group(2)}
         if vehicle_type:
             result["holding_vehicle_type"] = vehicle_type
         return result
@@ -266,11 +356,29 @@ def apply_config_update(updates: dict, config_path: str | Path = "config.yaml") 
     else:
         # Update holding fields on existing booking
         bookings = config["bookings"]
+        booking_name = updates.get("booking_name")
         identifier = updates.get("booking_identifier")
-        booking = _resolve_booking(bookings, identifier)
+
+        if booking_name is not None:
+            booking = next((b for b in bookings if b.get("name") == booking_name), None)
+            if booking is None:
+                raise ValueError(f"Booking '{booking_name}' not found")
+        elif identifier is not None:
+            booking = _resolve_booking(bookings, identifier)
+        else:
+            if len(bookings) == 1:
+                booking = bookings[0]
+            else:
+                import logging
+                logging.warning(
+                    "apply_config_update: booking_name not specified and multiple bookings "
+                    "exist; skipping update to avoid ambiguity"
+                )
+                return False
+
         changed = False
         for key, value in updates.items():
-            if key == "booking_identifier":
+            if key in ("booking_identifier", "booking_name"):
                 continue
             if booking.get(key) != value:
                 booking[key] = value

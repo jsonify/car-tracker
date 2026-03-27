@@ -117,6 +117,22 @@ class TestParseConfigUpdateStructured:
 # apply_config_update tests
 # ---------------------------------------------------------------------------
 
+SINGLE_BOOKING_CONFIG = {
+    "bookings": [
+        {
+            "name": "san_april",
+            "pickup_location": "SAN",
+            "pickup_date": "2026-04-02",
+            "pickup_time": "10:00",
+            "dropoff_date": "2026-04-08",
+            "dropoff_time": "10:00",
+            "holding_price": 375.23,
+            "holding_vehicle_type": "Standard Car",
+        },
+    ],
+    "database": {"path": "data/results.db"},
+}
+
 SAMPLE_CONFIG = {
     "bookings": [
         {
@@ -144,6 +160,11 @@ SAMPLE_CONFIG = {
 }
 
 
+def _write_single_booking_config(path: Path) -> None:
+    with open(path, "w") as f:
+        yaml.dump(SINGLE_BOOKING_CONFIG, f, default_flow_style=False, sort_keys=False)
+
+
 def _write_sample_config(path: Path) -> None:
     with open(path, "w") as f:
         yaml.dump(SAMPLE_CONFIG, f, default_flow_style=False, sort_keys=False)
@@ -153,7 +174,7 @@ class TestApplyConfigUpdate:
     def test_updates_holding_price_only(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg = Path(tmpdir) / "config.yaml"
-            _write_sample_config(cfg)
+            _write_single_booking_config(cfg)
             with patch("subprocess.run"):
                 result = apply_config_update({"holding_price": 400.0}, cfg)
             assert result is True
@@ -167,7 +188,7 @@ class TestApplyConfigUpdate:
     def test_updates_holding_vehicle_type_only(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg = Path(tmpdir) / "config.yaml"
-            _write_sample_config(cfg)
+            _write_single_booking_config(cfg)
             with patch("subprocess.run"):
                 result = apply_config_update({"holding_vehicle_type": "SUV"}, cfg)
             assert result is True
@@ -179,7 +200,7 @@ class TestApplyConfigUpdate:
     def test_updates_both_fields(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg = Path(tmpdir) / "config.yaml"
-            _write_sample_config(cfg)
+            _write_single_booking_config(cfg)
             with patch("subprocess.run"):
                 result = apply_config_update(
                     {"holding_price": 299.0, "holding_vehicle_type": "Economy Car"}, cfg
@@ -193,7 +214,7 @@ class TestApplyConfigUpdate:
     def test_noop_when_values_match(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg = Path(tmpdir) / "config.yaml"
-            _write_sample_config(cfg)
+            _write_single_booking_config(cfg)
             with patch("subprocess.run") as mock_run:
                 result = apply_config_update(
                     {"holding_price": 375.23, "holding_vehicle_type": "Standard Car"}, cfg
@@ -208,7 +229,7 @@ class TestApplyConfigUpdate:
     def test_git_commands_called_on_change(self):
         with tempfile.TemporaryDirectory() as tmpdir:
             cfg = Path(tmpdir) / "config.yaml"
-            _write_sample_config(cfg)
+            _write_single_booking_config(cfg)
             with patch("subprocess.run") as mock_run:
                 apply_config_update({"holding_price": 500.0}, cfg)
             calls = [c.args[0] for c in mock_run.call_args_list]
@@ -461,3 +482,137 @@ class TestListBookingsReply:
     def test_empty_bookings(self):
         reply = list_bookings_reply([])
         assert "no bookings" in reply.lower()
+
+
+# ---------------------------------------------------------------------------
+# parse_config_update tests — booking name capture in legacy format
+# ---------------------------------------------------------------------------
+
+
+class TestParseConfigUpdateBookingName:
+    def test_price_for_booking_name(self):
+        result = parse_config_update("update holding price to 350 for san_april")
+        assert result == {"holding_price": 350.0, "booking_name": "san_april"}
+
+    def test_booking_name_before_holding_price(self):
+        result = parse_config_update("set san_april holding price to 350")
+        assert result == {"holding_price": 350.0, "booking_name": "san_april"}
+
+    def test_update_keyword_booking_name_before_holding_price(self):
+        result = parse_config_update("update las_june holding price to 200")
+        assert result == {"holding_price": 200.0, "booking_name": "las_june"}
+
+    def test_price_for_booking_name_with_dollar_sign(self):
+        result = parse_config_update("update holding price to $450 for las_june")
+        assert result == {"holding_price": 450.0, "booking_name": "las_june"}
+
+    def test_price_for_booking_name_decimal(self):
+        result = parse_config_update("holding price to 299.99 for hawaii_may")
+        assert result == {"holding_price": 299.99, "booking_name": "hawaii_may"}
+
+    def test_price_for_vehicle_type_still_works(self):
+        # Vehicle type (no underscore) should still use the old path
+        result = parse_config_update("update holding price to 350 for Standard Car")
+        assert result == {"holding_price": 350.0, "holding_vehicle_type": "Standard Car"}
+
+    def test_booking_name_zero_price_excluded(self):
+        result = parse_config_update("set san_april holding price to 0")
+        assert "holding_price" not in result
+
+    def test_booking_name_case_insensitive_keyword(self):
+        result = parse_config_update("SET SAN_APRIL holding price to 350")
+        assert result == {"holding_price": 350.0, "booking_name": "SAN_APRIL"}
+
+    # --- type-only with booking name ---
+
+    def test_type_for_booking_name(self):
+        result = parse_config_update("update holding type to Standard Car for san_april")
+        assert result == {"holding_vehicle_type": "Standard Car", "booking_name": "san_april"}
+
+    def test_vehicle_type_for_booking_name(self):
+        result = parse_config_update("update holding vehicle type to Economy Car for las_june")
+        assert result == {"holding_vehicle_type": "Economy Car", "booking_name": "las_june"}
+
+    def test_booking_name_before_holding_type(self):
+        result = parse_config_update("set san_april holding type to Standard Car")
+        assert result == {"holding_vehicle_type": "Standard Car", "booking_name": "san_april"}
+
+    def test_booking_name_before_holding_vehicle_type(self):
+        result = parse_config_update("set las_june holding vehicle type to SUV")
+        assert result == {"holding_vehicle_type": "SUV", "booking_name": "las_june"}
+
+    def test_type_for_vehicle_type_still_works(self):
+        # No underscore in identifier → not treated as booking name
+        result = parse_config_update("set holding type to SUV")
+        assert result == {"holding_vehicle_type": "SUV"}
+        assert "booking_name" not in result
+
+
+# ---------------------------------------------------------------------------
+# apply_config_update tests — booking_name and ambiguity
+# ---------------------------------------------------------------------------
+
+
+class TestApplyConfigUpdateBookingName:
+    def test_update_by_booking_name_patches_correct_entry(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run"):
+                result = apply_config_update(
+                    {"booking_name": "las_june", "holding_price": 175.0}, cfg
+                )
+            assert result is True
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["bookings"][1]["holding_price"] == 175.0
+            # First booking untouched
+            assert updated["bookings"][0]["holding_price"] == 375.23
+
+    def test_update_first_booking_by_name(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run"):
+                result = apply_config_update(
+                    {"booking_name": "san_april", "holding_price": 400.0}, cfg
+                )
+            assert result is True
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["bookings"][0]["holding_price"] == 400.0
+            assert updated["bookings"][1]["holding_price"] == 200.0
+
+    def test_update_by_booking_name_noop_when_values_match(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run") as mock_run:
+                result = apply_config_update(
+                    {"booking_name": "las_june", "holding_price": 200.0}, cfg
+                )
+            assert result is False
+            mock_run.assert_not_called()
+
+    def test_update_by_booking_name_unknown_raises(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with pytest.raises(ValueError, match="not found"):
+                apply_config_update(
+                    {"booking_name": "nonexistent", "holding_price": 100.0}, cfg
+                )
+
+    def test_ambiguous_multiple_bookings_no_name_returns_false(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cfg = Path(tmpdir) / "config.yaml"
+            _write_sample_config(cfg)
+            with patch("subprocess.run") as mock_run:
+                result = apply_config_update({"holding_price": 999.0}, cfg)
+            assert result is False
+            mock_run.assert_not_called()
+            # Neither booking should be modified
+            with open(cfg) as f:
+                updated = yaml.safe_load(f)
+            assert updated["bookings"][0]["holding_price"] == 375.23
+            assert updated["bookings"][1]["holding_price"] == 200.0
