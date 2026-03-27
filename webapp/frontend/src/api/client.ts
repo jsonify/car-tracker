@@ -18,6 +18,10 @@ export interface Booking {
   dropoff_time: string
   holding_price: number | null
   holding_vehicle_type: string | null
+  city: string | null
+  alert_enabled: boolean
+  target_price: number | null
+  email_notifications: boolean
 }
 
 export interface RunSummary {
@@ -75,9 +79,41 @@ export interface VolatileCategory {
 export interface DashboardSummary {
   active_booking_count: number
   total_run_count: number
+  total_savings: number
+  alert_count: number
   bookings: BookingSummary[]
   volatile_categories: VolatileCategory[]
   recent_runs: RunSummary[]
+}
+
+export interface SavingsData {
+  booking_name: string
+  holding_price: number | null
+  current_best: number | null
+  delta: number | null
+  percentage_change: number | null
+}
+
+export interface VolatilityData {
+  booking_name: string
+  category: string
+  min_price: number
+  max_price: number
+  price_range: number
+  std_dev: number
+  trend: 'up' | 'down' | 'stable'
+  sample_count: number
+}
+
+export interface AlertConfig {
+  booking_name: string
+  alert_enabled: boolean
+  target_price: number | null
+  email_notifications: boolean
+}
+
+export interface AlertSettingsResponse {
+  alerts: AlertConfig[]
 }
 
 // --- API calls ---
@@ -98,3 +134,17 @@ export const getPriceHistory = (bookingName: string) =>
 
 export const getDashboardSummary = () =>
   api.get<DashboardSummary>('/dashboard/summary').then(r => r.data)
+
+export const getSavings = (bookingName: string) =>
+  api.get<SavingsData>(`/bookings/${bookingName}/savings`).then(r => r.data)
+
+export const getVolatility = (bookingName?: string) =>
+  api.get<VolatilityData[]>('/analytics/volatility', {
+    params: bookingName ? { booking_name: bookingName } : undefined,
+  }).then(r => r.data)
+
+export const getAlertSettings = () =>
+  api.get<AlertSettingsResponse>('/settings/alerts').then(r => r.data)
+
+export const updateAlertSettings = (alerts: AlertConfig[]) =>
+  api.put<AlertSettingsResponse>('/settings/alerts', { alerts }).then(r => r.data)

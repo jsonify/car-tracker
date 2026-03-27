@@ -124,12 +124,12 @@
 <!-- execution: sequential -->
 <!-- depends: phase2 -->
 
-- [ ] Task 1: Extend API client with new types and endpoints
+- [x] Task 1: Extend API client with new types and endpoints
   <!-- files: webapp/frontend/src/api/client.ts, webapp/frontend/src/api/client.test.ts -->
-  - [ ] Write tests for new API functions
-  - [ ] Add TypeScript types: SavingsData, VolatilityData, AlertConfig, EnhancedDashboardSummary
-  - [ ] Add functions: getSavings, getVolatility, getAlertSettings, updateAlertSettings
-  - [ ] Extend existing Booking type with city, alert fields
+  - [x] Write tests for new API functions
+  - [x] Add TypeScript types: SavingsData, VolatilityData, AlertConfig, EnhancedDashboardSummary
+  - [x] Add functions: getSavings, getVolatility, getAlertSettings, updateAlertSettings
+  - [x] Extend existing Booking type with city, alert fields
 
 ## Phase 5: Page Rebuilds
 <!-- execution: parallel -->
