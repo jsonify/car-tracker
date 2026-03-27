@@ -18,6 +18,10 @@ class BookingBase(BaseModel):
     dropoff_time: str  # HH:MM
     holding_price: float | None = None
     holding_vehicle_type: str | None = None
+    city: str | None = None
+    alert_enabled: bool = False
+    target_price: float | None = None
+    email_notifications: bool = True
 
     @field_validator("pickup_date", "dropoff_date")
     @classmethod

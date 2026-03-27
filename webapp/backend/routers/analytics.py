@@ -30,6 +30,70 @@ def _load_bookings() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Savings tracking
+# ---------------------------------------------------------------------------
+
+class SavingsResponse(BaseModel):
+    booking_name: str
+    holding_price: float | None
+    current_best: float | None
+    delta: float | None
+    percentage_change: float | None
+
+
+@router.get("/bookings/{booking_name}/savings", response_model=SavingsResponse)
+def get_savings(booking_name: str) -> dict:
+    bookings = _load_bookings()
+    booking = next((b for b in bookings if b["name"] == booking_name), None)
+    if not booking:
+        return {
+            "booking_name": booking_name,
+            "holding_price": None,
+            "current_best": None,
+            "delta": None,
+            "percentage_change": None,
+        }
+
+    holding_price = booking.get("holding_price")
+
+    conn = connect(_db())
+    latest_run = conn.execute("""
+        SELECT id FROM runs WHERE booking_name = ?
+        ORDER BY id DESC LIMIT 1
+    """, (booking_name,)).fetchone()
+
+    current_best = None
+    if latest_run:
+        hvt = booking.get("holding_vehicle_type")
+        if hvt:
+            row = conn.execute("""
+                SELECT MIN(total_price) FROM vehicles
+                WHERE run_id = ? AND name = ?
+            """, (latest_run[0], hvt)).fetchone()
+            current_best = row[0] if row and row[0] is not None else None
+        if current_best is None:
+            row = conn.execute("""
+                SELECT MIN(total_price) FROM vehicles WHERE run_id = ?
+            """, (latest_run[0],)).fetchone()
+            current_best = row[0] if row and row[0] is not None else None
+    conn.close()
+
+    delta = None
+    percentage_change = None
+    if holding_price is not None and current_best is not None:
+        delta = round(holding_price - current_best, 2)
+        percentage_change = round((delta / holding_price) * 100, 2) if holding_price else None
+
+    return {
+        "booking_name": booking_name,
+        "holding_price": holding_price,
+        "current_best": current_best,
+        "delta": delta,
+        "percentage_change": percentage_change,
+    }
+
+
+# ---------------------------------------------------------------------------
 # Price history
 # ---------------------------------------------------------------------------
 
@@ -126,6 +190,8 @@ class VolatileCategory(BaseModel):
 class DashboardSummary(BaseModel):
     active_booking_count: int
     total_run_count: int
+    total_savings: float
+    alert_count: int
     bookings: list[BookingSummary]
     volatile_categories: list[VolatileCategory]
     recent_runs: list[dict]
@@ -210,14 +276,95 @@ def get_dashboard_summary() -> dict:
     conn.close()
 
     active_count = sum(1 for b in booking_summaries if b["days_remaining"] >= 0)
+    total_savings = round(sum(
+        b["savings"] for b in booking_summaries
+        if b["savings"] is not None and b["savings"] > 0
+    ), 2)
+    alert_count = sum(1 for b in bookings_cfg if b.get("alert_enabled"))
 
     return {
         "active_booking_count": active_count,
         "total_run_count": total_run_count,
+        "total_savings": total_savings,
+        "alert_count": alert_count,
         "bookings": booking_summaries,
         "volatile_categories": [v.model_dump() for v in top_volatile],
         "recent_runs": [dict(r) for r in recent_runs],
     }
+
+
+# ---------------------------------------------------------------------------
+# Volatility
+# ---------------------------------------------------------------------------
+
+class VolatilityItem(BaseModel):
+    booking_name: str
+    category: str
+    min_price: float
+    max_price: float
+    price_range: float
+    std_dev: float
+    trend: str  # "up", "down", "stable"
+    sample_count: int
+
+
+@router.get("/analytics/volatility", response_model=list[VolatilityItem])
+def get_volatility(booking_name: str | None = None) -> list[dict]:
+    import statistics
+
+    bookings = _load_bookings()
+    if booking_name:
+        bookings = [b for b in bookings if b["name"] == booking_name]
+
+    conn = connect(_db())
+    results: list[dict] = []
+
+    for b in bookings:
+        rows = conn.execute("""
+            SELECT v.name, v.total_price, r.id
+            FROM vehicles v
+            JOIN runs r ON v.run_id = r.id
+            WHERE r.booking_name = ?
+            ORDER BY r.id ASC
+        """, (b["name"],)).fetchall()
+
+        cat_prices: dict[str, list[tuple[int, float]]] = {}
+        for name, price, run_id in rows:
+            cat = _extract_category(name)
+            cat_prices.setdefault(cat, []).append((run_id, price))
+
+        for cat, price_tuples in cat_prices.items():
+            prices = [p for _, p in price_tuples]
+            if len(prices) < 2:
+                continue
+            mn, mx = min(prices), max(prices)
+            std = round(statistics.stdev(prices), 2)
+
+            # Trend: compare first half avg to second half avg
+            mid = len(prices) // 2
+            first_avg = sum(prices[:mid]) / mid if mid > 0 else prices[0]
+            second_avg = sum(prices[mid:]) / (len(prices) - mid)
+            if second_avg > first_avg * 1.02:
+                trend = "up"
+            elif second_avg < first_avg * 0.98:
+                trend = "down"
+            else:
+                trend = "stable"
+
+            results.append({
+                "booking_name": b["name"],
+                "category": cat,
+                "min_price": mn,
+                "max_price": mx,
+                "price_range": round(mx - mn, 2),
+                "std_dev": std,
+                "trend": trend,
+                "sample_count": len(prices),
+            })
+
+    conn.close()
+    results.sort(key=lambda v: v["price_range"], reverse=True)
+    return results
 
 
 def _extract_category(name: str) -> str:
