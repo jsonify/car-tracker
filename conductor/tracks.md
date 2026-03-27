@@ -40,5 +40,4 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [x] Track: Webapp Rebuild — Velocity Dark Design System
-*Link: [./conductor/tracks/webapp_rebuild_20260326/](./conductor/tracks/webapp_rebuild_20260326/)*
+<!-- archived 2026-03-26: webapp_rebuild_20260326 — Webapp Rebuild — Velocity Dark Design System -->
