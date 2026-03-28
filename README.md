@@ -133,7 +133,7 @@ imessage:
 
 The `data/` directory is created automatically on first run. You can track as many bookings as you like — each is scraped and reported independently in the same run.
 
-## Running
+## Running the Scraper
 
 ```bash
 uv run python -m car_tracker
@@ -150,6 +150,33 @@ For debugging (opens a visible browser window):
 ```bash
 uv run python -m car_tracker --debug
 ```
+
+## Web Dashboard
+
+A local React app lets you explore your booking and price data interactively.
+
+### Quick Start
+
+From the project root:
+
+```bash
+./webapp/start.sh
+```
+
+This starts both backend and frontend servers and opens the dashboard at **http://localhost:5173**.
+
+### Features
+
+- **Dashboard** — At-a-glance stats: active bookings, total runs, total savings, active alerts. Upcoming bookings with countdown timers and urgency colors. Top 3 categories by price volatility. Recent run history.
+- **Bookings** — Manage bookings: add new ones, edit holding prices and vehicle types, delete bookings. Updates sync to `config.yaml` automatically.
+- **Price History** — Interactive multi-line chart per vehicle category with range sliders, holding price reference line, and best-time-to-book insights.
+- **Vehicles** — Filterable, sortable, paginated table of all scraped vehicle prices across all runs. See min/max/current pricing per category.
+- **Runs Log** — Chronological list of all scrape runs with expandable details: vehicles per run, holding-beat highlights (where you're beating your locked-in price).
+- **Settings** — Monitor sync status with `config.yaml` and database, view app status and recent activity.
+
+### Backend API
+
+FastAPI auto-generates interactive API docs at **http://127.0.0.1:8000/docs**. Use them to test endpoints directly or understand the data models.
 
 ## Email Output
 
@@ -277,6 +304,10 @@ car-tracker/
 ├── scripts/
 │   ├── check_imessage.py    # Poll iMessage for remote config update commands
 │   └── update_config.py     # Parse and apply config updates from iMessage text
+├── webapp/                  # Local React dashboard for exploring price data
+│   ├── backend/             # FastAPI server: queries database, serves API
+│   ├── frontend/            # React + Vite + Tailwind: dashboard, charts, tables
+│   └── start.sh             # Start both servers concurrently
 ├── docs/
 │   └── imessage_shortcut_setup.md
 ├── tests/                   # Unit tests
@@ -285,6 +316,8 @@ car-tracker/
 ```
 
 ## Development
+
+### Backend and Scraper Tests
 
 Run tests:
 
@@ -302,6 +335,21 @@ Lint:
 
 ```bash
 uv run ruff check src tests
+```
+
+### Dashboard Development
+
+The dashboard auto-rebuilds on file changes. While `./webapp/start.sh` is running:
+
+- Edit React components in `webapp/frontend/src/` and see changes immediately
+- Backend API changes auto-reload via Uvicorn `--reload`
+- Edit styles in Tailwind config (`webapp/frontend/tailwind.config.js`) and see updates in real time
+
+Run dashboard tests:
+
+```bash
+cd webapp/frontend
+npm test
 ```
 
 ## Notes
