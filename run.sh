@@ -32,10 +32,16 @@ fi
 source "$REPO_DIR/.venv/bin/activate"
 
 echo "[$TIMESTAMP] run.sh: checking iMessage for config updates" >> "$LOG"
-if python -m scripts.check_imessage --config "$REPO_DIR/config.yaml" >> "$LOG" 2>&1; then
-    echo "[$TIMESTAMP] run.sh: iMessage check complete" >> "$LOG"
-else
+IMESSAGE_EXIT=0
+python -m scripts.check_imessage --config "$REPO_DIR/config.yaml" >> "$LOG" 2>&1 || IMESSAGE_EXIT=$?
+
+if [ "$IMESSAGE_EXIT" -eq 2 ]; then
+    echo "[$TIMESTAMP] run.sh: car_tracker already ran on-demand via iMessage; skipping scheduled run" >> "$LOG"
+    exit 0
+elif [ "$IMESSAGE_EXIT" -ne 0 ]; then
     echo "[$TIMESTAMP] run.sh: WARNING — iMessage check failed; proceeding with existing config" >> "$LOG"
+else
+    echo "[$TIMESTAMP] run.sh: iMessage check complete" >> "$LOG"
 fi
 
 # ---------------------------------------------------------------------------
