@@ -128,18 +128,23 @@ def main(
     db_path: str | Path = DEFAULT_DB,
     state_path: str | Path = DEFAULT_STATE,
     config_path: str | Path = DEFAULT_CONFIG,
-) -> None:  # pragma: no cover
-    """Read pending iMessages, parse for config updates, apply and push."""
+) -> bool:  # pragma: no cover
+    """Read pending iMessages, parse for config updates, apply and push.
+
+    Returns True if car_tracker was run on demand (so callers like run.sh can
+    skip their own scheduled tracker invocation).
+    """
     state_path = Path(state_path)
 
     messages = read_pending_messages(db_path, state_path)
     if not messages:
         print("No new messages.")
-        return
+        return False
 
     phone = _get_phone(config_path)
     max_rowid = 0
     applied = 0
+    ran_ct = False
 
     for rowid, text in messages:
         max_rowid = max(max_rowid, rowid)
@@ -152,6 +157,7 @@ def main(
         # run car tracker on demand
         if action == "run_ct":
             print(f"Running car_tracker on demand (message {rowid})")
+            ran_ct = True
             if phone:
                 try:
                     send_imessage(phone, "Running car tracker...")
@@ -250,10 +256,13 @@ def main(
     state["last_rowid"] = max_rowid
     state_path.write_text(json.dumps(state, indent=2))
 
-    if applied == 0:
+    if applied == 0 and not ran_ct:
         print("No config changes applied.")
     else:
-        print(f"{applied} config update(s) committed and pushed.")
+        if applied > 0:
+            print(f"{applied} config update(s) committed and pushed.")
+
+    return ran_ct
 
 
 if __name__ == "__main__":  # pragma: no cover
@@ -262,4 +271,5 @@ if __name__ == "__main__":  # pragma: no cover
     parser.add_argument("--state", default=str(DEFAULT_STATE), help="Path to state JSON file")
     parser.add_argument("--config", default=str(DEFAULT_CONFIG), help="Path to config.yaml")
     args = parser.parse_args()
-    main(db_path=args.db, state_path=args.state, config_path=args.config)
+    ran = main(db_path=args.db, state_path=args.state, config_path=args.config)
+    sys.exit(2 if ran else 0)
