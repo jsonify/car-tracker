@@ -13,7 +13,7 @@ bookings:
   pickup_time: 09:00
   dropoff_date: '2026-07-26'
   dropoff_time: '22:00'
-  holding_price: 388.51
+  holding_price: 376.58
   holding_vehicle_type: Fullsize Car
 database:
   path: data/results.db
