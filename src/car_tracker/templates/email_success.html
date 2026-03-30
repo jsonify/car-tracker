@@ -2,97 +2,134 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Car Tracker | Price Intelligence</title>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
-  th { background: #f0f0f0; text-align: left; padding: 6px 10px; border-bottom: 2px solid #ccc; }
-  td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
-  .up   { color: #c0392b; }
-  .down { color: #27ae60; }
-  .new  { color: #7f8c8d; font-style: italic; }
-  .dash { color: #aaa; }
-  .booking-section { margin-bottom: 32px; }
-  .booking-header { font-size: 16px; font-weight: bold; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
-  .countdown { font-size: 13px; color: #555; margin-top: 4px; margin-bottom: 6px; }
-  .params { margin-bottom: 12px; font-size: 13px; color: #555; }
-  .holding { margin-bottom: 14px; font-size: 14px; padding: 8px 12px; border-radius: 4px; }
-  .holding-savings { background: #eafaf1; border-left: 4px solid #27ae60; }
-  .holding-ahead   { background: #fef9e7; border-left: 4px solid #f39c12; }
-  .savings-amt { color: #27ae60; font-weight: bold; }
-  .ahead-amt   { color: #e67e22; font-weight: bold; }
-  .run-ts { font-size: 12px; color: #888; margin-bottom: 20px; }
-  .holding-row-savings { background: #eafaf1; }
-  .holding-row-ahead   { background: #fef9e7; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+    background-color: #060e20;
+    color: #dee5ff;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+  }
+  table { border-collapse: collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+  .wrapper { max-width: 640px; margin: 0 auto; padding: 32px 24px; }
+  .run-ts { font-size: 11px; color: #a3aac4; margin-bottom: 32px; }
+  .section { margin-bottom: 48px; }
+  .location-label { font-size: 11px; font-weight: 600; color: #699cff; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
+  .booking-name { font-size: 32px; font-weight: 800; color: #dee5ff; margin: 0 0 4px 0; line-height: 1.15; }
+  .date-range { font-size: 13px; color: #a3aac4; margin-bottom: 12px; }
+  .countdown-badge { display: inline-block; background-color: #141f38; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #dee5ff; margin-bottom: 20px; }
+  .hero-card { background-color: #192540; border: 1px solid #2a3450; border-radius: 24px; padding: 28px; margin-bottom: 16px; }
+  .price-label { font-size: 10px; color: #a3aac4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .holding-price { font-size: 38px; font-weight: 800; color: #dee5ff; margin-bottom: 20px; line-height: 1.1; }
+  .best-price { font-size: 24px; font-weight: 700; color: #a3aac4; }
+  .status-card-savings { background-color: #0d2a1f; border: 1px solid #1a4a32; border-radius: 14px; padding: 18px; }
+  .status-card-ahead { background-color: #2a1020; border: 1px solid #4a1c2c; border-radius: 14px; padding: 18px; }
+  .status-title-savings { font-size: 16px; font-weight: 700; color: #69f6b8; margin-bottom: 8px; }
+  .status-title-ahead { font-size: 16px; font-weight: 700; color: #ff6f7e; margin-bottom: 8px; }
+  .status-body { font-size: 14px; color: #dee5ff; line-height: 1.5; }
+  .vehicle-card { background-color: #192540; border-radius: 12px; padding: 14px 16px; border: 1px solid #232f4a; }
+  .vehicle-card-holding { border: 2px solid #2a5a40; }
+  .vehicle-name { font-size: 15px; font-weight: 700; color: #dee5ff; }
+  .holding-badge { display: inline-block; background-color: #06b77f; color: #002919; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 100px; margin-left: 5px; vertical-align: middle; }
+  .per-day { font-size: 11px; color: #a3aac4; margin-top: 3px; }
+  .total-price { font-size: 18px; font-weight: 800; color: #dee5ff; }
+  .total-price-holding { color: #69f6b8; }
+  .delta-up { font-size: 11px; font-weight: 700; color: #ff6f7e; margin-top: 2px; }
+  .delta-down { font-size: 11px; font-weight: 700; color: #69f6b8; margin-top: 2px; }
+  .delta-none { font-size: 11px; color: #a3aac4; margin-top: 2px; }
+  .delta-new { font-size: 11px; color: #a3aac4; font-style: italic; margin-top: 2px; }
 </style>
 </head>
 <body>
-<div class="run-ts">Run: {{ run_ts }}</div>
-{% for section in sections %}
-<div class="booking-section">
-  <div class="booking-header">{{ section.booking.name }}</div>
-  {% if section.countdown_days > 0 %}<div class="countdown">{{ section.countdown_days }} days until your booking</div>{% elif section.countdown_days == 0 %}<div class="countdown">Today is your booking day!</div>{% endif %}
-  <div class="params">
-    <strong>{{ section.booking.pickup_location }}</strong> &nbsp;·&nbsp;
-    {{ section.booking.pickup_date }} {{ section.booking.pickup_time }} → {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}
-  </div>
-  {% if section.holding_summary %}
-    {% if section.holding_summary.is_savings %}
-    <div class="holding holding-savings">
-      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
-      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
-      <span class="savings-amt">Savings: ${{ "%.2f"|format(section.holding_summary.savings) }}</span>
-    </div>
-    {% else %}
-    <div class="holding holding-ahead">
-      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
-      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
-      <span class="ahead-amt">You're ahead by ${{ "%.2f"|format(section.holding_summary.savings) }} — keep your booking</span>
+<div class="wrapper">
+
+  <div class="run-ts">Run: {{ run_ts }}</div>
+
+  {% for section in sections %}
+  <div class="section">
+
+    <div class="location-label">{{ section.booking.pickup_location }}</div>
+    <div class="booking-name">{{ section.booking.name }}</div>
+    <div class="date-range">{{ section.booking.pickup_date }} {{ section.booking.pickup_time }} &rarr; {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}</div>
+
+    {% if section.countdown_days >= 0 %}
+    <div class="countdown-badge">
+      {% if section.countdown_days > 0 %}&#9201; {{ section.countdown_days }} days until your booking
+      {% else %}&#10004; Today is your booking day!
+      {% endif %}
     </div>
     {% endif %}
-  {% endif %}
-  <table>
-    <thead>
-      <tr>
-        <th>Vehicle Type</th>
-        <th>Total</th>
-        <th>Per Day</th>
-        <th>Change</th>
-      </tr>
-    </thead>
-    <tbody>
+
+    {% if section.holding_summary %}
+    <div class="hero-card">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td width="48%" valign="top" style="padding-right: 20px;">
+            <div class="price-label">Your holding price</div>
+            <div class="holding-price">${{ "%.2f"|format(section.holding_summary.holding_price) }}</div>
+            <div class="price-label">Best current price</div>
+            <div class="best-price">${{ "%.2f"|format(section.holding_summary.best_price) }}</div>
+          </td>
+          <td width="52%" valign="middle">
+            {% if section.holding_summary.is_savings %}
+            <div class="status-card-savings">
+              <div class="status-title-savings">&#128176; New Lower Price Found!</div>
+              <div class="status-body">A better price is available! You can save <strong style="color: #69f6b8;">${{ "%.2f"|format(section.holding_summary.savings) }}</strong> by re-booking.</div>
+            </div>
+            {% else %}
+            <div class="status-card-ahead">
+              <div class="status-title-ahead">&#9888; Market Moved Against You</div>
+              <div class="status-body">You're ahead by <strong style="color: #ff6f7e;">${{ "%.2f"|format(section.holding_summary.savings) }}</strong> &mdash; keep your current booking for now.</div>
+            </div>
+            {% endif %}
+          </td>
+        </tr>
+      </table>
+    </div>
+    {% endif %}
+
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
       {% for v in section.vehicles %}
-      {% set is_holding_row = section.booking.holding_vehicle_type == v.name %}
-      {% if is_holding_row and section.holding_summary %}
-        {% if section.holding_summary.is_savings %}
-          {% set row_class = "holding-row-savings" %}
-        {% else %}
-          {% set row_class = "holding-row-ahead" %}
-        {% endif %}
-      {% else %}
-        {% set row_class = "" %}
-      {% endif %}
-      <tr class="{{ row_class }}">
-        <td>{{ v.name }}</td>
-        <td>${{ "%.2f"|format(v.total_price) }}</td>
-        <td>${{ "%.2f"|format(v.price_per_day) }}</td>
-        <td>
-          {% if v.is_new %}
-            <span class="new">New</span>
-          {% elif v.delta is none %}
-            <span class="dash">—</span>
-          {% elif v.delta > 0 %}
-            <span class="up">▲ ${{ "%.2f"|format(v.delta) }}</span>
-          {% elif v.delta < 0 %}
-            <span class="down">▼ ${{ "%.2f"|format(v.delta | abs) }}</span>
-          {% else %}
-            <span class="dash">—</span>
-          {% endif %}
-        </td>
-      </tr>
+      {% set is_holding = section.booking.holding_vehicle_type == v.name %}
+      {% if loop.index is odd %}<tr>{% endif %}
+      <td width="50%" valign="top" style="{% if loop.index is odd %}padding-right: 4px;{% else %}padding-left: 4px;{% endif %} padding-bottom: 8px;">
+        <div class="vehicle-card{% if is_holding %} vehicle-card-holding{% endif %}">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <tr>
+              <td valign="top">
+                <div class="vehicle-name">
+                  {{ v.name }}{% if is_holding %}<span class="holding-badge">Holding</span>{% endif %}
+                </div>
+                <div class="per-day">${{ "%.2f"|format(v.price_per_day) }} / day</div>
+              </td>
+              <td valign="top" align="right">
+                <div class="total-price{% if is_holding and section.holding_summary and section.holding_summary.is_savings %} total-price-holding{% endif %}">${{ "%.2f"|format(v.total_price) }}</div>
+                {% if v.is_new %}
+                  <div class="delta-new">New</div>
+                {% elif v.delta is none or v.delta == 0 %}
+                  <div class="delta-none">&mdash;</div>
+                {% elif v.delta > 0 %}
+                  <div class="delta-up">&#9650; +${{ "%.2f"|format(v.delta) }}</div>
+                {% else %}
+                  <div class="delta-down">&#9660; &minus;${{ "%.2f"|format(v.delta | abs) }}</div>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </td>
+      {% if loop.last and loop.index is odd %}<td width="50%" style="padding-bottom: 8px;"></td>{% endif %}
+      {% if loop.index is even or loop.last %}</tr>{% endif %}
       {% endfor %}
-    </tbody>
-  </table>
+    </table>
+
+  </div>
+  {% endfor %}
+
 </div>
-{% endfor %}
 </body>
 </html>
