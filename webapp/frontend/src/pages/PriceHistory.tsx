@@ -15,6 +15,7 @@ export default function PriceHistoryPage() {
   const [loadingBookings, setLoadingBookings] = useState(true)
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     getBookings()
@@ -31,7 +32,18 @@ export default function PriceHistoryPage() {
     setLoadingHistory(true)
     setHistory(null)
     getPriceHistory(selectedBooking)
-      .then(setHistory)
+      .then((h) => {
+        setHistory(h)
+        // Default to top 6 categories by volatility, or if less than 6 total, select all
+        const cats = Object.keys(h.categories)
+        if (cats.length <= 6) {
+          setSelectedCategories(new Set(cats))
+        } else {
+          // Select a sensible default: common car types
+          const defaults = ['Economy Car', 'Standard Car', 'Compact SUV', 'Standard SUV', 'Premium Car', 'Fullsize SUV'].filter(c => cats.includes(c))
+          setSelectedCategories(new Set(defaults.length > 0 ? defaults : cats.slice(0, 6)))
+        }
+      })
       .catch(() => setError('Failed to load price history'))
       .finally(() => setLoadingHistory(false))
   }, [selectedBooking])
@@ -39,10 +51,16 @@ export default function PriceHistoryPage() {
   if (loadingBookings) return <LoadingSpinner label="Loading…" />
   if (error) return <div className="p-6 text-error">{error}</div>
 
-  const categories = history ? Object.keys(history.categories) : []
-  const colors = getCategoryColors(categories)
+  const allCategories = history ? Object.keys(history.categories) : []
+  const visibleCategories = Array.from(selectedCategories)
+  const visibleCategoriesData = history
+    ? Object.fromEntries(
+        visibleCategories.map(cat => [cat, history.categories[cat]])
+      )
+    : {}
+  const colors = getCategoryColors(visibleCategories)
   const chartData = history
-    ? buildChartData(history.run_dates, history.categories)
+    ? buildChartData(history.run_dates, visibleCategoriesData)
     : []
 
   const holdingCatPrices =
@@ -53,13 +71,23 @@ export default function PriceHistoryPage() {
     ? findBestRun(history!.run_dates, holdingCatPrices)
     : null
 
-  const latestPrices = history
-    ? Object.values(history.categories)
-        .map((prices) => prices[prices.length - 1])
-        .filter((p): p is number => p !== undefined)
-    : []
+  const latestPrices = visibleCategories
+    .map((cat) => visibleCategoriesData[cat])
+    .filter((prices): prices is number[] => Array.isArray(prices))
+    .map((prices) => prices[prices.length - 1])
+    .filter((p): p is number => p !== undefined)
   const currentBest = latestPrices.length > 0 ? Math.min(...latestPrices) : null
   const savings = history ? computeSavings(history.holding_price, currentBest) : null
+
+  const toggleCategory = (cat: string) => {
+    const updated = new Set(selectedCategories)
+    if (updated.has(cat)) {
+      updated.delete(cat)
+    } else {
+      updated.add(cat)
+    }
+    setSelectedCategories(updated)
+  }
 
   return (
     <div data-testid="page-price-history" className="p-6 space-y-6">
@@ -78,6 +106,25 @@ export default function PriceHistoryPage() {
         </select>
       </div>
 
+      {!loadingHistory && allCategories.length > 0 && (
+        <div className="bg-surface-container rounded-lg p-4 space-y-3">
+          <p className="text-sm font-body font-medium text-on-surface">Vehicle Categories ({visibleCategories.length}/{allCategories.length})</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
+            {allCategories.map((cat) => (
+              <label key={cat} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedCategories.has(cat)}
+                  onChange={() => toggleCategory(cat)}
+                  className="w-4 h-4 rounded accent-primary"
+                />
+                <span className="text-xs font-body text-on-surface">{cat}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
       {loadingHistory && <LoadingSpinner label="Loading price history…" />}
 
       {!loadingHistory && history && (
@@ -89,10 +136,16 @@ export default function PriceHistoryPage() {
                 description="Run the tracker to collect price data."
                 icon="show_chart"
               />
+            ) : visibleCategories.length === 0 ? (
+              <EmptyState
+                title="No categories selected"
+                description="Select at least one category above to view the chart."
+                icon="show_chart"
+              />
             ) : (
               <PriceChart
                 data={chartData}
-                categories={categories}
+                categories={visibleCategories}
                 colors={colors}
                 holdingPrice={history.holding_price}
               />
