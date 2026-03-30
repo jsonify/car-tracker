@@ -56,10 +56,12 @@
     <div class="booking-name">{{ section.booking.name }}</div>
     <div class="date-range">{{ section.booking.pickup_date }} {{ section.booking.pickup_time }} &rarr; {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}</div>
 
-    {% if section.countdown_days > 0 %}
-    <div class="countdown-badge">&#9201; {{ section.countdown_days }} days until your booking</div>
-    {% elif section.countdown_days == 0 %}
-    <div class="countdown-badge">&#10004; Today is your booking day!</div>
+    {% if section.countdown_days >= 0 %}
+    <div class="countdown-badge">
+      {% if section.countdown_days > 0 %}&#9201; {{ section.countdown_days }} days until your booking
+      {% else %}&#10004; Today is your booking day!
+      {% endif %}
+    </div>
     {% endif %}
 
     {% if section.holding_summary %}
@@ -108,14 +110,12 @@
                 <div class="total-price{% if is_holding and section.holding_summary and section.holding_summary.is_savings %} total-price-holding{% endif %}">${{ "%.2f"|format(v.total_price) }}</div>
                 {% if v.is_new %}
                   <div class="delta-new">New</div>
-                {% elif v.delta is none %}
+                {% elif v.delta is none or v.delta == 0 %}
                   <div class="delta-none">&mdash;</div>
                 {% elif v.delta > 0 %}
                   <div class="delta-up">&#9650; +${{ "%.2f"|format(v.delta) }}</div>
-                {% elif v.delta < 0 %}
-                  <div class="delta-down">&#9660; &minus;${{ "%.2f"|format(v.delta | abs) }}</div>
                 {% else %}
-                  <div class="delta-none">&mdash;</div>
+                  <div class="delta-down">&#9660; &minus;${{ "%.2f"|format(v.delta | abs) }}</div>
                 {% endif %}
               </td>
             </tr>
