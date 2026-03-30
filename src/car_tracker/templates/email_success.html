@@ -18,10 +18,11 @@
   .wrapper { max-width: 640px; margin: 0 auto; padding: 32px 24px; }
   .run-ts { font-size: 11px; color: #a3aac4; margin-bottom: 32px; }
   .section { margin-bottom: 48px; }
-  .location-label { font-size: 11px; font-weight: 600; color: #699cff; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
-  .booking-name { font-size: 32px; font-weight: 800; color: #dee5ff; margin: 0 0 4px 0; line-height: 1.15; }
-  .date-range { font-size: 13px; color: #a3aac4; margin-bottom: 12px; }
-  .countdown-badge { display: inline-block; background-color: #141f38; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #dee5ff; margin-bottom: 20px; }
+  .section-header { border-left: 4px solid #699cff; padding-left: 16px; margin-bottom: 16px; }
+  .location-label { font-size: 11px; font-weight: 700; color: #699cff; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+  .booking-name { font-size: 36px; font-weight: 800; color: #ffffff; margin: 0 0 6px 0; line-height: 1.1; }
+  .date-range { font-size: 13px; color: #c4ccdf; margin-bottom: 0; }
+  .countdown-badge { display: inline-block; background-color: #1e2e50; border: 1px solid #2e4070; padding: 6px 14px; border-radius: 10px; font-size: 13px; font-weight: 500; color: #dee5ff; margin-bottom: 20px; margin-top: 12px; }
   .hero-card { background-color: #192540; border: 1px solid #2a3450; border-radius: 24px; padding: 28px; margin-bottom: 16px; }
   .price-label { font-size: 10px; color: #a3aac4; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
   .holding-price { font-size: 38px; font-weight: 800; color: #dee5ff; margin-bottom: 20px; line-height: 1.1; }
@@ -32,9 +33,11 @@
   .status-title-ahead { font-size: 16px; font-weight: 700; color: #ff6f7e; margin-bottom: 8px; }
   .status-body { font-size: 14px; color: #dee5ff; line-height: 1.5; }
   .vehicle-card { background-color: #192540; border-radius: 12px; padding: 14px 16px; border: 1px solid #232f4a; }
-  .vehicle-card-holding { border: 2px solid #2a5a40; }
+  .vehicle-card-holding-savings { background-color: #0a2318; border-radius: 12px; padding: 14px 16px; border: 2px solid #1a5c38; }
+  .vehicle-card-holding-ahead { background-color: #280e18; border-radius: 12px; padding: 14px 16px; border: 2px solid #5c1a28; }
   .vehicle-name { font-size: 15px; font-weight: 700; color: #dee5ff; }
-  .holding-badge { display: inline-block; background-color: #06b77f; color: #002919; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 2px 6px; border-radius: 100px; margin-left: 5px; vertical-align: middle; }
+  .holding-badge-savings { display: inline-block; background-color: #69f6b8; color: #002919; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 3px 7px; border-radius: 100px; margin-left: 5px; vertical-align: middle; }
+  .holding-badge-ahead { display: inline-block; background-color: #ff6f7e; color: #2a0008; font-size: 9px; font-weight: 700; text-transform: uppercase; padding: 3px 7px; border-radius: 100px; margin-left: 5px; vertical-align: middle; }
   .per-day { font-size: 11px; color: #a3aac4; margin-top: 3px; }
   .total-price { font-size: 18px; font-weight: 800; color: #dee5ff; }
   .total-price-holding { color: #69f6b8; }
@@ -52,9 +55,11 @@
   {% for section in sections %}
   <div class="section">
 
-    <div class="location-label">{{ section.booking.pickup_location }}</div>
-    <div class="booking-name">{{ section.booking.name }}</div>
-    <div class="date-range">{{ section.booking.pickup_date }} {{ section.booking.pickup_time }} &rarr; {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}</div>
+    <div class="section-header">
+      <div class="location-label">{{ section.booking.pickup_location }}</div>
+      <div class="booking-name">{{ section.booking.name }}</div>
+      <div class="date-range">{{ section.booking.pickup_date }} {{ section.booking.pickup_time }} &rarr; {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}</div>
+    </div>
 
     {% if section.countdown_days >= 0 %}
     <div class="countdown-badge">
@@ -97,12 +102,12 @@
       {% set is_holding = section.booking.holding_vehicle_type == v.name %}
       {% if loop.index is odd %}<tr>{% endif %}
       <td width="50%" valign="top" style="{% if loop.index is odd %}padding-right: 4px;{% else %}padding-left: 4px;{% endif %} padding-bottom: 8px;">
-        <div class="vehicle-card{% if is_holding %} vehicle-card-holding{% endif %}">
+        <div class="{% if is_holding and section.holding_summary %}{% if section.holding_summary.is_savings %}vehicle-card-holding-savings{% else %}vehicle-card-holding-ahead{% endif %}{% else %}vehicle-card{% endif %}">
           <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
               <td valign="top">
                 <div class="vehicle-name">
-                  {{ v.name }}{% if is_holding %}<span class="holding-badge">Holding</span>{% endif %}
+                  {{ v.name }}{% if is_holding and section.holding_summary %}{% if section.holding_summary.is_savings %}<span class="holding-badge-savings">&#9660; Re-book</span>{% else %}<span class="holding-badge-ahead">&#9650; Keep</span>{% endif %}{% endif %}
                 </div>
                 <div class="per-day">${{ "%.2f"|format(v.price_per_day) }} / day</div>
               </td>
