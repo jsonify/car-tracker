@@ -66,7 +66,7 @@
 
     {% if section.holding_summary %}
     <div class="hero-card">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
         <tr>
           <td width="48%" valign="top" style="padding-right: 20px;">
             <div class="price-label">Your holding price</div>
@@ -77,8 +77,8 @@
           <td width="52%" valign="middle">
             {% if section.holding_summary.is_savings %}
             <div class="status-card-savings">
-              <div class="status-title-savings">&#10003; Holding Saves You Money</div>
-              <div class="status-body">You're saving <strong style="color: #69f6b8;">${{ "%.2f"|format(section.holding_summary.savings) }}</strong> &mdash; your current booking is the best option.</div>
+              <div class="status-title-savings">&#128176; New Lower Price Found!</div>
+              <div class="status-body">A better price is available! You can save <strong style="color: #69f6b8;">${{ "%.2f"|format(section.holding_summary.savings) }}</strong> by re-booking.</div>
             </div>
             {% else %}
             <div class="status-card-ahead">
@@ -92,13 +92,13 @@
     </div>
     {% endif %}
 
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
       {% for v in section.vehicles %}
       {% set is_holding = section.booking.holding_vehicle_type == v.name %}
       {% if loop.index is odd %}<tr>{% endif %}
       <td width="50%" valign="top" style="{% if loop.index is odd %}padding-right: 4px;{% else %}padding-left: 4px;{% endif %} padding-bottom: 8px;">
         <div class="vehicle-card{% if is_holding %} vehicle-card-holding{% endif %}">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
             <tr>
               <td valign="top">
                 <div class="vehicle-name">
@@ -122,6 +122,7 @@
           </table>
         </div>
       </td>
+      {% if loop.last and loop.index is odd %}<td width="50%" style="padding-bottom: 8px;"></td>{% endif %}
       {% if loop.index is even or loop.last %}</tr>{% endif %}
       {% endfor %}
     </table>
