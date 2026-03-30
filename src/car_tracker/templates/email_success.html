@@ -1,98 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
 <meta charset="UTF-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Nocturnal Navigator | Price Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "on-surface-variant": "#a3aac4",
+          "surface-container-high": "#141f38",
+          "surface-container-lowest": "#000000",
+          "on-primary-fixed": "#00452d",
+          "tertiary-fixed-dim": "#ff7986",
+          "surface-container": "#0f1930",
+          "primary": "#69f6b8",
+          "secondary-container": "#005ac2",
+          "on-surface": "#dee5ff",
+          "surface-container-low": "#091328",
+          "surface-bright": "#1f2b49",
+          "background": "#060e20",
+          "on-secondary": "#001e4a",
+          "on-primary-container": "#002919",
+          "primary-fixed": "#69f6b8",
+          "secondary": "#699cff",
+          "surface-tint": "#69f6b8",
+          "on-background": "#dee5ff",
+          "surface-variant": "#192540",
+          "on-primary-fixed-variant": "#006544",
+          "tertiary-container": "#fc4563",
+          "tertiary-dim": "#ff6f7e",
+          "on-error": "#490006",
+          "on-error-container": "#ffa8a3",
+          "inverse-surface": "#faf8ff",
+          "on-tertiary": "#490010",
+          "secondary-fixed": "#bfd1ff",
+          "secondary-fixed-dim": "#a9c4ff",
+          "inverse-primary": "#006d4a",
+          "surface": "#060e20",
+          "on-tertiary-container": "#100001",
+          "on-tertiary-fixed": "#39000b",
+          "surface-dim": "#060e20",
+          "surface-container-highest": "#192540",
+          "secondary-dim": "#699cff",
+          "tertiary-fixed": "#ff9099",
+          "primary-dim": "#58e7ab",
+          "inverse-on-surface": "#4d556b",
+          "tertiary": "#ff6f7e",
+          "outline": "#6d758c",
+          "outline-variant": "#40485d",
+          "primary-fixed-dim": "#58e7ab",
+          "error-dim": "#d7383b",
+          "on-secondary-fixed": "#003271",
+          "primary-container": "#06b77f",
+          "error": "#ff716c",
+          "error-container": "#9f0519",
+          "on-primary": "#005a3c",
+          "on-tertiary-fixed-variant": "#780021",
+          "on-secondary-fixed-variant": "#004da8",
+          "on-secondary-container": "#f7f7ff"
+        },
+        fontFamily: {
+          "headline": ["Plus Jakarta Sans"],
+          "body": ["Inter"],
+          "label": ["Inter"]
+        },
+        borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+      },
+    },
+  }
+</script>
 <style>
-  body { font-family: Arial, sans-serif; font-size: 14px; color: #222; }
-  table { border-collapse: collapse; width: 100%; margin-bottom: 24px; }
-  th { background: #f0f0f0; text-align: left; padding: 6px 10px; border-bottom: 2px solid #ccc; }
-  td { padding: 5px 10px; border-bottom: 1px solid #e0e0e0; }
-  .up   { color: #c0392b; }
-  .down { color: #27ae60; }
-  .new  { color: #7f8c8d; font-style: italic; }
-  .dash { color: #aaa; }
-  .booking-section { margin-bottom: 32px; }
-  .booking-header { font-size: 16px; font-weight: bold; margin-bottom: 6px; border-bottom: 2px solid #333; padding-bottom: 4px; }
-  .countdown { font-size: 13px; color: #555; margin-top: 4px; margin-bottom: 6px; }
-  .params { margin-bottom: 12px; font-size: 13px; color: #555; }
-  .holding { margin-bottom: 14px; font-size: 14px; padding: 8px 12px; border-radius: 4px; }
-  .holding-savings { background: #eafaf1; border-left: 4px solid #27ae60; }
-  .holding-ahead   { background: #fef9e7; border-left: 4px solid #f39c12; }
-  .savings-amt { color: #27ae60; font-weight: bold; }
-  .ahead-amt   { color: #e67e22; font-weight: bold; }
-  .run-ts { font-size: 12px; color: #888; margin-bottom: 20px; }
-  .holding-row-savings { background: #eafaf1; }
-  .holding-row-ahead   { background: #fef9e7; }
+  .glass-card {
+    background: rgba(25, 37, 64, 0.4);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
 </style>
 </head>
-<body>
-<div class="run-ts">Run: {{ run_ts }}</div>
-{% for section in sections %}
-<div class="booking-section">
-  <div class="booking-header">{{ section.booking.name }}</div>
-  {% if section.countdown_days > 0 %}<div class="countdown">{{ section.countdown_days }} days until your booking</div>{% elif section.countdown_days == 0 %}<div class="countdown">Today is your booking day!</div>{% endif %}
-  <div class="params">
-    <strong>{{ section.booking.pickup_location }}</strong> &nbsp;·&nbsp;
-    {{ section.booking.pickup_date }} {{ section.booking.pickup_time }} → {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}
-  </div>
-  {% if section.holding_summary %}
-    {% if section.holding_summary.is_savings %}
-    <div class="holding holding-savings">
-      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
-      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
-      <span class="savings-amt">Savings: ${{ "%.2f"|format(section.holding_summary.savings) }}</span>
+<body class="bg-background text-on-background font-body antialiased">
+
+<main class="max-w-4xl mx-auto px-6 py-12 space-y-16">
+
+  <div class="run-ts text-xs text-on-surface-variant font-label mb-2">Run: {{ run_ts }}</div>
+
+  {% for section in sections %}
+  <section class="space-y-8">
+
+    <!-- Section Header -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <div>
+        <span class="text-secondary font-label uppercase tracking-widest text-xs font-semibold">{{ section.booking.pickup_location }}</span>
+        <h2 class="text-4xl font-headline font-extrabold text-on-background mt-1">{{ section.booking.name }}</h2>
+        <p class="text-on-surface-variant text-sm mt-1">
+          {{ section.booking.pickup_date }} {{ section.booking.pickup_time }} &rarr; {{ section.booking.dropoff_date }} {{ section.booking.dropoff_time }}
+        </p>
+      </div>
+      {% if section.countdown_days > 0 %}
+      <div class="bg-surface-container-high px-4 py-2 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">timer</span>
+        <span class="font-medium text-on-surface">{{ section.countdown_days }} days until your booking</span>
+      </div>
+      {% elif section.countdown_days == 0 %}
+      <div class="bg-surface-container-high px-4 py-2 rounded-xl flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">event_available</span>
+        <span class="font-medium text-on-surface">Today is your booking day!</span>
+      </div>
+      {% endif %}
     </div>
-    {% else %}
-    <div class="holding holding-ahead">
-      Your holding price: ${{ "%.2f"|format(section.holding_summary.holding_price) }} &nbsp;·&nbsp;
-      Best current price: ${{ "%.2f"|format(section.holding_summary.best_price) }} &nbsp;·&nbsp;
-      <span class="ahead-amt">You're ahead by ${{ "%.2f"|format(section.holding_summary.savings) }} — keep your booking</span>
+
+    {% if section.holding_summary %}
+    <!-- Hero Summary Card -->
+    <div class="glass-card p-8 rounded-[2rem] border border-outline-variant/15 relative overflow-hidden">
+      <div class="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] -mr-32 -mt-32"></div>
+      <div class="relative z-10 grid md:grid-cols-2 gap-8 items-center">
+        <div class="space-y-6">
+          <div class="space-y-1">
+            <p class="text-on-surface-variant font-label text-sm uppercase tracking-wider">Your holding price</p>
+            <p class="text-5xl font-headline font-extrabold text-on-background">${{ "%.2f"|format(section.holding_summary.holding_price) }}</p>
+          </div>
+          <div class="space-y-1">
+            <p class="text-on-surface-variant font-label text-sm uppercase tracking-wider">Best current price</p>
+            <p class="text-3xl font-headline font-bold text-on-surface-variant opacity-60">${{ "%.2f"|format(section.holding_summary.best_price) }}</p>
+          </div>
+        </div>
+        {% if section.holding_summary.is_savings %}
+        <div class="bg-primary/10 border border-primary/20 p-6 rounded-2xl space-y-3">
+          <div class="flex items-center gap-3 text-primary">
+            <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+            <span class="text-xl font-bold font-headline">Holding Saves You Money</span>
+          </div>
+          <p class="text-lg leading-relaxed text-on-surface">You're saving <span class="text-primary font-bold">${{ "%.2f"|format(section.holding_summary.savings) }}</span> — your current booking is the best option.</p>
+        </div>
+        {% else %}
+        <div class="bg-tertiary/10 border border-tertiary/20 p-6 rounded-2xl space-y-3">
+          <div class="flex items-center gap-3 text-tertiary">
+            <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">warning</span>
+            <span class="text-xl font-bold font-headline">Market Moved Against You</span>
+          </div>
+          <p class="text-lg leading-relaxed text-on-surface">You're ahead by <span class="text-tertiary font-bold">${{ "%.2f"|format(section.holding_summary.savings) }}</span> — keep your current booking for now.</p>
+        </div>
+        {% endif %}
+      </div>
     </div>
     {% endif %}
-  {% endif %}
-  <table>
-    <thead>
-      <tr>
-        <th>Vehicle Type</th>
-        <th>Total</th>
-        <th>Per Day</th>
-        <th>Change</th>
-      </tr>
-    </thead>
-    <tbody>
+
+    <!-- Vehicle Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       {% for v in section.vehicles %}
-      {% set is_holding_row = section.booking.holding_vehicle_type == v.name %}
-      {% if is_holding_row and section.holding_summary %}
-        {% if section.holding_summary.is_savings %}
-          {% set row_class = "holding-row-savings" %}
-        {% else %}
-          {% set row_class = "holding-row-ahead" %}
-        {% endif %}
-      {% else %}
-        {% set row_class = "" %}
-      {% endif %}
-      <tr class="{{ row_class }}">
-        <td>{{ v.name }}</td>
-        <td>${{ "%.2f"|format(v.total_price) }}</td>
-        <td>${{ "%.2f"|format(v.price_per_day) }}</td>
-        <td>
+      {% set is_holding = section.booking.holding_vehicle_type == v.name %}
+      <div class="bg-surface-container-highest p-5 rounded-xl flex justify-between items-center hover:bg-surface-bright transition-colors{% if is_holding %} border-2 border-primary/20{% endif %}">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <h4 class="text-lg font-bold font-headline">{{ v.name }}</h4>
+            {% if is_holding %}
+            <span class="bg-primary-container text-on-primary-container text-[10px] px-2 py-0.5 rounded-full font-bold uppercase">Holding</span>
+            {% endif %}
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-on-surface-variant text-sm">${{ "%.2f"|format(v.price_per_day) }} / day</span>
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xl font-extrabold{% if is_holding and section.holding_summary and section.holding_summary.is_savings %} text-primary{% endif %}">${{ "%.2f"|format(v.total_price) }}</div>
           {% if v.is_new %}
-            <span class="new">New</span>
+            <div class="text-on-surface-variant text-sm font-medium italic">New</div>
           {% elif v.delta is none %}
-            <span class="dash">—</span>
+            <div class="text-on-surface-variant text-sm font-medium">No Change</div>
           {% elif v.delta > 0 %}
-            <span class="up">▲ ${{ "%.2f"|format(v.delta) }}</span>
+            <div class="flex items-center justify-end gap-1 text-tertiary text-sm font-bold">
+              <span class="material-symbols-outlined text-sm">trending_up</span>
+              <span>+${{ "%.2f"|format(v.delta) }}</span>
+            </div>
           {% elif v.delta < 0 %}
-            <span class="down">▼ ${{ "%.2f"|format(v.delta | abs) }}</span>
+            <div class="flex items-center justify-end gap-1 text-primary text-sm font-bold">
+              <span class="material-symbols-outlined text-sm">trending_down</span>
+              <span>-${{ "%.2f"|format(v.delta | abs) }}</span>
+            </div>
           {% else %}
-            <span class="dash">—</span>
+            <div class="text-on-surface-variant text-sm font-medium">No Change</div>
           {% endif %}
-        </td>
-      </tr>
+        </div>
+      </div>
       {% endfor %}
-    </tbody>
-  </table>
-</div>
-{% endfor %}
+    </div>
+
+  </section>
+  {% endfor %}
+
+</main>
 </body>
 </html>
