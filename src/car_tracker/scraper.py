@@ -215,11 +215,13 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         )
     await _slow_pause(2.5, 3.5)
 
-    # Click first matching autocomplete suggestion
-    suggestion = page.locator("ul.ui-list li").first
+    # Click first matching autocomplete suggestion.
+    # Use :visible to skip the hidden pre-selected airport item (class="airport selected")
+    # which Playwright resolves first but can never become visible.
+    suggestion = page.locator("ul.ui-list li:visible").first
     await suggestion.wait_for(state="visible", timeout=10000)
-    # Try exact airport match first
-    airport_item = page.locator(f'li[data-value="{location}"]').first
+    # Try exact airport match first (visible items only)
+    airport_item = page.locator(f'ul.ui-list li[data-value="{location}"]:visible').first
     try:
         await airport_item.wait_for(state="visible", timeout=3000)
         await airport_item.click()
