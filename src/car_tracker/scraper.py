@@ -121,6 +121,8 @@ class ChromeManager:  # pragma: no cover
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
                 "--disable-backgrounding-occluded-windows",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
             ])
         return args
 
