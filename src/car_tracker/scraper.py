@@ -221,7 +221,7 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     suggestion = page.locator("ul.ui-list li:visible").first
     await suggestion.wait_for(state="visible", timeout=10000)
     # Try exact airport match first (visible items only)
-    airport_item = page.locator(f'li[data-value="{location}"]:visible').first
+    airport_item = page.locator(f'ul.ui-list li[data-value="{location}"]:visible').first
     try:
         await airport_item.wait_for(state="visible", timeout=3000)
         await airport_item.click()
