@@ -14,6 +14,16 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG="$REPO_DIR/car-tracker.log"
 TIMESTAMP="$(date '+%Y-%m-%d %H:%M:%S')"
+LOCKFILE="$REPO_DIR/.run.lock"
+
+# ---------------------------------------------------------------------------
+# 0. Acquire lock — prevent concurrent runs (e.g. launchd + Shortcuts overlap)
+# ---------------------------------------------------------------------------
+exec 9>"$LOCKFILE"
+if ! flock -n 9; then
+    echo "[$TIMESTAMP] run.sh: another instance is already running; exiting" >> "$LOG"
+    exit 0
+fi
 
 # ---------------------------------------------------------------------------
 # 1. git pull (best-effort, non-fatal)
@@ -29,6 +39,7 @@ fi
 # ---------------------------------------------------------------------------
 # 2. check_imessage — apply any pending iMessage config commands (best-effort)
 # ---------------------------------------------------------------------------
+cd "$REPO_DIR"
 source "$REPO_DIR/.venv/bin/activate"
 
 echo "[$TIMESTAMP] run.sh: checking iMessage for config updates" >> "$LOG"
