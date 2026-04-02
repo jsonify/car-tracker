@@ -25,13 +25,17 @@ vi.mock('recharts', () => {
   const MockCartesianGrid = (props: any) => (
     <div data-testid="cartesian-grid" data-stroke={props.stroke} />
   )
-  const MockTooltip = (props: any) => (
-    <div
-      data-testid="tooltip"
-      data-bg={props.contentStyle?.backgroundColor}
-      data-has-label-formatter={typeof props.labelFormatter === 'function' ? 'true' : 'false'}
-    />
-  )
+  const MockTooltip = (props: any) => {
+    const formatterResult = props.formatter ? props.formatter(123.45, 'Economy Car') : null
+    return (
+      <div
+        data-testid="tooltip"
+        data-bg={props.contentStyle?.backgroundColor}
+        data-has-label-formatter={typeof props.labelFormatter === 'function' ? 'true' : 'false'}
+        data-formatter-name={Array.isArray(formatterResult) ? String(formatterResult[1]) : ''}
+      />
+    )
+  }
   const MockReferenceLine = (props: any) => (
     <div data-testid="reference-line" data-stroke={props.stroke} data-y={props.y} />
   )
@@ -141,6 +145,18 @@ describe('PriceChart', () => {
       />
     )
     expect(getByTestId('x-axis').getAttribute('data-has-tick-formatter')).toBe('true')
+  })
+
+  it('tooltip formatter returns category name (not undefined)', () => {
+    const { getByTestId } = render(
+      <PriceChart
+        data={sampleData}
+        categories={['Economy', 'Compact']}
+        colors={{ Economy: '#fe9821', Compact: '#a68cff' }}
+        holdingPrice={null}
+      />
+    )
+    expect(getByTestId('tooltip').getAttribute('data-formatter-name')).toBe('Economy Car')
   })
 
   it('passes labelFormatter to Tooltip', () => {
