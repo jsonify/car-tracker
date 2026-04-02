@@ -102,5 +102,9 @@ Reusable patterns discovered during development. Read this before starting new w
 ## Startup Scripts
 - **Parallel process startup with cleanup:** Use `trap cleanup EXIT INT TERM` + background `&` + store PIDs + `wait` for clean concurrent server launch in shell scripts. Run backend from project root via `uv run uvicorn webapp.backend.main:app`. (from: react_webapp_20260318)
 
+## Jinja2 / Email Templates
+- **Removing a Jinja2 global function: audit template tests too.** Stale test assertions on rendered output (e.g. `assert "Trend" in html`, sparkline SVG checks) won't fail on import but will fail at runtime or silently pass after the feature is gone — find and delete them when deleting the function. (from: fix_change_trend_20260321)
+- **Unused `field` import after dataclass cleanup:** When removing the only `field(default_factory=...)` usage in a dataclass, also remove `field` from the `from dataclasses import dataclass, field` import line to avoid an unused-import warning. (from: fix_change_trend_20260321)
+
 ---
-Last refreshed: 2026-03-18 (from: react_webapp_20260318)
+Last refreshed: 2026-04-01 (from: fix_change_trend_20260321)

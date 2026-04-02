@@ -35,9 +35,11 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Fix Change Delta Bug & Remove Trend Column
-*Link: [./conductor/tracks/fix_change_trend_20260321/](./conductor/tracks/fix_change_trend_20260321/)*
+<!-- archived 2026-04-01: fix_change_trend_20260321 — Fix Change Delta Bug & Remove Trend Column -->
+
+<!-- archived 2026-03-26: webapp_rebuild_20260326 — Webapp Rebuild — Velocity Dark Design System -->
 
 ---
 
-<!-- archived 2026-03-26: webapp_rebuild_20260326 — Webapp Rebuild — Velocity Dark Design System -->
+## [~] Track: Price History Page — Bug Fixes & Chart Enhancements
+*Link: [./conductor/tracks/history_charts_20260401/](./conductor/tracks/history_charts_20260401/)*

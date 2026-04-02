@@ -1,0 +1,33 @@
+{
+  "track_id": "history_charts_20260401",
+  "type": "enhancement",
+  "status": "new",
+  "priority": "critical",
+  "depends_on": ["fix_change_trend_20260321"],
+  "estimated_hours": 1,
+  "created_at": "2026-04-01T00:00:00Z",
+  "updated_at": "2026-04-01T00:00:00Z",
+  "description": "Price History page bug fixes (tooltip, date formatting, label clipping) and five new chart types in a 2-column grid",
+  "beads_epic": "car-tracker-0om",
+  "beads_tasks": {
+    "phase1": "car-tracker-0om.1",
+    "phase1_task1": "car-tracker-0om.1.1",
+    "phase1_task2": "car-tracker-0om.1.2",
+    "phase1_task3": "car-tracker-0om.1.3",
+    "phase2": "car-tracker-0om.2",
+    "phase2_task1": "car-tracker-0om.2.1",
+    "phase2_task2": "car-tracker-0om.2.2",
+    "phase2_task3": "car-tracker-0om.2.3",
+    "phase2_task4": "car-tracker-0om.2.4",
+    "phase3": "car-tracker-0om.3",
+    "phase3_task1": "car-tracker-0om.3.1",
+    "phase3_task2": "car-tracker-0om.3.2",
+    "phase3_task3": "car-tracker-0om.3.3",
+    "phase3_task4": "car-tracker-0om.3.4",
+    "phase4": "car-tracker-0om.4",
+    "phase4_task1": "car-tracker-0om.4.1",
+    "phase5": "car-tracker-0om.5",
+    "phase5_task1": "car-tracker-0om.5.1",
+    "phase5_task2": "car-tracker-0om.5.2"
+  }
+}

@@ -50,5 +50,5 @@
   - Verify full suite passes with coverage ≥ 80%.
   - `fix(email): remove trend column and sparkline dead code`
 
-- [ ] Task 6: Conductor — User Manual Verification 'Phase 2' (Protocol in workflow.md)
+- [x] Task 6: Conductor — User Manual Verification 'Phase 2' (Protocol in workflow.md)
   <!-- depends: task5 -->

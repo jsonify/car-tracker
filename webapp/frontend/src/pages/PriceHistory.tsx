@@ -4,8 +4,20 @@ import Card from '../components/Card'
 import LoadingSpinner from '../components/LoadingSpinner'
 import EmptyState from '../components/EmptyState'
 import PriceChart from '../components/PriceChart'
+import PriceRangeChart from '../components/PriceRangeChart'
+import LatestPricesChart from '../components/LatestPricesChart'
+import PriceChangeChart from '../components/PriceChangeChart'
+import HoldingComparisonChart from '../components/HoldingComparisonChart'
+import AllCategoriesTable from '../components/AllCategoriesTable'
 import Icon from '../components/Icon'
-import { buildChartData, getCategoryColors } from '../utils/chartData'
+import {
+  buildChartData,
+  getCategoryColors,
+  buildPriceRangeData,
+  buildLatestPricesData,
+  buildPriceChangeData,
+  buildHoldingComparisonData,
+} from '../utils/chartData'
 import { findBestRun, computeSavings } from '../utils/insights'
 import { formatRunDate } from '../utils/dateUtils'
 
@@ -35,12 +47,10 @@ export default function PriceHistoryPage() {
     getPriceHistory(selectedBooking)
       .then((h) => {
         setHistory(h)
-        // Default to top 6 categories by volatility, or if less than 6 total, select all
         const cats = Object.keys(h.categories)
         if (cats.length <= 6) {
           setSelectedCategories(new Set(cats))
         } else {
-          // Select a sensible default: common car types
           const defaults = ['Economy Car', 'Standard Car', 'Compact SUV', 'Standard SUV', 'Premium Car', 'Fullsize SUV'].filter(c => cats.includes(c))
           setSelectedCategories(new Set(defaults.length > 0 ? defaults : cats.slice(0, 6)))
         }
@@ -55,9 +65,7 @@ export default function PriceHistoryPage() {
   const allCategories = history ? Object.keys(history.categories) : []
   const visibleCategories = Array.from(selectedCategories)
   const visibleCategoriesData = history
-    ? Object.fromEntries(
-        visibleCategories.map(cat => [cat, history.categories[cat]])
-      )
+    ? Object.fromEntries(visibleCategories.map(cat => [cat, history.categories[cat]]))
     : {}
   const colors = getCategoryColors(visibleCategories)
   const chartData = history
@@ -79,6 +87,19 @@ export default function PriceHistoryPage() {
     .filter((p): p is number => p !== undefined)
   const currentBest = latestPrices.length > 0 ? Math.min(...latestPrices) : null
   const savings = history ? computeSavings(history.holding_price, currentBest) : null
+
+  const priceRangeData = history
+    ? buildPriceRangeData(history.categories, visibleCategories)
+    : []
+  const latestPricesData = history
+    ? buildLatestPricesData(history.categories, visibleCategories)
+    : []
+  const priceChangeData = history
+    ? buildPriceChangeData(history.categories, visibleCategories)
+    : []
+  const holdingComparisonData = history
+    ? buildHoldingComparisonData(history.holding_price, history.holding_vehicle_type, history.categories)
+    : null
 
   const toggleCategory = (cat: string) => {
     const updated = new Set(selectedCategories)
@@ -200,6 +221,31 @@ export default function PriceHistoryPage() {
               )}
             </Card>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="charts-grid">
+            <Card title="Price Range">
+              <PriceRangeChart data={priceRangeData} />
+            </Card>
+            <Card title="Latest Prices">
+              <LatestPricesChart data={latestPricesData} />
+            </Card>
+            <Card title="Price Change">
+              <PriceChangeChart data={priceChangeData} />
+            </Card>
+            <Card title="Holding vs Current">
+              <HoldingComparisonChart
+                data={holdingComparisonData}
+                holdingVehicleType={history.holding_vehicle_type}
+              />
+            </Card>
+          </div>
+
+          <Card title="All Categories Overview">
+            <AllCategoriesTable
+              categories={history.categories}
+              runDates={history.run_dates}
+            />
+          </Card>
         </>
       )}
 
