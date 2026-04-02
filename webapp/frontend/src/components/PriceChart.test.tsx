@@ -15,14 +15,22 @@ vi.mock('recharts', () => {
     <div data-testid={`line-${props.dataKey}`} data-stroke={props.stroke} />
   )
   const MockXAxis = (props: any) => (
-    <div data-testid="x-axis" data-stroke={props.stroke} />
+    <div
+      data-testid="x-axis"
+      data-stroke={props.stroke}
+      data-has-tick-formatter={typeof props.tickFormatter === 'function' ? 'true' : 'false'}
+    />
   )
   const MockYAxis = () => <div data-testid="y-axis" />
   const MockCartesianGrid = (props: any) => (
     <div data-testid="cartesian-grid" data-stroke={props.stroke} />
   )
   const MockTooltip = (props: any) => (
-    <div data-testid="tooltip" data-bg={props.contentStyle?.backgroundColor} />
+    <div
+      data-testid="tooltip"
+      data-bg={props.contentStyle?.backgroundColor}
+      data-has-label-formatter={typeof props.labelFormatter === 'function' ? 'true' : 'false'}
+    />
   )
   const MockReferenceLine = (props: any) => (
     <div data-testid="reference-line" data-stroke={props.stroke} data-y={props.y} />
@@ -121,6 +129,30 @@ describe('PriceChart', () => {
     const refLine = getByTestId('reference-line')
     expect(refLine.getAttribute('data-y')).toBe('299')
     expect(refLine.getAttribute('data-stroke')).toBe(tokens.primary)
+  })
+
+  it('passes formatRunDate to XAxis tickFormatter', () => {
+    const { getByTestId } = render(
+      <PriceChart
+        data={sampleData}
+        categories={['Economy']}
+        colors={{ Economy: '#fe9821' }}
+        holdingPrice={null}
+      />
+    )
+    expect(getByTestId('x-axis').getAttribute('data-has-tick-formatter')).toBe('true')
+  })
+
+  it('passes labelFormatter to Tooltip', () => {
+    const { getByTestId } = render(
+      <PriceChart
+        data={sampleData}
+        categories={['Economy']}
+        colors={{ Economy: '#fe9821' }}
+        holdingPrice={null}
+      />
+    )
+    expect(getByTestId('tooltip').getAttribute('data-has-label-formatter')).toBe('true')
   })
 
   it('does not render reference line when holding price is null', () => {

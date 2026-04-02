@@ -11,6 +11,7 @@ import {
 } from 'recharts'
 import type { ChartPoint } from '../utils/chartData'
 import { colors as tokens, fonts } from '../styles/tokens'
+import { formatRunDate } from '../utils/dateUtils'
 
 interface PriceChartProps {
   data: ChartPoint[]
@@ -26,6 +27,7 @@ export default function PriceChart({ data, categories, colors, holdingPrice }: P
         <CartesianGrid strokeDasharray="3 3" stroke={tokens.outlineVariant} />
         <XAxis
           dataKey="date"
+          tickFormatter={formatRunDate}
           tick={{ fill: tokens.onSurfaceVariant, fontSize: 11, fontFamily: fonts.body }}
           tickLine={false}
           stroke={tokens.outlineVariant}
@@ -45,7 +47,8 @@ export default function PriceChart({ data, categories, colors, holdingPrice }: P
           }}
           labelStyle={{ color: tokens.onSurfaceVariant, fontSize: 12, fontFamily: fonts.headline, fontWeight: 700 }}
           itemStyle={{ color: tokens.onSurface, fontSize: 12, fontFamily: fonts.body }}
-          formatter={(value: number) => [`$${value.toFixed(2)}`, undefined]}
+          labelFormatter={formatRunDate}
+          formatter={(value: number, name: string) => [`$${value.toFixed(2)}`, name]}
         />
         <Legend
           wrapperStyle={{ fontSize: 12, fontFamily: fonts.body, color: tokens.onSurfaceVariant }}

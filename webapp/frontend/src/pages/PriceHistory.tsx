@@ -7,6 +7,7 @@ import PriceChart from '../components/PriceChart'
 import Icon from '../components/Icon'
 import { buildChartData, getCategoryColors } from '../utils/chartData'
 import { findBestRun, computeSavings } from '../utils/insights'
+import { formatRunDate } from '../utils/dateUtils'
 
 export default function PriceHistoryPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -159,7 +160,7 @@ export default function PriceHistoryPage() {
                   <Icon name="star" size={20} className="text-primary mt-0.5" />
                   <div>
                     <p className="text-sm font-body text-on-surface">
-                      <span className="text-tertiary font-semibold">{bestRun.date}</span>
+                      <span className="text-tertiary font-semibold">{formatRunDate(bestRun.date)}</span>
                     </p>
                     <p className="text-xs font-body text-on-surface-variant mt-1">
                       {history.holding_vehicle_type} at{' '}
