@@ -41,5 +41,5 @@ This file tracks all major tracks for the project.
 
 ---
 
-## [~] Track: Price History Page — Bug Fixes & Chart Enhancements
+## [x] Track: Price History Page — Bug Fixes & Chart Enhancements
 *Link: [./conductor/tracks/history_charts_20260401/](./conductor/tracks/history_charts_20260401/)*

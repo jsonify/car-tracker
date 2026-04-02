@@ -23,4 +23,40 @@ Patterns, gotchas, and context discovered during implementation.
   - Patterns: `npx vitest run` must be executed from `webapp/frontend/` (the directory with vite.config.ts), not the repo root — jsdom environment not loaded otherwise
 ---
 
+## [2026-04-01 19:15] - Phase 2 Tasks 1-4: Chart Data Utilities
+- **Implemented:** buildPriceRangeData, buildLatestPricesData, buildPriceChangeData, buildHoldingComparisonData in chartData.ts; 26 new unit tests
+- **Files changed:** `utils/chartData.ts`, `utils/chartData.test.ts`
+- **Commit:** 836bc1f
+- **Learnings:**
+  - Patterns: Phase marked `<!-- execution: parallel -->` but all 4 tasks claimed same files — detected conflict, made sequential, committed as one batch
+  - Patterns: Pure utility functions with no side effects are trivial to test exhaustively; keep all chart transforms in chartData.ts
+---
+
+## [2026-04-01 19:17] - Phase 3 Tasks 1-4: New Chart Components
+- **Implemented:** PriceRangeChart (stacked floating bar), LatestPricesChart (horizontal), PriceChangeChart (Cell conditional color), HoldingComparisonChart (side-by-side); all with empty states and test files
+- **Files changed:** `PriceRangeChart.tsx/test.tsx`, `LatestPricesChart.tsx/test.tsx`, `PriceChangeChart.tsx/test.tsx`, `HoldingComparisonChart.tsx/test.tsx`
+- **Commit:** bffeca6
+- **Learnings:**
+  - Patterns: Stacked BarChart floating range bar — invisible base bar + colored range bar with same `stackId`; Tooltip suppresses base bar value with `[null, null]` return
+  - Patterns: Recharts `<Cell>` component enables per-bar conditional coloring inside a `<Bar>` — map data index to color based on value sign
+  - Gotchas: Parallel sub-agents ran independently and all passed; monitor `parallel_state.json` for completion before aggregating
+---
+
+## [2026-04-01 19:19] - Phase 4 Task 1: AllCategoriesTable
+- **Implemented:** Scrollable sortable HTML table — all categories × all run dates; sort by Latest column via useState toggle; formatRunDate for date headers
+- **Files changed:** `AllCategoriesTable.tsx`, `AllCategoriesTable.test.tsx`
+- **Commit:** bffeca6
+- **Learnings:**
+  - Gotchas: When a value appears in both a run-date cell and the Latest cell, `getByText` fails with "found multiple elements" — use `getAllByText(...).length >= 1` instead
+---
+
+## [2026-04-01 19:22] - Phase 5 Tasks 1-2: Page Integration
+- **Implemented:** Rewrote PriceHistory.tsx to integrate all 5 new components; wrote PriceHistory.test.tsx with 9 tests
+- **Files changed:** `src/pages/PriceHistory.tsx`, `src/pages/PriceHistory.test.tsx`
+- **Commit:** df0a39b
+- **Learnings:**
+  - Gotchas: `page-price-history` testid only renders after async data loads — first test used synchronous query and failed; must wrap even initial render assertions in `waitFor` when component shows a loading spinner first
+  - Patterns: Mock all chart sub-components in page tests with simple `data-testid` divs — tests assertions become trivial and don't rely on Recharts internals
+---
+
 <!-- Learnings from implementation will be appended below -->

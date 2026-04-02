@@ -98,6 +98,11 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Test selector specificity:** When multiple elements share the same text (nav link + page h1), use `getByRole('link', { name: /text/i })` or `getByRole('heading')` instead of `getByText`. (from: react_webapp_20260318)
 - **Pure utility modules for testability:** Extract all business logic into side-effect-free utility modules (countdown, volatility, chartData, tableUtils) — they're easily unit-tested without DOM setup. (from: react_webapp_20260318)
 - **Recharts responsive chart:** Wrap `<LineChart>` in `<ResponsiveContainer width="100%" height={300}>`. Use `<ReferenceLine y={holdingPrice}>` for horizontal threshold lines. (from: react_webapp_20260318)
+- **Deterministic date formatting in tests:** Use `toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })` — the `timeZone: 'UTC'` makes output identical in all CI/local environments regardless of host timezone. (from: history_charts_20260401)
+- **Recharts floating range bar (stacked):** Create a min-to-max bar with two `<Bar stackId="r">`: first bar renders the invisible base (fill transparent), second bar renders the colored range (`max - min`). Tooltip: return `[null, null]` to suppress the base bar's tooltip entry. (from: history_charts_20260401)
+- **Recharts per-bar conditional coloring:** Use `<Cell>` inside `<Bar>` to apply per-entry fill: `{data.map((entry, i) => <Cell key={i} fill={entry.delta < 0 ? green : red} />)}`. (from: history_charts_20260401)
+- **Mock chart components in page tests:** In page-level tests, mock all Recharts chart components as simple `() => <div data-testid="..." />` — assertions become trivial and don't rely on Recharts internals or jsdom canvas limitations. (from: history_charts_20260401)
+- **`getAllByText` for table cell duplicates:** When a value appears in both a data column and a summary/Latest column, `getByText` throws "found multiple elements". Use `getAllByText(val).length >= 1` or `getAllByText(val)[0]` instead. (from: history_charts_20260401)
 
 ## Startup Scripts
 - **Parallel process startup with cleanup:** Use `trap cleanup EXIT INT TERM` + background `&` + store PIDs + `wait` for clean concurrent server launch in shell scripts. Run backend from project root via `uv run uvicorn webapp.backend.main:app`. (from: react_webapp_20260318)
@@ -107,4 +112,4 @@ Reusable patterns discovered during development. Read this before starting new w
 - **Unused `field` import after dataclass cleanup:** When removing the only `field(default_factory=...)` usage in a dataclass, also remove `field` from the `from dataclasses import dataclass, field` import line to avoid an unused-import warning. (from: fix_change_trend_20260321)
 
 ---
-Last refreshed: 2026-04-01 (from: fix_change_trend_20260321)
+Last refreshed: 2026-04-01 (from: history_charts_20260401)
