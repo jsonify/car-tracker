@@ -37,7 +37,12 @@ vi.mock('recharts', () => {
     )
   }
   const MockReferenceLine = (props: any) => (
-    <div data-testid="reference-line" data-stroke={props.stroke} data-y={props.y} />
+    <div
+      data-testid="reference-line"
+      data-stroke={props.stroke}
+      data-y={props.y}
+      data-label-position={props.label?.position}
+    />
   )
   const MockLegend = () => <div data-testid="legend" />
 
@@ -121,6 +126,19 @@ describe('PriceChart', () => {
     expect(getByTestId('line-Compact')).toBeInTheDocument()
   })
 
+  it('has right margin wide enough for holding price label', () => {
+    const { getByTestId } = render(
+      <PriceChart
+        data={sampleData}
+        categories={['Economy']}
+        colors={{ Economy: '#fe9821' }}
+        holdingPrice={null}
+      />
+    )
+    const margin = JSON.parse(getByTestId('line-chart').getAttribute('data-margin') ?? '{}')
+    expect(margin.right).toBeGreaterThanOrEqual(100)
+  })
+
   it('renders reference line when holding price provided', () => {
     const { getByTestId } = render(
       <PriceChart
@@ -169,6 +187,19 @@ describe('PriceChart', () => {
       />
     )
     expect(getByTestId('tooltip').getAttribute('data-has-label-formatter')).toBe('true')
+  })
+
+  it('reference line label is positioned inside chart boundary', () => {
+    const { getByTestId } = render(
+      <PriceChart
+        data={sampleData}
+        categories={['Economy']}
+        colors={{ Economy: '#fe9821' }}
+        holdingPrice={299}
+      />
+    )
+    const pos = getByTestId('reference-line').getAttribute('data-label-position')
+    expect(pos).toMatch(/^inside/)
   })
 
   it('does not render reference line when holding price is null', () => {

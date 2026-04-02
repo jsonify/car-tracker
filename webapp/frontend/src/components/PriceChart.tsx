@@ -23,7 +23,7 @@ interface PriceChartProps {
 export default function PriceChart({ data, categories, colors, holdingPrice }: PriceChartProps) {
   return (
     <ResponsiveContainer width="100%" height={320}>
-      <LineChart data={data} margin={{ top: 8, right: 20, left: 10, bottom: 8 }}>
+      <LineChart data={data} margin={{ top: 8, right: 110, left: 10, bottom: 8 }}>
         <CartesianGrid strokeDasharray="3 3" stroke={tokens.outlineVariant} />
         <XAxis
           dataKey="date"
@@ -63,7 +63,7 @@ export default function PriceChart({ data, categories, colors, holdingPrice }: P
               fill: tokens.primary,
               fontSize: 11,
               fontFamily: fonts.headline,
-              position: 'right',
+              position: 'insideTopRight',
             }}
           />
         )}
