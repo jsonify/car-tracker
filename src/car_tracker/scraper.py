@@ -365,7 +365,7 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     return results
 
 
-async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
+async def _run_scrape(booking: BookingConfig, username: str, password: str) -> list[VehicleResult]:  # pragma: no cover
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
@@ -374,6 +374,10 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
         print("  Loading Costco Travel...", end=" ", flush=True)
         await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
         await _slow_pause(3, 5)
+        print("done")
+
+        print("  Logging in...", end=" ", flush=True)
+        await _login(page, username, password)
         print("done")
 
         print("  Filling search form...", end=" ", flush=True)
@@ -390,7 +394,7 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
 
 def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]:  # pragma: no cover
     """
-    Launch Chrome, scrape Costco Travel rental cars, and return results.
+    Launch Chrome, log into Costco Travel, scrape rental car prices, and return results.
 
     Args:
         booking: The BookingConfig to scrape.
@@ -400,15 +404,18 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
         List of VehicleResult in the order they appear on the page.
 
     Raises:
+        ValueError:   If COSTCO_USERNAME or COSTCO_PASSWORD is missing from .env.
+        LoginError:   If login fails or member pricing is not detected.
         RuntimeError: If Chrome fails to start or results cannot be scraped.
     """
+    username, password = load_costco_config()
     chrome = ChromeManager(debug=debug)
     chrome.start()
     try:
         last_err: Exception | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                results = asyncio.run(_run_scrape(booking))
+                results = asyncio.run(_run_scrape(booking, username, password))
                 break
             except Exception as exc:
                 last_err = exc
