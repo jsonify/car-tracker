@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "on-tertiary-container": "#004d57",
+            "on-surface-variant": "#ada9b3",
+            "secondary-dim": "#7e51ff",
+            "on-primary-fixed": "#281300",
+            "on-secondary-container": "#e4daff",
+            "surface-dim": "#0e0d14",
+            "tertiary-container": "#00e3fd",
+            "error": "#ff7351",
+            "primary-dim": "#ed8b0e",
+            "primary-fixed-dim": "#ed8b0e",
+            "primary-fixed": "#fe9821",
+            "on-tertiary": "#005762",
+            "surface-container-high": "#201e28",
+            "surface": "#0e0d14",
+            "primary-container": "#ea8908",
+            "background": "#0e0d14",
+            "tertiary-fixed-dim": "#00d4ec",
+            "tertiary": "#81ecff",
+            "surface-bright": "#2c2b36",
+            "on-error": "#450900",
+            "surface-container-low": "#14121a",
+            "surface-container": "#1a1921",
+            "error-dim": "#d53d18",
+            "on-secondary-fixed": "#3b00a0",
+            "tertiary-dim": "#00d4ec",
+            "inverse-on-surface": "#56545c",
+            "surface-tint": "#fe9821",
+            "error-container": "#b92902",
+            "outline-variant": "#49474f",
+            "secondary-fixed": "#d8caff",
+            "on-background": "#f4eff9",
+            "on-surface": "#f4eff9",
+            "on-tertiary-fixed-variant": "#005762",
+            "on-primary-fixed-variant": "#582f00",
+            "surface-container-lowest": "#000000",
+            "secondary-fixed-dim": "#cabaff",
+            "inverse-surface": "#fcf8ff",
+            "on-tertiary-fixed": "#003840",
+            "secondary": "#a68cff",
+            "outline": "#77747d",
+            "on-secondary-fixed-variant": "#591bdc",
+            "on-primary": "#4b2800",
+            "inverse-primary": "#8d5000",
+            "secondary-container": "#591adc",
+            "primary": "#fe9821",
+            "on-secondary": "#25006b",
+            "surface-variant": "#26252f",
+            "tertiary-fixed": "#00e3fd",
+            "on-error-container": "#ffd2c8",
+            "surface-container-highest": "#26252f",
+            "on-primary-container": "#371c00"
+          },
+          fontFamily: {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .glass-effect {
+      background: rgba(20, 18, 26, 0.7);
+      backdrop-filter: blur(16px);
+    }
+    .primary-gradient {
+      background: linear-gradient(135deg, #fe9821 0%, #ea8908 100%);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-[#1a1921] border-none shadow-[32px_0_32px_rgba(0,0,0,0.2)] z-50">
+<div class="text-xl font-extrabold text-[#fe9821] px-4 py-6 font-headline tracking-tighter">
+      Aviator Pro
+    </div>
+<nav class="flex-1">
+<div class="space-y-1">
+<a class="text-[#ada9b3] flex items-center px-6 py-4 hover:bg-[#26252f] hover:text-[#f4eff9] transition-all duration-300 font-label text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="dashboard">dashboard</span>
+          Dashboard
+        </a>
+<a class="text-[#ada9b3] flex items-center px-6 py-4 hover:bg-[#26252f] hover:text-[#f4eff9] transition-all duration-300 font-label text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="calendar_today">calendar_today</span>
+          Bookings
+        </a>
+<a class="text-[#ada9b3] flex items-center px-6 py-4 hover:bg-[#26252f] hover:text-[#f4eff9] transition-all duration-300 font-label text-sm font-medium tracking-wide" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="query_stats">query_stats</span>
+          Market Analysis
+        </a>
+<a class="bg-[#26252f] text-[#fe9821] border-r-4 border-[#fe9821] flex items-center px-6 py-4 font-label text-sm font-medium tracking-wide active:translate-x-1 transition-transform" href="#">
+<span class="material-symbols-outlined mr-3" data-icon="settings">settings</span>
+          Settings
+        </a>
+</div>
+</nav>
+<div class="p-4 mb-6">
+<div class="bg-surface-container-highest rounded-xl p-4 flex flex-col gap-3">
+<div class="text-xs text-on-surface-variant font-bold uppercase tracking-widest">Elite Membership</div>
+<button class="primary-gradient text-on-primary font-bold py-2 px-4 rounded-lg text-sm w-full transition-transform active:scale-95">
+          Upgrade to Elite
+        </button>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="md:ml-64 min-h-screen bg-surface">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-40 bg-[#0e0d14] font-headline">
+<div class="flex items-center gap-4">
+<h1 class="text-2xl font-black text-[#fe9821] tracking-tighter">Settings</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="hidden md:flex items-center bg-surface-container-highest px-4 py-2 rounded-full border border-outline-variant/15">
+<span class="material-symbols-outlined text-on-surface-variant text-sm mr-2" data-icon="search">search</span>
+<input class="bg-transparent border-none text-sm focus:ring-0 text-on-surface w-48 p-0" placeholder="Search preferences..." type="text"/>
+</div>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-colors relative">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden border border-primary/20">
+<img alt="User Profile Avatar" class="w-full h-full object-cover" data-alt="close-up portrait of Alex Chen, a professional male with a friendly expression in a modern office setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3_d0Opjylckm_nKu_oVPEmX8Px_Pkka-vHu8MeaxiD9nkNaB0vfBJ7xoT4v7WVEU0iZPiuFA3mG859kGyzLfRkpT93Q-4IP6FFLhZLZsS7it5d6WeN7y34aXfZluDuHTeaa3V3bjYAYMFBNrio3n2yaag7jRLkANM7AJTIJzYcBp37bI-mQRxSQXGm2-f3Hpek17Hj6PhNCBrNJdB5VTAlOwkSoMQfvvoWFTS7lqR-Logb6oV9yWmj7zqsERReOCzpLWw2iSoBDej"/>
+</div>
+</div>
+</header>
+<div class="px-6 py-8 max-w-6xl mx-auto space-y-8">
+<!-- Profile Header (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 bg-surface-container rounded-xl p-8 flex flex-col md:flex-row items-center gap-8 border-none relative overflow-hidden">
+<div class="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+<div class="relative">
+<div class="w-32 h-32 rounded-2xl overflow-hidden border-4 border-surface-container-highest shadow-2xl">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a man in his late 30s with short hair and a thoughtful expression" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB99WpnodXy1uwdyQ9lIdfu2IfMhL1-TGU4GJFuEtk1dJv5eBGPvko6cNVr-FbZtvQ9y2GMegwBqG4wf7Vs5Kz1FTdMR-HC0hoRgKlHayiy2JW1pdkj9yczu8sr7RXE2TPun8NpwpJh0y8jISb5VFW2k6aedOx3IQWFmHN57DCVXd_G7qt2zEsPwgYUH0C3me9qslF1z7Y_7JqFwnqc52PDoQLMHVJMy82EibueiYCniDbs2WfV4SEYSpN28qwkF24bjzkJ4WXmH9eU"/>
+</div>
+<button class="absolute -bottom-2 -right-2 bg-primary p-2 rounded-lg text-on-primary shadow-lg transition-transform active:scale-90">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+</button>
+</div>
+<div class="text-center md:text-left">
+<h2 class="text-3xl font-black font-headline text-on-surface tracking-tight mb-1">Alex Chen</h2>
+<p class="text-on-surface-variant font-medium mb-4">alex.chen@aviatorpro.com</p>
+<div class="flex flex-wrap gap-2 justify-center md:justify-start">
+<span class="px-3 py-1 bg-primary/10 text-primary rounded-full text-xs font-bold border border-primary/20 uppercase tracking-tighter">Premium Tier</span>
+<span class="px-3 py-1 bg-secondary/10 text-secondary rounded-full text-xs font-bold border border-secondary/20 uppercase tracking-tighter">Global Voyager</span>
+<span class="px-3 py-1 bg-tertiary/10 text-tertiary rounded-full text-xs font-bold border border-tertiary/20 uppercase tracking-tighter">Identity Verified</span>
+</div>
+</div>
+</div>
+<div class="bg-surface-container rounded-xl p-8 flex flex-col justify-between border-none">
+<div>
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Member Since</div>
+<div class="text-xl font-headline font-bold text-on-surface">March 2022</div>
+</div>
+<div class="mt-6">
+<div class="text-xs font-bold text-on-surface-variant uppercase tracking-widest mb-2">Status Points</div>
+<div class="text-4xl font-black font-headline text-primary tracking-tighter">12,450</div>
+<div class="w-full bg-surface-container-highest h-1.5 rounded-full mt-3 overflow-hidden">
+<div class="bg-primary h-full w-[70%]"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-2">2,550 points until <span class="text-secondary font-bold">Elite</span> status</p>
+</div>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Main Column -->
+<div class="lg:col-span-8 space-y-8">
+<!-- Loyalty Programs -->
+<section>
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-bold font-headline">Loyalty Programs</h3>
+<button class="text-primary text-sm font-bold flex items-center hover:underline">
+<span class="material-symbols-outlined text-sm mr-1" data-icon="add">add</span> Connect Program
+              </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Hertz -->
+<div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-black rounded-lg flex items-center justify-center font-black text-yellow-500 italic">H</div>
+<span class="text-[10px] px-2 py-0.5 bg-tertiary/20 text-tertiary font-bold rounded uppercase">Active</span>
+</div>
+<h4 class="font-bold text-on-surface">Hertz Gold Plus</h4>
+<p class="text-xs text-on-surface-variant mt-1">ID: ****9821</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-sm font-bold text-primary">President's Circle</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Avis -->
+<div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-[#D40011] rounded-lg flex items-center justify-center font-black text-white">A</div>
+<span class="text-[10px] px-2 py-0.5 bg-tertiary/20 text-tertiary font-bold rounded uppercase">Active</span>
+</div>
+<h4 class="font-bold text-on-surface">Avis Preferred</h4>
+<p class="text-xs text-on-surface-variant mt-1">ID: ****4421</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-sm font-bold text-on-surface">Preferred Plus</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Enterprise -->
+<div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-[#006341] rounded-lg flex items-center justify-center font-black text-white">e</div>
+<span class="text-[10px] px-2 py-0.5 bg-error/20 text-error font-bold rounded uppercase">Expired</span>
+</div>
+<h4 class="font-bold text-on-surface">Enterprise Plus</h4>
+<p class="text-xs text-on-surface-variant mt-1">ID: ****1102</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-sm font-bold text-on-surface-variant">Silver Elite</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="refresh">refresh</span>
+</div>
+</div>
+<!-- Marriott (Cross-Vertical) -->
+<div class="bg-surface-container-low p-5 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors group">
+<div class="flex items-center justify-between mb-4">
+<div class="w-10 h-10 bg-secondary rounded-lg flex items-center justify-center font-black text-on-secondary">M</div>
+<span class="text-[10px] px-2 py-0.5 bg-tertiary/20 text-tertiary font-bold rounded uppercase">Active</span>
+</div>
+<h4 class="font-bold text-on-surface">Marriott Bonvoy</h4>
+<p class="text-xs text-on-surface-variant mt-1">ID: ****5562</p>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-sm font-bold text-secondary">Titanium Elite</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Security Settings -->
+<section>
+<h3 class="text-xl font-bold font-headline mb-4">Security &amp; Authentication</h3>
+<div class="bg-surface-container-low rounded-xl overflow-hidden divide-y divide-outline-variant/10">
+<div class="p-5 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="key">key</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Two-Factor Authentication</h4>
+<p class="text-xs text-on-surface-variant">Secure your account with SMS or Authenticator app</p>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-xs font-bold text-tertiary">ENABLED</span>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="settings">settings</span>
+</div>
+</div>
+<div class="p-5 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="passkey">passkey</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Passkey Login</h4>
+<p class="text-xs text-on-surface-variant">Use biometric data for faster, safer login</p>
+</div>
+</div>
+<button class="text-xs font-bold py-1 px-3 bg-surface-container-highest rounded-lg border border-outline-variant/20 hover:border-primary transition-colors">CONFIGURE</button>
+</div>
+<div class="p-5 flex items-center justify-between hover:bg-surface-container-high transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-error" data-icon="devices">devices</span>
+</div>
+<div>
+<h4 class="font-bold text-sm">Active Sessions</h4>
+<p class="text-xs text-on-surface-variant">Managed 3 active devices currently signed in</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Sidebar Column -->
+<div class="lg:col-span-4 space-y-8">
+<!-- Billing Section -->
+<section class="bg-surface-container-high rounded-2xl p-6 relative overflow-hidden border border-primary/10">
+<div class="absolute -top-12 -right-12 w-40 h-40 bg-primary/10 rounded-full blur-2xl"></div>
+<div class="relative z-10">
+<h3 class="text-lg font-bold font-headline mb-6 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="payments">payments</span>
+                Billing Details
+              </h3>
+<div class="space-y-6">
+<div>
+<div class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-1">Current Plan</div>
+<div class="flex items-center justify-between">
+<span class="text-xl font-bold text-on-surface">Aviator Pro <span class="text-primary italic">Premium</span></span>
+<span class="text-sm font-medium text-on-surface-variant">$29.99/mo</span>
+</div>
+</div>
+<div class="p-4 bg-surface-container-highest rounded-xl border border-outline-variant/10">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-sm text-on-surface-variant" data-icon="credit_card">credit_card</span>
+<span class="text-xs font-medium text-on-surface-variant">Payment Method</span>
+</div>
+<button class="text-[10px] font-bold text-primary hover:underline uppercase">Edit</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="w-8 h-5 bg-on-surface/5 rounded flex items-center justify-center text-[8px] font-black border border-on-surface/10">VISA</div>
+<span class="text-sm font-bold tracking-widest">•••• 4412</span>
+<span class="text-[10px] text-on-surface-variant ml-auto">Exp 12/26</span>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10">
+<div class="flex justify-between items-center mb-1">
+<span class="text-xs text-on-surface-variant">Next Payment</span>
+<span class="text-sm font-bold text-on-surface">Oct 14, 2023</span>
+</div>
+<div class="flex justify-between items-center">
+<span class="text-xs text-on-surface-variant">Auto-renew</span>
+<span class="text-xs font-bold text-tertiary">ENABLED</span>
+</div>
+</div>
+<div class="space-y-3 pt-4">
+<button class="w-full py-3 bg-surface-container-highest hover:bg-surface-bright text-on-surface text-sm font-bold rounded-xl transition-colors">View Invoices</button>
+<button class="w-full py-3 text-error-dim text-xs font-bold hover:bg-error/10 rounded-xl transition-colors">Cancel Subscription</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Email Preferences -->
+<section class="bg-surface-container rounded-2xl p-6">
+<h3 class="text-lg font-bold font-headline mb-4">Email Preferences</h3>
+<div class="space-y-5">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="text-sm font-bold">Price Drop Alerts</h4>
+<p class="text-[11px] text-on-surface-variant">Instant notifications for market dips</p>
+</div>
+<div class="w-10 h-5 bg-primary rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-on-primary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<h4 class="text-sm font-bold">Market Summaries</h4>
+<p class="text-[11px] text-on-surface-variant">Weekly analytical insights</p>
+</div>
+<div class="w-10 h-5 bg-surface-container-highest rounded-full relative">
+<div class="absolute left-0.5 top-0.5 w-4 h-4 bg-on-surface-variant rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<h4 class="text-sm font-bold">Product Updates</h4>
+<p class="text-[11px] text-on-surface-variant">New feature releases &amp; news</p>
+</div>
+<div class="w-10 h-5 bg-primary rounded-full relative">
+<div class="absolute right-0.5 top-0.5 w-4 h-4 bg-on-primary rounded-full"></div>
+</div>
+</div>
+<button class="w-full mt-4 py-2 border border-outline-variant/30 text-on-surface-variant text-xs font-bold rounded-lg hover:text-on-surface hover:border-outline-variant/60 transition-colors">Save Preferences</button>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-effect border-t border-outline-variant/10 z-50 flex justify-around items-center px-4 py-3">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] font-bold">Home</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="text-[10px] font-bold">Bookings</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats">query_stats</span>
+<span class="text-[10px] font-bold">Market</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="settings" style="font-variation-settings: 'FILL' 1;">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</a>
+</nav>
+</body></html>

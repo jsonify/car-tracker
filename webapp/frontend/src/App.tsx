@@ -14,7 +14,7 @@ export default function App() {
     <BrowserRouter>
       <div data-testid="app-root" className="flex min-h-screen bg-surface">
         <Sidebar />
-        <div className="flex-1 flex flex-col overflow-auto">
+        <div className="flex-1 min-w-0 flex flex-col overflow-x-hidden overflow-y-auto">
           <TopAppBar />
           <main className="flex-1">
             <Routes>

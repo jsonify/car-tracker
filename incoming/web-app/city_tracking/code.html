@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container": "#1a1921",
+              "secondary-container": "#591adc",
+              "surface-container-low": "#14121a",
+              "error-container": "#b92902",
+              "surface-container-lowest": "#000000",
+              "surface": "#0e0d14",
+              "secondary-fixed": "#d8caff",
+              "on-secondary-fixed-variant": "#591bdc",
+              "primary-fixed-dim": "#ed8b0e",
+              "on-secondary": "#25006b",
+              "secondary-dim": "#7e51ff",
+              "on-error-container": "#ffd2c8",
+              "primary": "#fe9821",
+              "background": "#0e0d14",
+              "on-tertiary-fixed": "#003840",
+              "on-primary-fixed-variant": "#582f00",
+              "tertiary-dim": "#00d4ec",
+              "primary-fixed": "#fe9821",
+              "primary-container": "#ea8908",
+              "on-surface-variant": "#ada9b3",
+              "on-tertiary-fixed-variant": "#005762",
+              "outline": "#77747d",
+              "on-background": "#f4eff9",
+              "on-secondary-fixed": "#3b00a0",
+              "error": "#ff7351",
+              "on-surface": "#f4eff9",
+              "error-dim": "#d53d18",
+              "tertiary-fixed": "#00e3fd",
+              "inverse-primary": "#8d5000",
+              "on-tertiary-container": "#004d57",
+              "surface-tint": "#fe9821",
+              "secondary-fixed-dim": "#cabaff",
+              "on-primary": "#4b2800",
+              "tertiary-fixed-dim": "#00d4ec",
+              "on-tertiary": "#005762",
+              "on-primary-container": "#371c00",
+              "surface-container-highest": "#26252f",
+              "on-error": "#450900",
+              "surface-dim": "#0e0d14",
+              "surface-variant": "#26252f",
+              "tertiary-container": "#00e3fd",
+              "surface-bright": "#2c2b36",
+              "outline-variant": "#49474f",
+              "secondary": "#a68cff",
+              "surface-container-high": "#201e28",
+              "primary-dim": "#ed8b0e",
+              "inverse-surface": "#fcf8ff",
+              "on-primary-fixed": "#281300",
+              "inverse-on-surface": "#56545c",
+              "on-secondary-container": "#e4daff",
+              "tertiary": "#81ecff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(20, 18, 26, 0.7);
+        backdrop-filter: blur(20px);
+      }
+      .signature-gradient {
+        background: linear-gradient(to bottom right, #fe9821, #ea8908);
+      }
+      .pulse-glow {
+        box-shadow: 0 0 20px rgba(254, 152, 33, 0.2);
+      }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 selection:text-primary">
+<!-- SideNavBar Anchor -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant/15 flex flex-col h-full py-8 px-4 bg-[#0e0d14] dark:bg-[#0e0d14] z-50">
+<div class="mb-10 px-2">
+<span class="text-2xl font-black tracking-tighter text-[#fe9821] font-headline">Aviator Pro</span>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mt-1">Market Oversight</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#fe9821] bg-[#1a1921] border-r-4 border-[#fe9821] font-bold transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-headline tracking-tight text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span class="font-headline tracking-tight text-sm">Bookings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-headline tracking-tight text-sm">Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-headline tracking-tight text-sm">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-2">
+<button class="w-full signature-gradient text-on-primary py-3 rounded-xl font-bold font-headline shadow-lg flex items-center justify-center gap-2 hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-xl" data-icon="add">add</span>
+                New Search
+            </button>
+</div>
+</aside>
+<!-- TopNavBar Anchor -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-[#0e0d14]/80 backdrop-blur-xl flex items-center justify-between px-8">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full group">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant group-focus-within:text-primary transition-colors" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-full py-2 pl-12 pr-4 text-sm focus:ring-1 focus:ring-primary/40 placeholder:text-on-surface-variant font-body" placeholder="Search city or market data..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-tertiary animate-pulse"></span>
+<span class="text-xs font-bold text-on-surface-variant tracking-wider uppercase">Market Pulse Live</span>
+</div>
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+</button>
+<div class="h-8 w-8 rounded-full bg-surface-container-highest overflow-hidden border border-outline-variant/20">
+<img class="w-full h-full object-cover" data-alt="professional portrait of a man in tech attire with a clean modern studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDuXWXaxm0Zq9fdYeGB1vtLJJgUBLuswUIAsYRQXSDWTY0L3d-paz5J4QLg2HMtgv0rikXVepm4iaGwWsgYZDEsaHO1P3xJQ61YvzS82FjV4Nd9teKVNO8tPNUjPYY3an4nepu0necbyGKiKX-0FPQkO7euROK6pjAqVvltL1YNkCAArzUh0qj4jLx4rwO6uqRyxduqhLKx4pyUYvN64k-QxAsP2_Ho_EEpbd_q8MXvcvn34Dki0YnsYmAeM3Appkl8eTohG5sUyneh"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 pb-12 px-10">
+<!-- Hero Header Section -->
+<div class="flex flex-col md:flex-row justify-between items-end gap-6 mb-12">
+<div class="space-y-2">
+<div class="flex items-center gap-2 text-tertiary text-sm font-bold tracking-widest uppercase">
+<span class="material-symbols-outlined text-lg" data-icon="location_on">location_on</span>
+                    Market Overview
+                </div>
+<h1 class="text-5xl font-black font-headline tracking-tighter text-on-surface">San Francisco</h1>
+<p class="text-on-surface-variant max-w-md font-body">Real-time volatility analysis and rental inventory forecasting for the SF Bay Area market.</p>
+</div>
+<div class="flex items-center gap-3 p-1 bg-surface-container-highest rounded-xl">
+<button class="px-6 py-2 rounded-lg bg-surface-container text-primary font-bold text-sm">Economy</button>
+<button class="px-6 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-bold text-sm transition-colors">SUV</button>
+<button class="px-6 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-bold text-sm transition-colors">Luxury</button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Main Price Chart (Asymmetric) -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container rounded-3xl p-8 relative overflow-hidden group">
+<div class="flex justify-between items-start mb-10 relative z-10">
+<div>
+<h3 class="text-2xl font-bold font-headline tracking-tight text-on-surface">Price History Chart</h3>
+<p class="text-on-surface-variant text-sm mt-1">30-day historical trend vs Market Benchmark</p>
+</div>
+<div class="flex gap-4">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-primary"></span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">SF Current</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-outline-variant"></span>
+<span class="text-xs font-bold text-on-surface-variant uppercase tracking-tighter">Market Avg</span>
+</div>
+</div>
+</div>
+<!-- Pulse Graph Simulation -->
+<div class="h-64 relative mt-4">
+<!-- SVG Graph Placeholder -->
+<svg class="w-full h-full" viewbox="0 0 800 200">
+<defs>
+<lineargradient id="gradient-area" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#fe9821" stop-opacity="0.2"></stop>
+<stop offset="100%" stop-color="#fe9821" stop-opacity="0"></stop>
+</lineargradient>
+</defs>
+<!-- Market Average Line -->
+<path d="M0,140 Q100,135 200,145 T400,140 T600,150 T800,142" fill="none" stroke="#49474f" stroke-dasharray="8,4" stroke-width="2"></path>
+<!-- Area Fill -->
+<path d="M0,160 Q100,130 200,150 T400,80 T600,100 T800,40 V200 H0 Z" fill="url(#gradient-area)"></path>
+<!-- Primary Data Line -->
+<path d="M0,160 Q100,130 200,150 T400,80 T600,100 T800,40" fill="none" stroke="#fe9821" stroke-width="3"></path>
+<!-- Best Price Marker -->
+<circle class="animate-pulse" cx="800" cy="40" fill="#81ecff" r="6"></circle>
+</svg>
+<div class="absolute bottom-0 w-full flex justify-between px-2 text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-4">
+<span>Oct 01</span>
+<span>Oct 08</span>
+<span>Oct 15</span>
+<span>Oct 22</span>
+<span>Oct 30</span>
+</div>
+<!-- Floating Insight Tag -->
+<div class="absolute top-1/4 right-8 glass-panel p-4 rounded-2xl border border-primary/20 flex items-center gap-4">
+<div class="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" data-icon="trending_down">trending_down</span>
+</div>
+<div>
+<p class="text-xs text-on-surface-variant font-bold uppercase tracking-tighter leading-none">Best Price Found</p>
+<p class="text-lg font-black font-headline text-on-surface">$42/day</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Best Time to Book Bento Card -->
+<div class="col-span-12 lg:col-span-4 bg-surface-container-high rounded-3xl p-8 flex flex-col justify-between">
+<div>
+<div class="w-12 h-12 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary mb-6">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h3 class="text-2xl font-bold font-headline tracking-tight text-on-surface mb-2">Best Time to Book</h3>
+<p class="text-on-surface-variant text-sm leading-relaxed">Based on historical SF patterns, prices drop significantly when booking exactly <span class="text-secondary font-bold">14 days</span> in advance for weekends.</p>
+</div>
+<div class="mt-8 space-y-4">
+<div class="p-4 rounded-2xl bg-surface-container-highest flex items-center justify-between">
+<span class="text-sm font-bold text-on-surface-variant">Optimal Window</span>
+<span class="text-sm font-black text-on-surface uppercase tracking-tight">Nov 12 - 18</span>
+</div>
+<div class="p-4 rounded-2xl border border-outline-variant/20 flex items-center justify-between">
+<span class="text-sm font-bold text-on-surface-variant">Avg. Savings</span>
+<span class="text-sm font-black text-tertiary uppercase tracking-tight">22% Lower</span>
+</div>
+</div>
+</div>
+<!-- Comparison Stats -->
+<div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] block mb-4">Volatility Index</span>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-4xl font-black font-headline text-on-surface">Moderate</span>
+<span class="text-error text-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-sm" data-icon="arrow_upward">arrow_upward</span>
+                        4%
+                    </span>
+</div>
+<div class="w-full bg-surface-container-highest h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[65%]"></div>
+</div>
+<p class="text-xs text-on-surface-variant mt-4 leading-snug">Prices are stabilizing after a 4% weekend surge. Monitoring recommended.</p>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] block mb-4">SF vs Market Average</span>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-4xl font-black font-headline text-on-surface">+$12.50</span>
+<span class="text-on-surface-variant text-xs font-bold uppercase tracking-tight">Per Day</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container-highest rounded-full w-fit">
+<span class="material-symbols-outlined text-sm text-tertiary" data-icon="info" style="font-variation-settings: 'FILL' 1;">info</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase">Premium Location Surcharge</span>
+</div>
+</div>
+<div class="col-span-12 md:col-span-4 bg-surface-container-low rounded-3xl p-8 border border-outline-variant/10">
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] block mb-4">Availability Radar</span>
+<div class="flex items-baseline gap-2 mb-6">
+<span class="text-4xl font-black font-headline text-on-surface">High</span>
+<span class="text-tertiary text-sm font-bold flex items-center">92%</span>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="sleek modern car headlight close-up in dark moody lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMASNDPHJhGmPfftU9hlEMQxPMvfTYqmKgY1TtFjBA8Dax9HezJZ4jcNGxzxdNodNLDCQJHJqYBt-rZsSEY5S5TMmVTsyYnpekNFdGm5TCAVDTTYryIv3uyanD6X69wInpYqL1Fy3rRbfXHKypzI_YdiGnMDGPgWO_6H1IPRyrmsgLoLFvIOxRi3vxgcSGrtrVUf7aBk9M9svZSl7_OmEDGaWWOxrj13Ed2eaExksoTw6CLOycTzMMyBu62Z6hda8JO7HiJI2mrsDb"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="modern car dashboard interface glowing at night with orange accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtrE-kwzm61Gmf85YnFGNwqDlAqDP-KY7K-4K-SAwm4qPrmFbge3aVQo0BbSbveOL5usYFH7_zFUavds_x1rRMcy7fR1VjD2LYzuAsK_qbH5pTEdxKm5HI4IprI5O6XgYWUsI_gHyNM7V3f1Bwg0bRos3Trexx3YbhJee9hb7VuSqRYLlNoiz-Q4f1vjU4yMn_7OnOjie7zjN1tTsq41JlzxlFs6JFL22y1a_x2U4Je0S_JvuLnvh1i0lo3YOKUUXnr2cseGxmM7kT"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-highest flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="front view of a white electric sedan in a minimalist studio environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD8SOeCjIaGgZ30Ot2YtU9v8_16x192FYK7IArfG-5IFrd_-6BNLEEmo8gJqV2-qu8SmLPnFp-nBVhl4_-_u61z6k5gyjNREcN8w7k4Ak2fjObdjNDF-mEvURrudwGWcwjg9GtHmaIzqpC_X4dvcFO2LZpeu3e1VbvuNeodPeoqthPvC1aHCnq-TlZbjENuzIKsSAtmnLXor6rmvYD3iNrxzjW5WekfLLue6gBwK8Zm3HNNkkoP4GVey__5_4HmY94BQvIKbOk5Zbjf"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container-highest flex items-center justify-center text-[10px] font-bold text-on-surface-variant">
+                        +12
+                    </div>
+</div>
+</div>
+</div>
+<!-- Category Details / Dynamic List -->
+<div class="mt-12">
+<div class="flex items-center justify-between mb-8">
+<h3 class="text-2xl font-bold font-headline tracking-tight text-on-surface">Best Value Findings in SF</h3>
+<button class="text-primary text-sm font-bold flex items-center gap-1 hover:underline">
+                    View All Inventory
+                    <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Card 1 -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden hover:bg-surface-container-high transition-colors group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="luxury dark blue sedan parked in front of a modern glass office building at sunset" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP7Gy7NRj3iI0sSP2IoRwxHdI_eWdXhzIAAzQH8KMIk-bVRbjm_36oRcLGAAYEIScSaJ0xguNxj5Ivc_FX-Fa_Mr34pyOfSPI2JfXU6Va7IvmxRlJrfRWRUO-muSoOqhCxxreA5QO598MMAt_97LwZx7uccPZ5IJ4BBruUtCB0r2c0pWzuDpttY2reyqa29beEu2lDgYfffRUeDkokK7cQjZ1zRzzu4HYv7kjSDv1iZYNjlu-bR78ti7ZKX8QEOH8OkZHNg7L8SFvG"/>
+<div class="absolute top-4 left-4 glass-panel px-3 py-1 rounded-full text-[10px] font-bold text-tertiary uppercase tracking-widest border border-tertiary/20">
+                            Economy Choice
+                        </div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-lg font-bold font-headline text-on-surface">Hyundai Elantra</h4>
+<p class="text-on-surface-variant text-xs">or similar | 5 Seats</p>
+</div>
+<div class="text-right">
+<span class="text-2xl font-black font-headline text-primary">$42</span>
+<span class="text-[10px] font-bold text-on-surface-variant block uppercase tracking-tighter">Per Day</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-bold text-on-surface-variant pt-4 border-t border-outline-variant/10">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="local_gas_station">local_gas_station</span>
+                                35 MPG
+                            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="settings_input_component">settings_input_component</span>
+                                Auto
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden hover:bg-surface-container-high transition-colors group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="modern black suv parked on a scenic coastal road in San Francisco with ocean in background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCiGUHka1qeEr8J8QzC29r78O3gzOQ8BVxiRy6fPoCopGFgSk6kH_qwCjrLX8dCIhLr9HEqUzIVMh4TAFhRwamZRe-3kHVMTX5KViZxiOetu5QT--TVF5lkOLbQnCfGmkeGnTRJ0bAyTsDVWgfFHQ4QXOslaEVTdNZnjRcw5SWaegv1OnrTbfv8TMaxJuoR3VJ8lLBziJWQPqNqFb7fb2sw4CHRafFUGyMn5qdIKpKOiTDhq4ofljMgqSY462ftCHEZ3CRAt0r8fMEv"/>
+<div class="absolute top-4 left-4 glass-panel px-3 py-1 rounded-full text-[10px] font-bold text-primary uppercase tracking-widest border border-primary/20">
+                            Most Popular
+                        </div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-lg font-bold font-headline text-on-surface">Toyota RAV4</h4>
+<p class="text-on-surface-variant text-xs">or similar | 5 Seats</p>
+</div>
+<div class="text-right">
+<span class="text-2xl font-black font-headline text-primary">$68</span>
+<span class="text-[10px] font-bold text-on-surface-variant block uppercase tracking-tighter">Per Day</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-bold text-on-surface-variant pt-4 border-t border-outline-variant/10">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="luggage">luggage</span>
+                                3 Large
+                            </span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="grid_view">grid_view</span>
+                                AWD
+                            </span>
+</div>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="bg-surface-container-low rounded-2xl overflow-hidden hover:bg-surface-container-high transition-colors group">
+<div class="h-48 w-full relative overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="high-end luxury black sedan interior with leather seats and futuristic ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBMFztZzNboofJBKlCDsZuxU9O-tD75a4-EXiZHeoKF7MqEUz9GIhGV_7CsCoi7_3G5DyFmt239d3F-18FE2RBGgvIVFGM3ezz4vbPLhv6p3Qx2f04a58L_eeu03lkcJCd-TV7zV4B1qp1VqN6PHVxKb-u1wQRoHLb_cBDLJNYIQDB4pO0AAypflNHv5Zl899lTAcEZYBRUobWksLAZNuyHaX_VmAGl4_AhgRap2_TBZ9cr8uqMQh-x1RJblp_2crUAyygzfKdEXagm"/>
+<div class="absolute top-4 left-4 glass-panel px-3 py-1 rounded-full text-[10px] font-bold text-secondary uppercase tracking-widest border border-secondary/20">
+                            Premium Elite
+                        </div>
+</div>
+<div class="p-6">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="text-lg font-bold font-headline text-on-surface">BMW 5 Series</h4>
+<p class="text-on-surface-variant text-xs">Luxury Sport | 5 Seats</p>
+</div>
+<div class="text-right">
+<span class="text-2xl font-black font-headline text-primary">$124</span>
+<span class="text-[10px] font-bold text-on-surface-variant block uppercase tracking-tighter">Per Day</span>
+</div>
+</div>
+<div class="flex items-center gap-4 text-xs font-bold text-on-surface-variant pt-4 border-t border-outline-variant/10">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="speed">speed</span>
+                                Sport Mode
+                            </span>
+<span class="flex items-center gap-1 text-secondary font-bold">
+<span class="material-symbols-outlined text-sm" data-icon="workspace_premium" style="font-variation-settings: 'FILL' 1;">workspace_premium</span>
+                                Top Tier
+                            </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Map Context Widget (Fixed Floating) -->
+<div class="fixed bottom-8 right-8 w-80 h-48 rounded-3xl overflow-hidden shadow-2xl border border-outline-variant/30 group">
+<div class="absolute inset-0 bg-surface-container-highest">
+<!-- Simulated Map Image -->
+<img class="w-full h-full object-cover opacity-60 group-hover:scale-105 transition-transform duration-700" data-alt="aerial topographic map view of San Francisco city grid with Golden Gate bridge visible" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9jAoo83Hhye738IV-kiX-8JOlRFKMCNK1WV6FDXbXtNoChl4HX9bQkTo8EFxRS9S6v9dtnF1-OcNKfmZBZ3LloSWbtBv6RHGkDfU5bBcHIjEdNULWAp21n1vUS8bmFLFLKdllvKMwAzWt5PT-Thxl7YXfd8ndyxKrxAxUyRG9hK_zByBDTEVyjwEaLsltAaudriTbgqr8r3yVh8syXqRG-v8-nZbO9wMhRHHiFfVUUcqkrUU8x7h4F0DNQWwW-OedxXGSbAO-HMh9"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface to-transparent"></div>
+</div>
+<div class="absolute bottom-4 left-4 right-4 flex justify-between items-end">
+<div>
+<p class="text-[10px] font-bold text-primary uppercase tracking-widest">Active Search Zone</p>
+<h5 class="text-lg font-black font-headline text-on-surface leading-tight">SF Downtown Hub</h5>
+</div>
+<button class="w-10 h-10 rounded-full bg-primary text-on-primary flex items-center justify-center pulse-glow">
+<span class="material-symbols-outlined" data-icon="near_me">near_me</span>
+</button>
+</div>
+</div>
+</body></html>

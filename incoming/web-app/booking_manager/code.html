@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Aviator Pro | Booking Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-container": "#1a1921",
+              "secondary-container": "#591adc",
+              "surface-container-low": "#14121a",
+              "error-container": "#b92902",
+              "surface-container-lowest": "#000000",
+              "surface": "#0e0d14",
+              "secondary-fixed": "#d8caff",
+              "on-secondary-fixed-variant": "#591bdc",
+              "primary-fixed-dim": "#ed8b0e",
+              "on-secondary": "#25006b",
+              "secondary-dim": "#7e51ff",
+              "on-error-container": "#ffd2c8",
+              "primary": "#fe9821",
+              "background": "#0e0d14",
+              "on-tertiary-fixed": "#003840",
+              "on-primary-fixed-variant": "#582f00",
+              "tertiary-dim": "#00d4ec",
+              "primary-fixed": "#fe9821",
+              "primary-container": "#ea8908",
+              "on-surface-variant": "#ada9b3",
+              "on-tertiary-fixed-variant": "#005762",
+              "outline": "#77747d",
+              "on-background": "#f4eff9",
+              "on-secondary-fixed": "#3b00a0",
+              "error": "#ff7351",
+              "on-surface": "#f4eff9",
+              "error-dim": "#d53d18",
+              "tertiary-fixed": "#00e3fd",
+              "inverse-primary": "#8d5000",
+              "on-tertiary-container": "#004d57",
+              "surface-tint": "#fe9821",
+              "secondary-fixed-dim": "#cabaff",
+              "on-primary": "#4b2800",
+              "tertiary-fixed-dim": "#00d4ec",
+              "on-tertiary": "#005762",
+              "on-primary-container": "#371c00",
+              "surface-container-highest": "#26252f",
+              "on-error": "#450900",
+              "surface-dim": "#0e0d14",
+              "surface-variant": "#26252f",
+              "tertiary-container": "#00e3fd",
+              "surface-bright": "#2c2b36",
+              "outline-variant": "#49474f",
+              "secondary": "#a68cff",
+              "surface-container-high": "#201e28",
+              "primary-dim": "#ed8b0e",
+              "inverse-surface": "#fcf8ff",
+              "on-primary-fixed": "#281300",
+              "inverse-on-surface": "#56545c",
+              "on-secondary-container": "#e4daff",
+              "tertiary": "#81ecff"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-card {
+        background: rgba(26, 25, 33, 0.7);
+        backdrop-filter: blur(16px);
+      }
+      .signature-gradient {
+        background: linear-gradient(to bottom right, #fe9821, #ea8908);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body">
+<!-- SideNavBar (Authority: JSON + Design System) -->
+<aside class="h-screen w-64 fixed left-0 top-0 border-r border-outline-variant/10 bg-[#0e0d14] flex flex-col py-8 px-4 z-50">
+<div class="mb-10 px-4">
+<h1 class="text-2xl font-black tracking-tighter text-primary font-headline">Aviator Pro</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold mt-1">Market Oversight</p>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-headline font-bold tracking-tight">Dashboard</span>
+</a>
+<!-- Active Tab: Bookings -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-primary bg-[#1a1921] border-r-4 border-primary font-headline font-bold tracking-tight" href="#">
+<span class="material-symbols-outlined" data-icon="event_available">event_available</span>
+<span>Bookings</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+<span class="font-headline font-bold tracking-tight">Alerts</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-lg text-[#ada9b3] hover:text-[#f4eff9] hover:bg-[#1a1921]/50 transition-all duration-200 group" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="font-headline font-bold tracking-tight">Settings</span>
+</a>
+</nav>
+<div class="mt-auto px-2">
+<button class="w-full signature-gradient text-on-primary font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-primary/10">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+<span>New Search</span>
+</button>
+<div class="mt-8 flex items-center gap-3 px-2">
+<img class="w-10 h-10 rounded-full object-cover border border-outline-variant/30" data-alt="professional headshot of a male executive with a confident expression in a dark studio setting with cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrZL_LVjiuEEY5NSLO96UfbTWJWVTu5ya2CS1RWm2v489HCB9BmRe8OboLdanNvR6TAyOrjVuIuyjlvXSHefTouKKj7z8z1np4vX6KvWSFRv1ysxw2d01XsrzsgnizgWx6sMDpFgSJK_YGIOn6VYiN-xiXJnaMVPkZ9kMQd8zw1sIawHx-NnYRTSI8D1gFRNX3gSHKYM3QJ-5J27eJCsSSgKHwMptVirvXLU21at2tywvnTqgKAgJl3JfIgy1bfwU3GcH4xFi8buMK"/>
+<div>
+<p class="text-sm font-bold text-on-surface">Alex Rivera</p>
+<p class="text-xs text-on-surface-variant">Pro Tier Account</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar (Authority: JSON) -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 z-40 bg-[#0e0d14]/80 backdrop-blur-xl flex items-center justify-between px-8">
+<div class="flex items-center gap-4 w-1/2">
+<div class="relative w-full max-w-md group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-lg group-focus-within:text-primary transition-colors" data-icon="search">search</span>
+<input class="w-full bg-surface-container-highest border-none rounded-lg py-2 pl-10 pr-4 text-sm text-on-surface placeholder:text-on-surface-variant/50 focus:ring-1 focus:ring-primary/40 transition-all" placeholder="Search reservations, locations, or companies..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="text-on-surface-variant hover:text-on-surface transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+<span class="text-xs font-medium font-body">Filters</span>
+</button>
+<div class="h-4 w-[1px] bg-outline-variant/20"></div>
+<button class="text-on-surface-variant hover:text-on-surface transition-colors">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+</button>
+</div>
+</header>
+<!-- Main Canvas -->
+<main class="ml-64 pt-24 px-8 pb-12 min-h-screen">
+<!-- Editorial Header -->
+<section class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
+<div>
+<h2 class="text-4xl font-black font-headline tracking-tighter text-on-surface leading-none">Booking Manager</h2>
+<p class="text-on-surface-variant mt-2 max-w-xl">Oversee your active market positions and track price volatility across your upcoming itineraries.</p>
+</div>
+<!-- Status Tabs (Precision Filter) -->
+<div class="flex p-1 bg-surface-container rounded-xl gap-1">
+<button class="px-6 py-2 rounded-lg bg-surface-container-highest text-primary font-bold text-sm shadow-sm">Active</button>
+<button class="px-6 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-medium text-sm transition-colors">Past</button>
+<button class="px-6 py-2 rounded-lg text-on-surface-variant hover:text-on-surface font-medium text-sm transition-colors">Cancelled</button>
+</div>
+</section>
+<!-- Bento Grid / Asymmetric Layout Content -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Reservations Table (High-End Professional List) -->
+<div class="col-span-12 lg:col-span-9 bg-surface-container rounded-2xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full border-collapse text-left">
+<thead>
+<tr class="bg-surface-container-high/50 border-b border-outline-variant/5">
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Rental Co</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Dates</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">City</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Booked</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Current</th>
+<th class="px-6 py-4 text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Savings</th>
+<th class="px-6 py-4"></th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-bright/20 transition-colors group">
+<td class="px-6 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-black text-secondary-dim text-xs">HERTZ</div>
+<div>
+<p class="font-bold text-on-surface leading-tight">Full-Size SUV</p>
+<p class="text-xs text-on-surface-variant">Chevy Tahoe or similar</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="text-sm font-medium">
+<p class="text-on-surface">Oct 12 – 18</p>
+<p class="text-xs text-on-surface-variant">6 Days</p>
+</div>
+</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Denver, CO</td>
+<td class="px-6 py-6">
+<span class="text-sm font-bold text-on-surface">$542.00</span>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-tertiary">$418.00</span>
+<span class="text-[10px] text-tertiary/70 font-bold uppercase tracking-tighter">Market Low</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="bg-tertiary/10 text-tertiary px-2 py-1 rounded text-xs font-black">-$124.00</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary text-xs font-black rounded-lg transition-all">RE-BOOK</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-bright/20 transition-colors group">
+<td class="px-6 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-black text-primary text-xs">Sixt</div>
+<div>
+<p class="font-bold text-on-surface leading-tight">Luxury Sedan</p>
+<p class="text-xs text-on-surface-variant">BMW 5 Series</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="text-sm font-medium">
+<p class="text-on-surface">Nov 04 – 07</p>
+<p class="text-xs text-on-surface-variant">3 Days</p>
+</div>
+</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Miami, FL</td>
+<td class="px-6 py-6">
+<span class="text-sm font-bold text-on-surface">$329.50</span>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-on-surface-variant">$332.00</span>
+<span class="text-[10px] text-error/70 font-bold uppercase tracking-tighter">+0.8% Hike</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="text-on-surface-variant px-2 py-1 rounded text-xs font-black">--</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-4 py-2 bg-surface-container-highest text-on-surface hover:bg-surface-bright text-xs font-black rounded-lg transition-all">DETAILS</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-bright/20 transition-colors group">
+<td class="px-6 py-6">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-black text-secondary text-xs">AVIS</div>
+<div>
+<p class="font-bold text-on-surface leading-tight">Compact Electric</p>
+<p class="text-xs text-on-surface-variant">Tesla Model 3</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-6">
+<div class="text-sm font-medium">
+<p class="text-on-surface">Dec 22 – 30</p>
+<p class="text-xs text-on-surface-variant">8 Days</p>
+</div>
+</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Los Angeles, CA</td>
+<td class="px-6 py-6">
+<span class="text-sm font-bold text-on-surface">$712.20</span>
+</td>
+<td class="px-6 py-6">
+<div class="flex flex-col">
+<span class="text-sm font-bold text-tertiary">$580.40</span>
+<span class="text-[10px] text-tertiary/70 font-bold uppercase tracking-tighter">Holiday Drop</span>
+</div>
+</td>
+<td class="px-6 py-6">
+<span class="bg-tertiary/10 text-tertiary px-2 py-1 rounded text-xs font-black">-$131.80</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="px-4 py-2 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary text-xs font-black rounded-lg transition-all">RE-BOOK</button>
+<button class="p-2 text-on-surface-variant hover:text-on-surface">
+<span class="material-symbols-outlined text-xl" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Sidebar Contextual Cards -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<!-- Savings Summary Card -->
+<div class="bg-secondary-container/10 border border-secondary/20 rounded-2xl p-6 relative overflow-hidden">
+<div class="relative z-10">
+<span class="text-[10px] font-black uppercase tracking-widest text-secondary mb-2 block">Total Projected Savings</span>
+<div class="flex items-baseline gap-1">
+<span class="text-4xl font-black font-headline text-on-surface">$255.80</span>
+<span class="text-sm font-bold text-tertiary">↑ 12%</span>
+</div>
+<p class="text-xs text-on-surface-variant mt-3 leading-relaxed">Your active tracked bookings have dropped in price. Re-book now to lock in these market rates.</p>
+<button class="w-full mt-6 py-3 bg-secondary text-on-secondary font-bold rounded-xl text-sm hover:opacity-90 transition-all">Execute All Changes</button>
+</div>
+<!-- Decorative background flare -->
+<div class="absolute -right-12 -bottom-12 w-32 h-32 bg-secondary/20 blur-3xl rounded-full"></div>
+</div>
+<!-- Market Insight Bento Item -->
+<div class="bg-surface-container rounded-2xl p-6">
+<h4 class="text-sm font-bold text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg" data-icon="query_stats">query_stats</span>
+                        Market Volatility
+                    </h4>
+<div class="space-y-4">
+<div class="flex items-center justify-between text-xs">
+<span class="text-on-surface-variant">SUV Category</span>
+<span class="text-error font-bold">+18.2%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-error w-[80%] h-full"></div>
+</div>
+<div class="flex items-center justify-between text-xs pt-2">
+<span class="text-on-surface-variant">Economy Category</span>
+<span class="text-tertiary font-bold">-4.5%</span>
+</div>
+<div class="w-full bg-surface-container-highest h-1 rounded-full overflow-hidden">
+<div class="bg-tertiary w-[35%] h-full"></div>
+</div>
+</div>
+<p class="text-[10px] text-on-surface-variant mt-6 italic">Last synced: 2 minutes ago</p>
+</div>
+<!-- Featured Image Card -->
+<div class="bg-surface-container rounded-2xl overflow-hidden group">
+<div class="h-32 w-full overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" data-alt="luxury sports car parked in a minimalist high-tech garage with moody purple neon lighting and reflective floor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD709vCtZ6zo9uz3Tbx5eCGkK8tb42A-c0IVUaNQKBSVD5T6UlcOfHS-LPFPfxVLsCvGRwapG9T8cOfz3VRTSwfF9VFpnjUr4nRzTdvIhJOplSOXW27C4BpCE3O3JVLwldbAwsznq-buxxUDQ4QOqfJ00uUvh2lN7_w2-mY95pOmwb7d4Wvo_-fHV_wUsGwojB6r7ih_Fb1N8SCPaI3kVYEQwKnX5qRYC2v6lzm6wIFIlZKTfwD44Ko-PDlJoI0Rn_UmLFAgVDcuj2O"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container to-transparent"></div>
+</div>
+<div class="p-4">
+<p class="text-xs font-black text-primary uppercase tracking-tighter">Premium Tip</p>
+<p class="text-sm font-medium text-on-surface mt-1 leading-tight">Switching to "Manager's Choice" in Denver could save an additional $45.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

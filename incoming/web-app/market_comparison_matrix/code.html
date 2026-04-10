@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Market Comparison Matrix | Aviator Pro</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "on-tertiary-container": "#004d57",
+              "on-surface-variant": "#ada9b3",
+              "secondary-dim": "#7e51ff",
+              "on-primary-fixed": "#281300",
+              "on-secondary-container": "#e4daff",
+              "surface-dim": "#0e0d14",
+              "tertiary-container": "#00e3fd",
+              "error": "#ff7351",
+              "primary-dim": "#ed8b0e",
+              "primary-fixed-dim": "#ed8b0e",
+              "primary-fixed": "#fe9821",
+              "on-tertiary": "#005762",
+              "surface-container-high": "#201e28",
+              "surface": "#0e0d14",
+              "primary-container": "#ea8908",
+              "background": "#0e0d14",
+              "tertiary-fixed-dim": "#00d4ec",
+              "tertiary": "#81ecff",
+              "surface-bright": "#2c2b36",
+              "on-error": "#450900",
+              "surface-container-low": "#14121a",
+              "surface-container": "#1a1921",
+              "error-dim": "#d53d18",
+              "on-secondary-fixed": "#3b00a0",
+              "tertiary-dim": "#00d4ec",
+              "inverse-on-surface": "#56545c",
+              "surface-tint": "#fe9821",
+              "error-container": "#b92902",
+              "outline-variant": "#49474f",
+              "secondary-fixed": "#d8caff",
+              "on-background": "#f4eff9",
+              "on-surface": "#f4eff9",
+              "on-tertiary-fixed-variant": "#005762",
+              "on-primary-fixed-variant": "#582f00",
+              "surface-container-lowest": "#000000",
+              "secondary-fixed-dim": "#cabaff",
+              "inverse-surface": "#fcf8ff",
+              "on-tertiary-fixed": "#003840",
+              "secondary": "#a68cff",
+              "outline": "#77747d",
+              "on-secondary-fixed-variant": "#591bdc",
+              "on-primary": "#4b2800",
+              "inverse-primary": "#8d5000",
+              "secondary-container": "#591adc",
+              "primary": "#fe9821",
+              "on-secondary": "#25006b",
+              "surface-variant": "#26252f",
+              "tertiary-fixed": "#00e3fd",
+              "on-error-container": "#ffd2c8",
+              "surface-container-highest": "#26252f",
+              "on-primary-container": "#371c00"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(26, 25, 33, 0.7);
+            backdrop-filter: blur(16px);
+        }
+        .gradient-text {
+            background: linear-gradient(to right, #fe9821, #ea8908);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary selection:text-on-primary">
+<!-- Sidebar Navigation -->
+<aside class="hidden md:flex flex-col h-screen w-64 fixed left-0 top-0 bg-surface-container z-50 shadow-[32px_0_32px_rgba(0,0,0,0.2)]">
+<div class="text-xl font-extrabold text-primary px-4 py-6 font-headline tracking-tighter">
+            Aviator Pro
+        </div>
+<nav class="flex-1 flex flex-col space-y-1">
+<a class="text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-highest hover:text-on-surface transition-all duration-300" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="dashboard">dashboard</span>
+<span class="font-label text-sm font-medium tracking-wide">Dashboard</span>
+</a>
+<a class="bg-surface-container-highest text-primary border-r-4 border-primary flex items-center px-6 py-4 transition-all duration-300" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="query_stats">query_stats</span>
+<span class="font-label text-sm font-medium tracking-wide">Market Analysis</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-highest hover:text-on-surface transition-all duration-300" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="calendar_today">calendar_today</span>
+<span class="font-label text-sm font-medium tracking-wide">Bookings</span>
+</a>
+<a class="text-on-surface-variant flex items-center px-6 py-4 hover:bg-surface-container-highest hover:text-on-surface transition-all duration-300" href="#">
+<span class="material-symbols-outlined mr-4" data-icon="settings">settings</span>
+<span class="font-label text-sm font-medium tracking-wide">Settings</span>
+</a>
+</nav>
+<div class="p-6">
+<button class="w-full py-3 bg-gradient-to-r from-primary to-primary-container text-on-primary font-bold rounded-md shadow-lg hover:opacity-90 transition-opacity">
+                Upgrade to Elite
+            </button>
+</div>
+</aside>
+<main class="md:ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-40 bg-surface shadow-none">
+<div class="flex items-center gap-4">
+<h1 class="font-headline font-bold text-2xl tracking-tight text-on-surface">Market Comparison Matrix</h1>
+</div>
+<div class="flex items-center space-x-4">
+<div class="relative hidden sm:block">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant" data-icon="search">search</span>
+<input class="bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-primary w-64 text-on-surface" placeholder="Search cities..." type="text"/>
+</div>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="filter_list">filter_list</span>
+</button>
+<button class="p-2 hover:bg-surface-container-highest rounded-full transition-colors text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden bg-surface-container-highest">
+<img alt="User Profile Avatar" data-alt="professional male portrait with confident expression in studio lighting with dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBu2JE3B4rMo4KMwFvrwpKWyZuJU1F3lM3vf-CuZe_HNZc_x9E5oErT1JQds1vxV90hMRPMOZBZXnh1ha6SqtNAV-IKqpT1aZR_xnNmCWE_f3k_EJjm20tyGoKdfOZSmYhi6ldNNKCx05DmIZ6cPQ42ntSskGi66Yhh4virNFdpMO2En6rJ8pvOxjs3G9dxSKMysO88UfOJE84EJxUBSOVMo8EfnZ5aeZNX8is7YjkwePVs2nHiPv5wqFRWsfKcoyakbACGrdLgX21v"/>
+</div>
+</div>
+</header>
+<section class="p-6 max-w-7xl mx-auto space-y-10">
+<!-- Market Pulse Header Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="p-6 rounded-xl bg-surface-container-low border-none shadow-sm relative overflow-hidden group">
+<div class="flex flex-col space-y-2">
+<span class="text-on-surface-variant font-label text-xs uppercase tracking-widest">Global Volatility Index</span>
+<div class="flex items-baseline space-x-2">
+<span class="text-4xl font-headline font-extrabold text-primary">64.2</span>
+<span class="text-error font-bold flex items-center text-sm">
+<span class="material-symbols-outlined text-sm" data-icon="trending_up">trending_up</span> 12%
+                            </span>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 opacity-10 scale-150 group-hover:scale-125 transition-transform duration-700">
+<span class="material-symbols-outlined text-9xl text-primary" data-icon="auto_graph">auto_graph</span>
+</div>
+</div>
+<div class="p-6 rounded-xl bg-surface-container-low border-none shadow-sm relative overflow-hidden group">
+<div class="flex flex-col space-y-2">
+<span class="text-on-surface-variant font-label text-xs uppercase tracking-widest">Top Opportunity</span>
+<div class="flex items-baseline space-x-2">
+<span class="text-3xl font-headline font-extrabold text-tertiary">London</span>
+<span class="text-on-surface-variant font-medium text-sm">Luxury Drop</span>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 opacity-10 scale-150 group-hover:scale-125 transition-transform duration-700">
+<span class="material-symbols-outlined text-9xl text-tertiary" data-icon="sell">sell</span>
+</div>
+</div>
+<div class="p-6 rounded-xl bg-surface-container-low border-none shadow-sm relative overflow-hidden group">
+<div class="flex flex-col space-y-2">
+<span class="text-on-surface-variant font-label text-xs uppercase tracking-widest">Market Status</span>
+<div class="flex items-baseline space-x-2">
+<span class="text-3xl font-headline font-extrabold text-secondary">Bearish</span>
+<span class="text-on-surface-variant font-medium text-sm">Q3 Projection</span>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 opacity-10 scale-150 group-hover:scale-125 transition-transform duration-700">
+<span class="material-symbols-outlined text-9xl text-secondary" data-icon="query_stats">query_stats</span>
+</div>
+</div>
+</div>
+<!-- Main Matrix Grid -->
+<div class="bg-surface-container rounded-xl overflow-hidden shadow-2xl">
+<div class="p-8 border-b border-outline-variant/10">
+<h2 class="font-headline text-xl font-bold">Category Comparison Heatmap</h2>
+<p class="text-on-surface-variant text-sm mt-1 font-body">Real-time price deviation against 30-day trailing averages.</p>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full border-collapse">
+<thead>
+<tr class="bg-surface-container-high/50">
+<th class="text-left py-6 px-8 text-on-surface-variant font-label text-xs uppercase tracking-widest border-none">Market / City</th>
+<th class="text-center py-6 px-8 text-on-surface-variant font-label text-xs uppercase tracking-widest border-none">Economy</th>
+<th class="text-center py-6 px-8 text-on-surface-variant font-label text-xs uppercase tracking-widest border-none">SUV &amp; Crossover</th>
+<th class="text-center py-6 px-8 text-on-surface-variant font-label text-xs uppercase tracking-widest border-none">Luxury &amp; Sport</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/5">
+<!-- Matrix Row: NYC -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="py-8 px-8 border-none">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="location_city">location_city</span>
+</div>
+<div>
+<div class="font-headline font-bold text-lg">New York</div>
+<div class="text-xs text-on-surface-variant font-body">US East Coast Hub</div>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-surface-container-low rounded-lg p-4 text-center border-l-4 border-error/50">
+<div class="text-error font-bold text-xl">+18.4%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-error h-full w-[80%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 8.2</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-surface-container-low rounded-lg p-4 text-center border-l-4 border-primary/50">
+<div class="text-primary font-bold text-xl">+2.1%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[30%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 3.1</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-tertiary-container/10 rounded-lg p-4 text-center border-l-4 border-tertiary/50">
+<div class="text-tertiary font-bold text-xl">-14.2%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[65%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 6.5</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Matrix Row: London -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="py-8 px-8 border-none">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="castle">castle</span>
+</div>
+<div>
+<div class="font-headline font-bold text-lg">London</div>
+<div class="text-xs text-on-surface-variant font-body">UK / Europe Access</div>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-tertiary-container/10 rounded-lg p-4 text-center border-l-4 border-tertiary/50">
+<div class="text-tertiary font-bold text-xl">-3.5%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[25%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 2.4</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-tertiary-container/20 rounded-lg p-4 text-center border-l-4 border-tertiary">
+<div class="text-tertiary font-black text-xl">-28.9%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-tertiary h-full w-[95%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 9.8</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-surface-container-low rounded-lg p-4 text-center border-l-4 border-primary/50">
+<div class="text-primary font-bold text-xl">+5.4%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[45%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 4.2</span>
+</div>
+</div>
+</td>
+</tr>
+<!-- Matrix Row: Dubai -->
+<tr class="hover:bg-surface-container-highest/30 transition-colors group">
+<td class="py-8 px-8 border-none">
+<div class="flex items-center space-x-4">
+<div class="w-12 h-12 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="apartment">apartment</span>
+</div>
+<div>
+<div class="font-headline font-bold text-lg">Dubai</div>
+<div class="text-xs text-on-surface-variant font-body">UAE / Gulf Region</div>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-surface-container-low rounded-lg p-4 text-center border-l-4 border-primary/50">
+<div class="text-primary font-bold text-xl">+1.2%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-primary h-full w-[15%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 1.1</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-surface-container-low rounded-lg p-4 text-center border-l-4 border-error/50">
+<div class="text-error font-bold text-xl">+7.9%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-error h-full w-[55%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 5.4</span>
+</div>
+</div>
+</td>
+<td class="py-8 px-8 border-none">
+<div class="bg-error-container/20 rounded-lg p-4 text-center border-l-4 border-error">
+<div class="text-error font-black text-xl">+32.4%</div>
+<div class="flex items-center justify-center space-x-1 mt-1">
+<div class="w-24 h-1 bg-surface-container-highest rounded-full overflow-hidden">
+<div class="bg-error h-full w-[100%]"></div>
+</div>
+<span class="text-[10px] text-on-surface-variant font-bold">VOL 10.0</span>
+</div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Focus Insight & Parallel Visuals -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-10 mt-12">
+<!-- Market Velocity Chart Simulation -->
+<div class="space-y-6">
+<h3 class="font-headline text-lg font-bold flex items-center">
+<span class="material-symbols-outlined mr-2 text-primary" data-icon="timeline">timeline</span>
+                        Luxury Segment Velocity
+                    </h3>
+<div class="bg-surface-container-low rounded-2xl p-8 aspect-video relative flex items-end justify-between space-x-4">
+<!-- Simulated Bar Chart -->
+<div class="flex-1 bg-surface-container-highest rounded-t-lg relative group h-[40%]">
+<div class="absolute inset-0 bg-primary opacity-20 group-hover:opacity-40 transition-opacity"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-on-surface-variant">NYC</div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg relative group h-[85%]">
+<div class="absolute inset-0 bg-tertiary opacity-30 group-hover:opacity-50 transition-opacity"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-tertiary">LDN</div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg relative group h-[60%]">
+<div class="absolute inset-0 bg-secondary opacity-20 group-hover:opacity-40 transition-opacity"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-on-surface-variant">DXB</div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg relative group h-[95%]">
+<div class="absolute inset-0 bg-primary opacity-40 group-hover:opacity-60 transition-opacity"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-primary">SIN</div>
+</div>
+<div class="flex-1 bg-surface-container-highest rounded-t-lg relative group h-[50%]">
+<div class="absolute inset-0 bg-surface-container-highest"></div>
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 text-xs font-bold text-on-surface-variant">PAR</div>
+</div>
+<!-- Chart Grid Lines -->
+<div class="absolute inset-0 flex flex-col justify-between pointer-events-none p-8 opacity-10">
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+<div class="w-full h-px bg-on-surface"></div>
+</div>
+</div>
+<div class="flex justify-between items-center px-2">
+<div class="flex space-x-4 text-xs font-label text-on-surface-variant">
+<span class="flex items-center"><span class="w-2 h-2 rounded-full bg-primary mr-1"></span> Hike</span>
+<span class="flex items-center"><span class="w-2 h-2 rounded-full bg-tertiary mr-1"></span> Drop</span>
+<span class="flex items-center"><span class="w-2 h-2 rounded-full bg-surface-container-highest mr-1"></span> Stable</span>
+</div>
+<button class="text-primary font-bold text-xs uppercase tracking-widest hover:underline transition-all">Download Full Report</button>
+</div>
+</div>
+<!-- Bento-style Market Tips -->
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-2 p-8 rounded-2xl bg-gradient-to-br from-surface-container-highest to-surface-container-low shadow-lg relative overflow-hidden">
+<div class="relative z-10">
+<div class="bg-tertiary/20 text-tertiary text-[10px] px-2 py-1 rounded w-fit font-black mb-3">ELITE INSIGHT</div>
+<h4 class="font-headline font-bold text-xl leading-tight">London SUVs are at a 2-year low.</h4>
+<p class="text-on-surface-variant text-sm mt-2 max-w-[70%]">Bookings made in the next 48 hours for September travel are seeing an additional 12% override drop.</p>
+<button class="mt-4 px-6 py-2 bg-tertiary text-on-tertiary font-bold rounded-lg text-sm hover:scale-105 transition-transform">
+                                View Deals
+                            </button>
+</div>
+<span class="material-symbols-outlined absolute -right-4 -bottom-4 text-9xl opacity-10 rotate-12" data-icon="rocket_launch">rocket_launch</span>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-low flex flex-col justify-between">
+<span class="material-symbols-outlined text-error" data-icon="warning">warning</span>
+<div>
+<div class="font-headline font-bold text-sm">NYC Supply Squeeze</div>
+<p class="text-xs text-on-surface-variant mt-1">Economy categories rising due to UN Assembly.</p>
+</div>
+</div>
+<div class="p-6 rounded-2xl bg-surface-container-low flex flex-col justify-between">
+<span class="material-symbols-outlined text-secondary" data-icon="auto_awesome">auto_awesome</span>
+<div>
+<div class="font-headline font-bold text-sm">Arbitrage Alert</div>
+<p class="text-xs text-on-surface-variant mt-1">Luxury in Dubai vs Paris: 40% spread widening.</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Footer / Mobile Nav Spacer -->
+<div class="h-24 md:hidden"></div>
+</main>
+<!-- Bottom Navigation (Mobile Only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 bg-surface-container border-none flex justify-around items-center py-4 z-50">
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="text-[10px] mt-1 font-medium">Home</span>
+</a>
+<a class="flex flex-col items-center text-primary" href="#">
+<span class="material-symbols-outlined" data-icon="query_stats" style="font-variation-settings: 'FILL' 1;">query_stats</span>
+<span class="text-[10px] mt-1 font-bold">Analysis</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+<span class="text-[10px] mt-1 font-medium">Books</span>
+</a>
+<a class="flex flex-col items-center text-on-surface-variant" href="#">
+<span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+<span class="text-[10px] mt-1 font-medium">Profile</span>
+</a>
+</nav>
+</body></html>
