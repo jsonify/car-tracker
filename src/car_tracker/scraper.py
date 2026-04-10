@@ -33,7 +33,7 @@ _CHROME_UA = (
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 
 # Costco login selectors — verified via debug_login.py
-_LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login'], a:visible:has-text('Login')"
+_LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 _LOGIN_EMAIL_SELECTOR = "input#signInName"
 _LOGIN_PASSWORD_SELECTOR = "input#password"
 _LOGIN_SUBMIT_SELECTOR = "button#next"
