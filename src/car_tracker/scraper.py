@@ -329,6 +329,15 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
     await _slow_pause(2.0, 3.0)
 
+    # Verify member pricing is active — if absent, login did not produce a member session
+    member_banner = page.locator("text=The price includes your Costco member savings")
+    try:
+        await member_banner.wait_for(state="visible", timeout=5000)
+    except Exception as exc:
+        raise LoginError(
+            "Login succeeded but member pricing not detected — retrying"
+        ) from exc
+
     cards = await page.locator(".car-result-card").all()
     num_days = days_between(booking.pickup_date, booking.dropoff_date)
 
