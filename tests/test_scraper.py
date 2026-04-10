@@ -142,5 +142,5 @@ def test_load_costco_config_missing_both(monkeypatch):
     monkeypatch.delenv("COSTCO_PASSWORD", raising=False)
     with patch("car_tracker.scraper.load_dotenv"):
         from car_tracker.scraper import load_costco_config
-        with pytest.raises(ValueError, match="COSTCO_USERNAME"):
+        with pytest.raises(ValueError, match="COSTCO_USERNAME.*COSTCO_PASSWORD"):
             load_costco_config()

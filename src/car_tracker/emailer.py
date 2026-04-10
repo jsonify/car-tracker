@@ -14,7 +14,7 @@ from jinja2 import Environment, FileSystemLoader
 from car_tracker.config import BookingConfig
 from car_tracker.database import VehicleRecord
 
-_ENV_PATH = Path("/Users/jasonrueckert/code/car-tracker/.env")
+_ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _TEMPLATES_DIR = Path(__file__).parent / "templates"
 
 
