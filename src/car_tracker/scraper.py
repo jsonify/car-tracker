@@ -32,6 +32,12 @@ _CHROME_UA = (
 )
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 
+# Costco login selectors — verified via debug_login.py
+_LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login'], a:visible:has-text('Login')"
+_LOGIN_EMAIL_SELECTOR = "input#signInName"
+_LOGIN_PASSWORD_SELECTOR = "input#password"
+_LOGIN_SUBMIT_SELECTOR = "button#next"
+
 
 class LoginError(RuntimeError):
     """Raised when Costco login fails or member pricing is not detected."""
@@ -201,6 +207,49 @@ class ChromeManager:  # pragma: no cover
 
 async def _slow_pause(lo: float = 0.8, hi: float = 1.8) -> None:  # pragma: no cover
     await asyncio.sleep(random.uniform(lo, hi))
+
+
+async def _login(page: Page, username: str, password: str) -> None:  # pragma: no cover
+    """Log into Costco Travel using stored credentials.
+
+    Clicks the login link (which performs a full-page redirect to signin.costco.com),
+    fills credentials, submits, and waits for the redirect back to costcotravel.com.
+
+    Raises:
+        LoginError: If the login form does not appear, or the redirect back
+                    to costcotravel.com does not occur within timeout.
+    """
+    await page.locator(_LOGIN_LINK_SELECTOR).first.click()
+
+    # Full-page redirect to signin.costco.com — wait for it to load
+    try:
+        await page.wait_for_url("**/signin.costco.com/**", timeout=15000)
+    except Exception as exc:
+        raise LoginError("Did not reach Costco sign-in page — check _LOGIN_LINK_SELECTOR") from exc
+
+    await _slow_pause(1.5, 2.5)
+
+    email_field = page.locator(_LOGIN_EMAIL_SELECTOR).first
+    try:
+        await email_field.wait_for(state="visible", timeout=15000)
+    except Exception as exc:
+        raise LoginError("Login email field not found — check _LOGIN_EMAIL_SELECTOR") from exc
+
+    await email_field.fill(username)
+    await _slow_pause(0.5, 1.0)
+    await page.locator(_LOGIN_PASSWORD_SELECTOR).first.fill(password)
+    await _slow_pause(0.5, 1.0)
+    await page.locator(_LOGIN_SUBMIT_SELECTOR).first.click()
+
+    # Wait for redirect back to costcotravel.com as success indicator
+    try:
+        await page.wait_for_url("**/costcotravel.com/**", timeout=20000)
+    except Exception as exc:
+        raise LoginError(
+            "Costco login failed — check COSTCO_USERNAME / COSTCO_PASSWORD in .env"
+        ) from exc
+
+    await _slow_pause(1.0, 2.0)
 
 
 async def _set_date_field(page: Page, field_id: str, value: str) -> None:  # pragma: no cover
