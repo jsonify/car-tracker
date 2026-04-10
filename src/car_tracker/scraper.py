@@ -219,7 +219,12 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
         LoginError: If the login form does not appear, or the redirect back
                     to costcotravel.com does not occur within timeout.
     """
-    await page.locator(_LOGIN_LINK_SELECTOR).first.click()
+    login_link = page.locator(_LOGIN_LINK_SELECTOR).first
+    try:
+        await login_link.wait_for(state="visible", timeout=10000)
+    except Exception as exc:
+        raise LoginError("Login link not found — check _LOGIN_LINK_SELECTOR") from exc
+    await login_link.click()
 
     # Full-page redirect to signin.costco.com — wait for it to load
     try:
