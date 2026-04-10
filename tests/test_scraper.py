@@ -100,3 +100,47 @@ def test_price_per_day_calculation():
     assert days == 4
     ppd = round(total / days, 2)
     assert ppd == 99.16
+
+
+# ---------------------------------------------------------------------------
+# load_costco_config
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch
+
+
+def test_load_costco_config_success(monkeypatch):
+    monkeypatch.setenv("COSTCO_USERNAME", "user@example.com")
+    monkeypatch.setenv("COSTCO_PASSWORD", "secret123")
+    with patch("car_tracker.scraper.load_dotenv"):
+        from car_tracker.scraper import load_costco_config
+        username, password = load_costco_config()
+    assert username == "user@example.com"
+    assert password == "secret123"
+
+
+def test_load_costco_config_missing_username(monkeypatch):
+    monkeypatch.delenv("COSTCO_USERNAME", raising=False)
+    monkeypatch.setenv("COSTCO_PASSWORD", "secret123")
+    with patch("car_tracker.scraper.load_dotenv"):
+        from car_tracker.scraper import load_costco_config
+        with pytest.raises(ValueError, match="COSTCO_USERNAME"):
+            load_costco_config()
+
+
+def test_load_costco_config_missing_password(monkeypatch):
+    monkeypatch.setenv("COSTCO_USERNAME", "user@example.com")
+    monkeypatch.delenv("COSTCO_PASSWORD", raising=False)
+    with patch("car_tracker.scraper.load_dotenv"):
+        from car_tracker.scraper import load_costco_config
+        with pytest.raises(ValueError, match="COSTCO_PASSWORD"):
+            load_costco_config()
+
+
+def test_load_costco_config_missing_both(monkeypatch):
+    monkeypatch.delenv("COSTCO_USERNAME", raising=False)
+    monkeypatch.delenv("COSTCO_PASSWORD", raising=False)
+    with patch("car_tracker.scraper.load_dotenv"):
+        from car_tracker.scraper import load_costco_config
+        with pytest.raises(ValueError, match="COSTCO_USERNAME"):
+            load_costco_config()

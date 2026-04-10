@@ -9,10 +9,12 @@ import tempfile
 import time
 from dataclasses import dataclass
 from datetime import date, datetime
+from pathlib import Path
 
 # Suppress Playwright's Node.js DEP0169 deprecation warning (url.parse)
 os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
+from dotenv import load_dotenv
 from playwright.async_api import Page, async_playwright
 
 from car_tracker.config import BookingConfig
@@ -28,6 +30,26 @@ _CHROME_UA = (
     "AppleWebKit/537.36 (KHTML, like Gecko) "
     "Chrome/146.0.0.0 Safari/537.36"
 )
+_ENV_PATH = Path(__file__).parent.parent.parent / ".env"
+
+
+class LoginError(RuntimeError):
+    """Raised when Costco login fails or member pricing is not detected."""
+
+
+def load_costco_config() -> tuple[str, str]:
+    """Load Costco credentials from .env. Returns (username, password).
+
+    Raises:
+        ValueError: If COSTCO_USERNAME or COSTCO_PASSWORD is missing.
+    """
+    load_dotenv(_ENV_PATH)
+    username = os.environ.get("COSTCO_USERNAME", "")
+    password = os.environ.get("COSTCO_PASSWORD", "")
+    missing = [k for k, v in [("COSTCO_USERNAME", username), ("COSTCO_PASSWORD", password)] if not v]
+    if missing:
+        raise ValueError(f"Missing required Costco env vars: {', '.join(missing)}")
+    return username, password
 
 
 # ---------------------------------------------------------------------------
