@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import os
 import random
+import re
 import shutil
 import subprocess
 import tempfile
@@ -139,13 +140,14 @@ class ChromeManager:  # pragma: no cover
             "--disable-features=AutomationControlled",
         ]
         if not self.debug:
+            # Run headed but off-screen: Costco's Azure AD B2C blocks headless Chrome
+            # logins ("We are having trouble signing you in"). Headed mode with the
+            # window positioned off-screen passes their bot detection identically to a
+            # real browser session.
             args.extend([
-                "--headless=new",
                 "--window-size=1920,1080",
+                "--window-position=-9999,0",
                 f"--user-agent={_CHROME_UA}",
-                "--disable-gpu",
-                "--hide-scrollbars",
-                "--mute-audio",
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
                 "--disable-backgrounding-occluded-windows",
@@ -228,7 +230,7 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
 
     # Full-page redirect to signin.costco.com — wait for it to load
     try:
-        await page.wait_for_url("**/signin.costco.com/**", timeout=15000)
+        await page.wait_for_url(re.compile(r"signin\.costco\.com"), timeout=15000)
     except Exception as exc:
         raise LoginError("Did not reach Costco sign-in page — check _LOGIN_LINK_SELECTOR") from exc
 
@@ -246,9 +248,14 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     await _slow_pause(0.5, 1.0)
     await page.locator(_LOGIN_SUBMIT_SELECTOR).first.click()
 
-    # Wait for redirect back to costcotravel.com as success indicator
+    # Wait for redirect back to costcotravel.com as success indicator.
+    # Using a regex because the glob pattern **/costcotravel.com/** fails to match
+    # www.costcotravel.com (minimatch treats the subdomain as its own path segment).
     try:
-        await page.wait_for_url("**/costcotravel.com/**", timeout=20000)
+        await page.wait_for_url(
+            re.compile(r"^https?://(?:www\.)?costcotravel\.com/"),
+            timeout=30000,
+        )
     except Exception as exc:
         raise LoginError(
             "Costco login failed — check COSTCO_USERNAME / COSTCO_PASSWORD in .env"
@@ -330,7 +337,7 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     await _slow_pause(2.0, 3.0)
 
     # Verify member pricing is active — if absent, login did not produce a member session
-    member_banner = page.locator("text=The price includes your Costco member savings")
+    member_banner = page.locator("text=The price includes your Costco member savings").first
     try:
         await member_banner.wait_for(state="visible", timeout=5000)
     except Exception as exc:
@@ -378,6 +385,13 @@ async def _run_scrape(booking: BookingConfig, username: str, password: str) -> l
 
         print("  Logging in...", end=" ", flush=True)
         await _login(page, username, password)
+        print("done")
+
+        # After login, Costco redirects to /memberBookings. Navigate back to
+        # the rental car search page before filling the form.
+        print("  Navigating to rental cars...", end=" ", flush=True)
+        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+        await _slow_pause(2, 3)
         print("done")
 
         print("  Filling search form...", end=" ", flush=True)
