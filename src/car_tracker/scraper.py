@@ -147,6 +147,7 @@ class ChromeManager:  # pragma: no cover
             args.extend([
                 "--window-size=1920,1080",
                 "--window-position=-9999,0",
+                "--start-minimized",
                 f"--user-agent={_CHROME_UA}",
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
