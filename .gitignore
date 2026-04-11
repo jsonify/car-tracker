@@ -59,6 +59,9 @@ test-results/
 # Chrome automation temp dir
 /tmp/car-tracker-chrome/
 
+# Runtime lock file (prevents concurrent cron runs)
+.run.lock
+
 # Credentials — never commit
 .env
 
