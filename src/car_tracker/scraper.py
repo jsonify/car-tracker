@@ -7,6 +7,7 @@ import re
 import shutil
 import subprocess
 import tempfile
+import threading
 import time
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -180,10 +181,38 @@ class ChromeManager:  # pragma: no cover
                 import urllib.request
                 urllib.request.urlopen(f"http://127.0.0.1:{CDP_PORT}/json/version", timeout=1)
                 print("ready")
+                if not self.debug:
+                    self._start_hider_thread()
                 return
             except Exception:
                 time.sleep(0.3)
         raise RuntimeError("Chrome did not start in time.")
+
+    def _start_hider_thread(self) -> None:
+        """Background thread that repeatedly hides Chrome's window on macOS.
+
+        Chrome opens new windows during page navigation, so a one-shot hide
+        is not enough. We tell the Chrome application to hide itself every
+        300 ms until stop() is called. Uses Chrome's own AppleScript interface
+        (no Accessibility permissions required).
+        """
+        self._hider_stop = threading.Event()
+
+        def _run(stop: threading.Event) -> None:
+            script = 'tell application "Google Chrome" to hide'
+            while not stop.is_set():
+                try:
+                    subprocess.run(
+                        ["osascript", "-e", script],
+                        capture_output=True,
+                        timeout=5,
+                    )
+                except Exception:
+                    pass  # Non-fatal
+                stop.wait(1.0)
+
+        t = threading.Thread(target=_run, args=(self._hider_stop,), daemon=True)
+        t.start()
 
     def restart(self) -> None:
         """Stop (if running) and start a fresh Chrome instance."""
@@ -191,6 +220,8 @@ class ChromeManager:  # pragma: no cover
         self.start()
 
     def stop(self) -> None:
+        if hasattr(self, "_hider_stop"):
+            self._hider_stop.set()
         if self._proc:
             self._proc.terminate()
             try:
