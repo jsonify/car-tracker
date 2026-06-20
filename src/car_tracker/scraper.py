@@ -161,6 +161,7 @@ class ChromeManager:  # pragma: no cover
                 "--disable-backgrounding-occluded-windows",
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
             ])
         return args
 
