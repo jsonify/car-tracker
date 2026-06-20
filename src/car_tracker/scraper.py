@@ -41,8 +41,7 @@ _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 _LOGIN_EMAIL_SELECTOR = "input#signInName"
 _LOGIN_PASSWORD_SELECTOR = "input#password"
-# button#next = old Azure AD B2C submit; button[type="submit"] = new unified Costco login
-_LOGIN_SUBMIT_SELECTOR = "button#next, button[type='submit']"
+_LOGIN_SUBMIT_SELECTOR = "button#next"
 
 
 class LoginError(RuntimeError):
@@ -298,6 +297,7 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
         )
     except Exception as exc:
         try:
+            print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
             await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
         except Exception:
             pass
