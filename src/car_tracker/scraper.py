@@ -24,7 +24,10 @@ from car_tracker.config import BookingConfig
 COSTCO_RENTAL_URL = "https://www.costcotravel.com/rental-cars"
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds between retries
-CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME_PATH = os.environ.get(
+    "CAR_TRACKER_CHROME_PATH",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+)
 CDP_PORT = 9222
 USER_DATA_DIR = "/tmp/car-tracker-chrome"
 _CHROME_UA = (
