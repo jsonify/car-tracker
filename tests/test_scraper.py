@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from car_tracker.scraper import (
+    CHROME_PATH,
     VehicleResult,
     days_between,
     to_12h,
@@ -144,3 +147,11 @@ def test_load_costco_config_missing_both(monkeypatch):
         from car_tracker.scraper import load_costco_config
         with pytest.raises(ValueError, match="COSTCO_USERNAME.*COSTCO_PASSWORD"):
             load_costco_config()
+
+
+def test_chrome_path_default_is_macos(monkeypatch):
+    monkeypatch.delenv("CAR_TRACKER_CHROME_PATH", raising=False)
+    import importlib
+    import car_tracker.scraper as scraper_mod
+    importlib.reload(scraper_mod)
+    assert scraper_mod.CHROME_PATH == "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"

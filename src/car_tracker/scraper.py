@@ -24,7 +24,10 @@ from car_tracker.config import BookingConfig
 COSTCO_RENTAL_URL = "https://www.costcotravel.com/rental-cars"
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds between retries
-CHROME_PATH = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+CHROME_PATH = os.environ.get(
+    "CAR_TRACKER_CHROME_PATH",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+)
 CDP_PORT = 9222
 USER_DATA_DIR = "/tmp/car-tracker-chrome"
 _CHROME_UA = (
@@ -118,9 +121,12 @@ class ChromeManager:  # pragma: no cover
 
     def _kill_stale(self) -> None:
         """Kill any leftover Chrome process listening on CDP_PORT."""
+        lsof = shutil.which("lsof")
+        if not lsof:
+            return
         try:
             out = subprocess.check_output(
-                ["/usr/sbin/lsof", "-ti", f"tcp:{CDP_PORT}"],
+                [lsof, "-ti", f"tcp:{CDP_PORT}"],
                 stderr=subprocess.DEVNULL,
             )
             for pid in out.decode().split():
@@ -155,6 +161,7 @@ class ChromeManager:  # pragma: no cover
                 "--disable-backgrounding-occluded-windows",
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
             ])
         return args
 
@@ -280,15 +287,20 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     await _slow_pause(0.5, 1.0)
     await page.locator(_LOGIN_SUBMIT_SELECTOR).first.click()
 
-    # Wait for redirect back to costcotravel.com as success indicator.
-    # Using a regex because the glob pattern **/costcotravel.com/** fails to match
-    # www.costcotravel.com (minimatch treats the subdomain as its own path segment).
+    # Wait for redirect away from signin.costco.com as the success indicator.
+    # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
+    # costco.com. Accept either — _run_scrape navigates back to COSTCO_RENTAL_URL anyway.
     try:
         await page.wait_for_url(
-            re.compile(r"^https?://(?:www\.)?costcotravel\.com/"),
+            re.compile(r"^https?://(?:www\.)?(?:costcotravel|costco)\.com/"),
             timeout=30000,
         )
     except Exception as exc:
+        try:
+            print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
+            await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
+        except Exception:
+            pass
         raise LoginError(
             "Costco login failed — check COSTCO_USERNAME / COSTCO_PASSWORD in .env"
         ) from exc
