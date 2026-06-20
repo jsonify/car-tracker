@@ -58,7 +58,7 @@ def remove_expired_bookings(config_path: Path, today: date) -> list[BookingConfi
         )
         subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=repo_dir, check=True)
         subprocess.run(["git", "push"], cwd=repo_dir, check=True)
-    except subprocess.CalledProcessError as exc:
+    except (subprocess.CalledProcessError, OSError) as exc:
         _log.warning("git sync after removing expired bookings failed (non-fatal): %s", exc)
 
     # Construct BookingConfig objects for the removed bookings
