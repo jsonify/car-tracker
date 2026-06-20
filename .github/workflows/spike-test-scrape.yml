@@ -2,6 +2,9 @@ name: Spike — Chrome scrape test (manual only)
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - spike/github-actions-chrome-test
 
 jobs:
   scrape-test:
