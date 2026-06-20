@@ -41,7 +41,8 @@ _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 _LOGIN_EMAIL_SELECTOR = "input#signInName"
 _LOGIN_PASSWORD_SELECTOR = "input#password"
-_LOGIN_SUBMIT_SELECTOR = "button#next"
+# button#next = old Azure AD B2C submit; button[type="submit"] = new unified Costco login
+_LOGIN_SUBMIT_SELECTOR = "button#next, button[type='submit']"
 
 
 class LoginError(RuntimeError):
@@ -287,12 +288,12 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     await _slow_pause(0.5, 1.0)
     await page.locator(_LOGIN_SUBMIT_SELECTOR).first.click()
 
-    # Wait for redirect back to costcotravel.com as success indicator.
-    # Using a regex because the glob pattern **/costcotravel.com/** fails to match
-    # www.costcotravel.com (minimatch treats the subdomain as its own path segment).
+    # Wait for redirect away from signin.costco.com as the success indicator.
+    # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
+    # costco.com. Accept either — _run_scrape navigates back to COSTCO_RENTAL_URL anyway.
     try:
         await page.wait_for_url(
-            re.compile(r"^https?://(?:www\.)?costcotravel\.com/"),
+            re.compile(r"^https?://(?:www\.)?(?:costcotravel|costco)\.com/"),
             timeout=30000,
         )
     except Exception as exc:
