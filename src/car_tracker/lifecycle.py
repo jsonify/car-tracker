@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import subprocess
 from datetime import date
 from pathlib import Path
@@ -7,6 +8,8 @@ from pathlib import Path
 import yaml
 
 from car_tracker.config import BookingConfig
+
+_log = logging.getLogger(__name__)
 
 
 def remove_expired_bookings(config_path: Path, today: date) -> list[BookingConfig]:
@@ -41,19 +44,22 @@ def remove_expired_bookings(config_path: Path, today: date) -> list[BookingConfi
 
     # Git: add → commit → pull --rebase --autostash → push
     repo_dir = config_path.parent
-    subprocess.run(["git", "add", str(config_path)], cwd=repo_dir, check=True)
-    subprocess.run(
-        [
-            "git",
-            "commit",
-            "-m",
-            f"chore(config): remove {len(removed_raw)} expired booking(s)",
-        ],
-        cwd=repo_dir,
-        check=True,
-    )
-    subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=repo_dir, check=True)
-    subprocess.run(["git", "push"], cwd=repo_dir, check=True)
+    try:
+        subprocess.run(["git", "add", str(config_path)], cwd=repo_dir, check=True)
+        subprocess.run(
+            [
+                "git",
+                "commit",
+                "-m",
+                f"chore(config): remove {len(removed_raw)} expired booking(s)",
+            ],
+            cwd=repo_dir,
+            check=True,
+        )
+        subprocess.run(["git", "pull", "--rebase", "--autostash"], cwd=repo_dir, check=True)
+        subprocess.run(["git", "push"], cwd=repo_dir, check=True)
+    except subprocess.CalledProcessError as exc:
+        _log.warning("git sync after removing expired bookings failed (non-fatal): %s", exc)
 
     # Construct BookingConfig objects for the removed bookings
     removed: list[BookingConfig] = []
