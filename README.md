@@ -18,9 +18,10 @@ A scheduled scraping tool that monitors Costco Travel rental car prices across m
 
 When you sign up for a new Costco Travel reservation and want to start tracking it:
 
-### 1. Add it to `config.yaml` (or via iMessage)
+### 1. Add it to `config.yaml`
 
-**Direct edit** (takes effect immediately on the next run):
+Edit `config.yaml` directly — changes are picked up on the next run (or immediately if you trigger a manual run):
+
 ```yaml
 bookings:
   - name: vegas_june
@@ -33,22 +34,13 @@ bookings:
     holding_vehicle_type: "Standard Car"
 ```
 
-**Via iMessage** (if you're away from your machine):
-```
-add booking vegas_june LAS 2026-06-10 12:00 2026-06-15 12:00
-```
+If you're away from your machine, edit `config.yaml` directly on GitHub.com — `run.sh` does a `git pull` before each scrape, so the change is picked up automatically.
 
 ### 2. Does adding a booking trigger a run?
 
-**No.** Adding a booking — whether via config edit or iMessage — does not automatically trigger a scrape. The system is schedule-driven, not event-driven.
+**No.** Adding a booking does not automatically trigger a scrape. The system is schedule-driven, not event-driven.
 
 To run immediately after adding:
-
-```bash
-uv run python -m scripts.check_imessage && uv run python -m car_tracker
-```
-
-Or skip the iMessage check if you edited `config.yaml` directly:
 
 ```bash
 uv run python -m car_tracker
@@ -56,9 +48,8 @@ uv run python -m car_tracker
 
 ### 3. What happens on the next scheduled run
 
-1. `check_imessage.py` fires first — picks up any pending iMessage commands and applies them to `config.yaml`
-2. `car_tracker` scrapes prices for all active bookings and emails results
-3. Your new booking appears as a section in the email with current prices, deltas vs. the prior run, and a countdown to pick-up
+1. `car_tracker` scrapes prices for all active bookings and emails results
+2. Your new booking appears as a section in the email with current prices, deltas vs. the prior run, and a countdown to pick-up
 
 After that, every scheduled run monitors your booking automatically until its pick-up date passes, at which point it's removed from `config.yaml` and monitoring pauses if no bookings remain.
 
@@ -103,7 +94,7 @@ Edit `config.yaml` with a `bookings:` list — one entry per trip you want to tr
 
 ```yaml
 bookings:
-  - name: hawaii_may           # Unique label used in emails and iMessage commands
+  - name: hawaii_may           # Unique label used in emails
     pickup_location: "HNL"     # Airport code or city name
     pickup_date: "2026-05-01"  # YYYY-MM-DD
     pickup_time: "10:00"       # HH:MM (24hr)
@@ -126,9 +117,6 @@ bookings:
 
 database:
   path: "data/results.db"      # Relative path to SQLite file
-
-imessage:
-  phone_number: "+15551234567" # Phone number to watch for remote config commands
 ```
 
 The `data/` directory is created automatically on first run. You can track as many bookings as you like — each is scraped and reported independently in the same run.
@@ -194,85 +182,6 @@ On scrape failure for a booking, a failure notification email is sent for that b
 
 After a booking's pick-up date passes, it is automatically removed from `config.yaml` on the next run and the change is committed and pushed to git. If the last booking expires (or the bookings list is otherwise empty), a single **"Monitoring Paused"** notification email is sent — subsequent runs are silent until a new booking is added, at which point monitoring resumes automatically.
 
-## Remote Config Updates via iMessage
-
-You can update a booking's holding price and vehicle type by sending an iMessage from your configured phone number. The `check_imessage` script is designed to run before each scrape (e.g. via cron).
-
-All commands are case-insensitive. Any matching command updates `config.yaml`, commits, and pushes automatically.
-
-> **Ambiguity rule:** Natural-language commands that don't specify a booking name are only applied when there is exactly one booking configured. With multiple bookings and no name, the command is ignored to avoid updating the wrong entry.
-
-### Update holding price and type together (structured)
-
-```
-update holding <name_or_index> <price> <vehicle_type>
-```
-
-```
-update holding hawaii_may 380.00 Economy Car
-update holding las_june 175.00 Compact Car
-update holding 1 420.00 Standard Car
-update holding 2 199.00 Economy Car
-```
-
-### Update holding price only
-
-```
-update holding price to 350 for san_april
-set san_april holding price to 350
-update holding price to $299.99 for las_june
-```
-
-Single-booking shorthand (only works when exactly one booking is configured):
-```
-update holding price to 375
-set holding price to $400.50
-```
-
-### Update holding vehicle type only
-
-```
-update holding type to Standard Car for san_april
-update holding vehicle type to Economy Car for las_june
-set san_april holding type to Standard Car
-set las_june holding vehicle type to SUV
-```
-
-Single-booking shorthand:
-```
-set holding type to SUV
-update holding type to Economy Car
-```
-
-### Add a new booking
-
-```
-add booking <name> <location> <pickup_date> <pickup_time> <dropoff_date> <dropoff_time>
-```
-
-```
-add booking hawaii_may HNL 2026-05-01 10:00 2026-05-08 10:00
-add booking portland PDX 2026-07-01 09:00 2026-07-05 09:00
-```
-
-Dates must be `YYYY-MM-DD` and times `HH:MM` (24hr). The new booking has no holding price until you set one.
-
-### List bookings
-
-```
-list bookings
-```
-
-Returns a numbered list of active bookings with their current holding price and vehicle type.
-
-### Running the iMessage checker
-
-```bash
-uv run python -m scripts.check_imessage
-```
-
-See `docs/imessage_shortcut_setup.md` for macOS Full Disk Access setup and automation options (manual, macOS Shortcuts, or cron).
-
 ## Scheduling with cron
 
 To run automatically twice a week (e.g. Monday and Thursday at 8 AM):
@@ -284,7 +193,7 @@ crontab -e
 Add:
 
 ```
-0 8 * * 1,4 cd /Users/<you>/code/car-tracker && /usr/sbin/lsof -ti tcp:9222 | xargs kill -9 2>/dev/null; /Users/<you>/code/car-tracker/.venv/bin/python -m scripts.check_imessage >> /tmp/car-tracker.log 2>&1 && /Users/<you>/code/car-tracker/.venv/bin/python -m car_tracker >> /tmp/car-tracker.log 2>&1
+0 8 * * 1,4 /usr/sbin/lsof -ti tcp:9222 | xargs kill -9 2>/dev/null; /Users/<you>/code/car-tracker/run.sh
 ```
 
 ## Project Structure
@@ -296,20 +205,15 @@ car-tracker/
 │   ├── __main__.py          # Entry point: expires bookings, iterates active ones, sends email
 │   ├── config.py            # Config loading and validation (AppConfig, BookingConfig)
 │   ├── lifecycle.py         # Booking expiration: removes past bookings from config.yaml + git push
-│   ├── state.py             # App state helpers: read/write data/imessage_state.json
+│   ├── state.py             # App state helpers: read/write data/app_state.json
 │   ├── scraper.py           # Playwright browser automation
 │   ├── database.py          # SQLite storage (booking_name-scoped)
 │   ├── emailer.py           # Email rendering and delivery (incl. countdown + monitoring paused)
 │   └── templates/           # Jinja2 HTML email templates
-├── scripts/
-│   ├── check_imessage.py    # Poll iMessage for remote config update commands
-│   └── update_config.py     # Parse and apply config updates from iMessage text
 ├── webapp/                  # Local React dashboard for exploring price data
 │   ├── backend/             # FastAPI server: queries database, serves API
 │   ├── frontend/            # React + Vite + Tailwind: dashboard, charts, tables
 │   └── start.sh             # Start both servers concurrently
-├── docs/
-│   └── imessage_shortcut_setup.md
 ├── tests/                   # Unit tests
 ├── data/                    # SQLite database (created on first run, git-ignored)
 └── pyproject.toml

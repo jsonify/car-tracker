@@ -2,9 +2,7 @@
 # run.sh — cron wrapper for car-tracker
 #
 # 1. git pull to pick up any config changes made on GitHub.com
-# 2. check_imessage — apply any pending iMessage config commands, commit & push
-# 3. Activate the project virtualenv
-# 4. Run the scraper
+# 2. Activate the project virtualenv and run the scraper
 #
 # If git pull fails for any reason, a warning is logged and the scraper runs
 # with the existing local config — the run is never aborted due to a pull failure.
@@ -38,25 +36,8 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# 2. check_imessage — apply any pending iMessage config commands (best-effort)
+# 2. Run scraper
 # ---------------------------------------------------------------------------
 cd "$REPO_DIR"
 source "$REPO_DIR/.venv/bin/activate"
-
-echo "[$TIMESTAMP] run.sh: checking iMessage for config updates" >> "$LOG"
-IMESSAGE_EXIT=0
-python -m scripts.check_imessage --config "$REPO_DIR/config.yaml" >> "$LOG" 2>&1 || IMESSAGE_EXIT=$?
-
-if [ "$IMESSAGE_EXIT" -eq 2 ]; then
-    echo "[$TIMESTAMP] run.sh: car_tracker already ran on-demand via iMessage; skipping scheduled run" >> "$LOG"
-    exit 0
-elif [ "$IMESSAGE_EXIT" -ne 0 ]; then
-    echo "[$TIMESTAMP] run.sh: WARNING — iMessage check failed; proceeding with existing config" >> "$LOG"
-else
-    echo "[$TIMESTAMP] run.sh: iMessage check complete" >> "$LOG"
-fi
-
-# ---------------------------------------------------------------------------
-# 3. Run scraper
-# ---------------------------------------------------------------------------
 exec python -m car_tracker --config "$REPO_DIR/config.yaml"

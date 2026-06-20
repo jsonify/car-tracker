@@ -1,5 +1,21 @@
 # Track Learnings: imessage_config_20260315
 
+## [2026-06-20] — Cancellation
+
+This feature was fully implemented and shipped, then later removed. The GitHub-based remote config (editing `config.yaml` directly on GitHub.com, picked up by `git pull` in `run.sh`) covers the same use case with meaningfully less operational overhead:
+
+- No macOS Full Disk Access grant required for Terminal
+- No cron entry or Shortcut needed to run `check_imessage.py` separately
+- No iMessage phone number to configure
+- No `data/imessage_state.json` cursor file to manage
+- No osascript dependency for sending reply messages
+
+The iMessage approach added friction (setup, permissions, maintenance) that wasn't justified by actual usage frequency. Config changes are infrequent enough that editing on GitHub.com is not a meaningful inconvenience.
+
+**What was removed:** `scripts/check_imessage.py`, `scripts/update_config.py`, `docs/imessage_shortcut_setup.md`, their test files, the `imessage:` key in `config.yaml`, and the `check_imessage` invocation in `run.sh`. The shared state file was renamed from `data/imessage_state.json` to `data/app_state.json` since it still tracks `monitoring_paused_notified`.
+
+---
+
 Patterns, gotchas, and context discovered during implementation.
 
 ## Codebase Patterns (Inherited)

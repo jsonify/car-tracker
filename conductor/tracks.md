@@ -18,11 +18,11 @@ This file tracks all major tracks for the project.
 
 ---
 
-<!-- archived 2026-03-16: imessage_config_20260315 — Remote Config Updates via iMessage -->
+<!-- cancelled 2026-06-20: imessage_config_20260315 — Remote Config Updates via iMessage (removed: GitHub-based config covers same use case with less friction) -->
 
 <!-- archived 2026-03-17: multi_booking_20260316 — Multiple Bookings Support -->
 
-<!-- archived 2026-03-17: imessage_booking_mgmt_20260316 — iMessage Booking Management —create and list bookings via iMessage commands -->
+<!-- cancelled 2026-06-20: imessage_booking_mgmt_20260316 — iMessage Booking Management (removed with imessage_config_20260315) -->
 
 <!-- archived 2026-03-17: booking_lifecycle_20260317 — Booking Countdown & Expiration —countdown in email banner, auto-expiration of past bookings, monitoring paused notification -->
 

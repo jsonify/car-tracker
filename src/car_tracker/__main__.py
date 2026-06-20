@@ -12,7 +12,7 @@ from car_tracker.lifecycle import remove_expired_bookings
 from car_tracker.scraper import scrape
 from car_tracker.state import read_app_state, write_app_state
 
-_STATE_PATH = Path("data/imessage_state.json")
+_STATE_PATH = Path("data/app_state.json")
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
