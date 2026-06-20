@@ -121,9 +121,12 @@ class ChromeManager:  # pragma: no cover
 
     def _kill_stale(self) -> None:
         """Kill any leftover Chrome process listening on CDP_PORT."""
+        lsof = shutil.which("lsof")
+        if not lsof:
+            return
         try:
             out = subprocess.check_output(
-                ["/usr/sbin/lsof", "-ti", f"tcp:{CDP_PORT}"],
+                [lsof, "-ti", f"tcp:{CDP_PORT}"],
                 stderr=subprocess.DEVNULL,
             )
             for pid in out.decode().split():
