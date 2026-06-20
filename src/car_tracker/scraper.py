@@ -296,6 +296,10 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
             timeout=30000,
         )
     except Exception as exc:
+        try:
+            await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
+        except Exception:
+            pass
         raise LoginError(
             "Costco login failed — check COSTCO_USERNAME / COSTCO_PASSWORD in .env"
         ) from exc
