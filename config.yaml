@@ -9,5 +9,3 @@ bookings:
   pickup_time: 09:00
 database:
   path: data/results.db
-imessage:
-  phone_number: '+15039990921'

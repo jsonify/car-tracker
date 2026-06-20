@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 _DEFAULTS: dict = {
-    "last_rowid": 0,
     "monitoring_paused_notified": False,
 }
 
