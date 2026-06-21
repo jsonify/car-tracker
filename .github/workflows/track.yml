@@ -38,6 +38,7 @@ jobs:
           CAR_TRACKER_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
           COSTCO_USERNAME: ${{ secrets.COSTCO_USERNAME }}
           COSTCO_PASSWORD: ${{ secrets.COSTCO_PASSWORD }}
+          COSTCO_COOKIES: ${{ secrets.COSTCO_COOKIES }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
