@@ -447,7 +447,7 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     # event system sees each keystroke and updates its internal form state.
     pickup_field = page.locator("#pickUpDateWidget")
     await pickup_field.click(force=True)
-    await pickup_field.triple_click()  # select-all so we overwrite any placeholder
+    await page.keyboard.press("Control+a")  # select-all so we overwrite any placeholder
     await page.keyboard.press("Delete")
     await page.type("#pickUpDateWidget", _to_mmddyyyy(booking.pickup_date), delay=80)
     await page.keyboard.press("Escape")  # close any datepicker popup
@@ -456,7 +456,7 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
 
     dropoff_field = page.locator("#dropOffDateWidget")
     await dropoff_field.click(force=True)
-    await dropoff_field.triple_click()
+    await page.keyboard.press("Control+a")
     await page.keyboard.press("Delete")
     await page.type("#dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date), delay=80)
     await page.keyboard.press("Escape")  # close any datepicker popup
