@@ -1,0 +1,54 @@
+name: Car Tracker — Price Check
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'  # Every 4 hours
+  workflow_dispatch:
+
+jobs:
+  track:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Chrome
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - uses: astral-sh/setup-uv@v3
+
+      - run: uv sync
+
+      - name: Install Xvfb
+        run: sudo apt-get install -y xvfb
+
+      - name: Restore data cache
+        uses: actions/cache@v4
+        with:
+          path: data/
+          key: car-tracker-data-${{ github.run_id }}
+          restore-keys: |
+            car-tracker-data-
+
+      - name: Run tracker
+        run: xvfb-run --auto-servernum -- uv run python -m car_tracker
+        env:
+          CAR_TRACKER_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
+          COSTCO_USERNAME: ${{ secrets.COSTCO_USERNAME }}
+          COSTCO_PASSWORD: ${{ secrets.COSTCO_PASSWORD }}
+          COSTCO_COOKIES: ${{ secrets.COSTCO_COOKIES }}
+          SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          SENDER_PASSWORD: ${{ secrets.SENDER_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
+
+      - name: Upload failure screenshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: chrome-failure-screenshots-${{ github.run_id }}
+          path: /tmp/car-tracker-*.png
+          if-no-files-found: ignore
