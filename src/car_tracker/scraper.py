@@ -17,7 +17,6 @@ from pathlib import Path
 os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from dotenv import load_dotenv
-from typing import Any
 from playwright.async_api import Page, async_playwright
 
 from car_tracker.config import BookingConfig
@@ -304,21 +303,13 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
         raise LoginError("Login submit button not found — check _LOGIN_SUBMIT_SELECTOR") from exc
 
     btn_text = await submit_btn.text_content()
-    print(f"\n  [login-debug] Clicking submit button: '{btn_text}' url={page.url}", flush=True)
-    await page.screenshot(path="/tmp/car-tracker-pre-click.png", full_page=True)
+    print(f"\n  [login-debug] Submitting via Enter key: '{btn_text}' url={page.url}", flush=True)
 
-    # Capture network requests made during the submit to distinguish
-    # "click fully suppressed by JS" from "request made but rejected by server".
-    requests_made: list[str] = []
-    page.on("request", lambda r: requests_made.append(f"{r.method} {r.url[:120]}"))
-
-    # Hover first to simulate natural mouse movement, then click
-    await submit_btn.hover()
-    await _slow_pause(0.3, 0.6)
-    await submit_btn.click()
-    await _slow_pause(1.0, 1.5)  # give JS time to fire any async handlers
-    print(f"  [login-debug] Post-click url={page.url}", flush=True)
-    print(f"  [login-debug] Requests after click ({len(requests_made)}): {requests_made[:5]}", flush=True)
+    # Press Enter on the password field — keyboard submission bypasses the JS
+    # click-suppression that bot detection hooks onto button mouse events.
+    await password_field.press("Enter")
+    await _slow_pause(1.0, 1.5)
+    print(f"  [login-debug] Post-submit url={page.url}", flush=True)
 
     # Wait for redirect away from signin.costco.com as the success indicator.
     # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
@@ -367,40 +358,29 @@ def _to_mmddyyyy(iso_date: str) -> str:
 
 async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # pragma: no cover
     """Fill and submit the Costco Travel rental car search form."""
-    print(f"\n  [form-step] page url before fill: {page.url}", flush=True)
-    await page.screenshot(path="/tmp/car-tracker-before-fill.png")
-    print(f"  [form-step] screenshot saved", flush=True)
-
     # Location autocomplete
-    print(f"  [form-step] clicking #pickupLocationTextWidget ...", flush=True)
     await page.click("#pickupLocationTextWidget")
-    print(f"  [form-step] clicked, pausing ...", flush=True)
     await _slow_pause()
     location = booking.pickup_location
-    print(f"  [form-step] typing location '{location}' ...", flush=True)
     for ch in location:
         await page.type(
             "#pickupLocationTextWidget",
             ch,
             delay=random.randint(120, 280),
         )
-    print(f"  [form-step] typed location, pausing ...", flush=True)
     await _slow_pause(2.5, 3.5)
 
     # Click first matching autocomplete suggestion.
     # Use :visible to skip the hidden pre-selected airport item (class="airport selected")
     # which Playwright resolves first but can never become visible.
-    print(f"  [form-step] waiting for autocomplete suggestion ...", flush=True)
     suggestion = page.locator("ul.ui-list li:visible").first
     await suggestion.wait_for(state="visible", timeout=10000)
     # Try exact airport match first (visible items only)
     airport_item = page.locator(f'ul.ui-list li[data-value="{location}"]:visible').first
     try:
         await airport_item.wait_for(state="visible", timeout=3000)
-        print(f"  [form-step] clicking exact airport match ...", flush=True)
         await airport_item.click()
     except Exception:
-        print(f"  [form-step] clicking first suggestion ...", flush=True)
         await suggestion.click()
     await _slow_pause()
 
@@ -420,40 +400,27 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     # Search button does nothing (form validation silently blocks submission).
     age_checkbox = page.locator("input[type='checkbox']").first
     try:
-        is_checked = await age_checkbox.is_checked()
-        if not is_checked:
-            print(f"\n  [form-step] checking age checkbox ...", flush=True)
+        if not await age_checkbox.is_checked():
             await age_checkbox.check()
-    except Exception as exc:
-        print(f"\n  [form-step] age checkbox not found: {exc}", flush=True)
+    except Exception:
+        pass
     await _slow_pause(0.3, 0.7)
 
-    # Submit — results load via AJAX on the same /rental-cars URL
-    print(f"\n  [form-step] clicking Search ...", flush=True)
     await page.locator("#findMyCarButton").click()
-    print(f"\n  [form-step] clicked Search, url={page.url}", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
     # Wait for at least one result card
-    try:
-        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
-    except Exception as exc:
-        await page.screenshot(path="/tmp/car-tracker-results-timeout.png", full_page=True)
-        print(f"\n  [results-debug] URL: {page.url}", flush=True)
-        print(f"  [results-debug] title: {await page.title()}", flush=True)
-        raise
+    await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
     await _slow_pause(2.0, 3.0)
 
-    # Check whether member pricing is active (requires login). Log a warning if absent
-    # but still return results — non-member prices are still useful for tracking trends.
+    # Verify member pricing is active (confirms login succeeded).
     member_banner = page.locator("text=The price includes your Costco member savings").first
     try:
         await member_banner.wait_for(state="visible", timeout=5000)
-        print("  [member pricing active]", flush=True)
-    except Exception:
-        print("  [warning] member pricing banner not found — prices may not include member discount", flush=True)
+    except Exception as exc:
+        raise LoginError("Login succeeded but member pricing not detected — retrying") from exc
 
     cards = await page.locator(".car-result-card").all()
     num_days = days_between(booking.pickup_date, booking.dropoff_date)
@@ -502,25 +469,19 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
         await _slow_pause(3, 5)
         print("done")
 
-        # Capture API calls made during the search to diagnose silent failures
-        api_requests: list[str] = []
-        def _on_request(req: Any) -> None:
-            if "rental" in req.url.lower() or "search" in req.url.lower() or "vehicle" in req.url.lower() or "car" in req.url.lower():
-                api_requests.append(f"{req.method} {req.url}")
-        page.on("request", _on_request)
+        username, password = load_costco_config()
+        print("  Logging in...", end=" ", flush=True)
+        await _login(page, username, password)
+        print("done")
+
+        print("  Navigating to rental cars...", end=" ", flush=True)
+        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+        await _slow_pause(2, 3)
+        print("done")
 
         print("  Filling search form...", end=" ", flush=True)
         await _fill_search_form(page, booking)
         print("submitted")
-
-        # Wait for the form POST to /rentalCarSearch.act to complete and page to settle
-        try:
-            await page.wait_for_load_state("networkidle", timeout=20000)
-        except Exception:
-            pass
-        await _slow_pause(2, 3)
-        print(f"\n  [net-debug] post-search url: {page.url}", flush=True)
-        await page.screenshot(path="/tmp/car-tracker-post-search.png", full_page=True)
 
         print("  Waiting for results...", end=" ", flush=True)
         results = await _extract_results(page, booking)
@@ -547,25 +508,7 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
     chrome = ChromeManager(debug=debug)
     chrome.start()
     try:
-        last_err: Exception | None = None
-        for attempt in range(1, MAX_RETRIES + 1):
-            try:
-                results = asyncio.run(_run_scrape(booking))
-                break
-            except Exception as exc:
-                last_err = exc
-                if attempt < MAX_RETRIES:
-                    print(f"Attempt {attempt}/{MAX_RETRIES} failed: {exc}")
-                    if not chrome.is_alive():
-                        print("Chrome crashed — restarting...")
-                        chrome.restart()
-                    else:
-                        print(f"Retrying in {RETRY_DELAY}s...")
-                        time.sleep(RETRY_DELAY)
-        else:
-            raise RuntimeError(
-                f"All {MAX_RETRIES} scrape attempts failed. Last error: {last_err}"
-            )
+        results = asyncio.run(_run_scrape(booking))
     finally:
         chrome.stop()
 
