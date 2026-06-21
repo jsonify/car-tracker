@@ -440,20 +440,33 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         await suggestion.click()
     await _slow_pause()
 
-    # Dates — use Playwright's .fill() so the browser dispatches InputEvent/change at
-    # the CDP level. This triggers React's synthetic event system (unlike setting
-    # el.value via JS + jQuery, which updates the DOM but not React's internal state).
+    # Dates — use page.type() to simulate real keystrokes character-by-character.
+    # fill() sends a CDP insertText call that writes the DOM value but bypasses the
+    # keyboard events (keydown/keypress/keyup) that React's datepicker is listening
+    # for. type() generates the full chain of keyboard events, so React's synthetic
+    # event system sees each keystroke and updates its internal form state.
     pickup_field = page.locator("#pickUpDateWidget")
     await pickup_field.click(force=True)
-    await pickup_field.fill(_to_mmddyyyy(booking.pickup_date))
+    await pickup_field.triple_click()  # select-all so we overwrite any placeholder
+    await page.keyboard.press("Delete")
+    await page.type("#pickUpDateWidget", _to_mmddyyyy(booking.pickup_date), delay=80)
+    await page.keyboard.press("Escape")  # close any datepicker popup
     await page.keyboard.press("Tab")
     await _slow_pause(0.5, 1.0)
 
     dropoff_field = page.locator("#dropOffDateWidget")
     await dropoff_field.click(force=True)
-    await dropoff_field.fill(_to_mmddyyyy(booking.dropoff_date))
+    await dropoff_field.triple_click()
+    await page.keyboard.press("Delete")
+    await page.type("#dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date), delay=80)
+    await page.keyboard.press("Escape")  # close any datepicker popup
     await page.keyboard.press("Tab")
     await _slow_pause(0.5, 1.0)
+
+    # Log what React actually sees in the date fields to confirm state sync.
+    pickup_val = await page.eval_on_selector("#pickUpDateWidget", "el => el.value")
+    dropoff_val = await page.eval_on_selector("#dropOffDateWidget", "el => el.value")
+    print(f"  [form] date fields: pickup={pickup_val!r} dropoff={dropoff_val!r}", flush=True)
 
     # Times
     await page.select_option("#pickupTimeWidget", label=to_12h(booking.pickup_time))
@@ -461,36 +474,44 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
-    # Age checkbox — force-check via JS so form validation always passes.
-    checked = await page.evaluate("""
-        () => {
-            const boxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
-            let n = 0;
-            boxes.forEach(b => {
-                if (!b.checked) {
-                    b.checked = true;
-                    b.dispatchEvent(new Event('change', {bubbles: true}));
-                    b.dispatchEvent(new Event('click', {bubbles: true}));
-                    n++;
-                }
-            });
-            return n;
-        }
-    """)
+    # Age checkbox — use Playwright's native check() so isTrusted events fire and
+    # React's synthetic event system picks them up (JS dispatchEvent is not trusted).
+    checkboxes = await page.locator("input[type='checkbox']").all()
+    checked = 0
+    for cb in checkboxes:
+        try:
+            if not await cb.is_checked():
+                await cb.check()
+                checked += 1
+        except Exception:
+            pass
     print(f"  [form] checked {checked} checkbox(es)", flush=True)
     await _slow_pause(0.3, 0.7)
 
     # Screenshot before submit so failures show the final form state.
     await page.screenshot(path="/tmp/car-tracker-before-submit.png")
 
-    # Use Playwright's native .click() (CDP-level, isTrusted=true) so the form
-    # handler's trusted-event check passes. JS element.click() sets isTrusted=false
-    # and may be rejected by the form's submit guard.
     search_btn = page.locator("#findMyCarButton")
     await search_btn.wait_for(state="visible", timeout=10000)
     await search_btn.scroll_into_view_if_needed()
+
+    # Log button state before clicking to detect silent form-validation blocks.
+    is_disabled = await search_btn.is_disabled()
+    btn_classes = await search_btn.get_attribute("class") or ""
+    print(f"  [form] search button disabled={is_disabled} classes={btn_classes!r}", flush=True)
+
     await search_btn.click()
-    print(f"  [form] search button clicked (CDP), url={page.url}", flush=True)
+    print(f"  [form] search button clicked, url={page.url}", flush=True)
+
+    # Brief window to detect if the search actually fired: a loading spinner or
+    # network request should appear within ~3 s of a real submission.
+    try:
+        await page.locator(".loading, .spinner, [class*='loading'], [class*='spinner']").first.wait_for(
+            state="visible", timeout=3000
+        )
+        print("  [form] loading spinner detected — search is in flight", flush=True)
+    except Exception:
+        print("  [form] no spinner detected within 3s — form may not have submitted", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
