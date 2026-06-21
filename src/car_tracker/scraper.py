@@ -513,13 +513,14 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
         await _fill_search_form(page, booking)
         print("submitted")
 
+        # Wait for the form POST to /rentalCarSearch.act to complete and page to settle
+        try:
+            await page.wait_for_load_state("networkidle", timeout=20000)
+        except Exception:
+            pass
         await _slow_pause(2, 3)
-        if api_requests:
-            print(f"\n  [net-debug] API calls captured ({len(api_requests)}):", flush=True)
-            for r in api_requests[:10]:
-                print(f"    {r}", flush=True)
-        else:
-            print(f"\n  [net-debug] No relevant API calls captured after Search click", flush=True)
+        print(f"\n  [net-debug] post-search url: {page.url}", flush=True)
+        await page.screenshot(path="/tmp/car-tracker-post-search.png", full_page=True)
 
         print("  Waiting for results...", end=" ", flush=True)
         results = await _extract_results(page, booking)
