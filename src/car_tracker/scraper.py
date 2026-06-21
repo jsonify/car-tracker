@@ -414,14 +414,14 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
     await _slow_pause(2.0, 3.0)
 
-    # Verify member pricing is active — if absent, login did not produce a member session
+    # Check whether member pricing is active (requires login). Log a warning if absent
+    # but still return results — non-member prices are still useful for tracking trends.
     member_banner = page.locator("text=The price includes your Costco member savings").first
     try:
         await member_banner.wait_for(state="visible", timeout=5000)
-    except Exception as exc:
-        raise LoginError(
-            "Login succeeded but member pricing not detected — retrying"
-        ) from exc
+        print("  [member pricing active]", flush=True)
+    except Exception:
+        print("  [warning] member pricing banner not found — prices may not include member discount", flush=True)
 
     cards = await page.locator(".car-result-card").all()
     num_days = days_between(booking.pickup_date, booking.dropoff_date)
@@ -450,7 +450,7 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     return results
 
 
-async def _run_scrape(booking: BookingConfig, username: str, password: str) -> list[VehicleResult]:  # pragma: no cover
+async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
@@ -468,17 +468,6 @@ async def _run_scrape(booking: BookingConfig, username: str, password: str) -> l
         print("  Loading Costco Travel...", end=" ", flush=True)
         await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
         await _slow_pause(3, 5)
-        print("done")
-
-        print("  Logging in...", end=" ", flush=True)
-        await _login(page, username, password)
-        print("done")
-
-        # After login, Costco redirects to /memberBookings. Navigate back to
-        # the rental car search page before filling the form.
-        print("  Navigating to rental cars...", end=" ", flush=True)
-        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-        await _slow_pause(2, 3)
         print("done")
 
         print("  Filling search form...", end=" ", flush=True)
@@ -505,18 +494,15 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
         List of VehicleResult in the order they appear on the page.
 
     Raises:
-        ValueError:   If COSTCO_USERNAME or COSTCO_PASSWORD is missing from .env.
-        LoginError:   If login fails or member pricing is not detected.
         RuntimeError: If Chrome fails to start or results cannot be scraped.
     """
-    username, password = load_costco_config()
     chrome = ChromeManager(debug=debug)
     chrome.start()
     try:
         last_err: Exception | None = None
         for attempt in range(1, MAX_RETRIES + 1):
             try:
-                results = asyncio.run(_run_scrape(booking, username, password))
+                results = asyncio.run(_run_scrape(booking))
                 break
             except Exception as exc:
                 last_err = exc
