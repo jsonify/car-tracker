@@ -475,8 +475,8 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
                     "value": c["value"],
                     "domain": c.get("domain", ".costcotravel.com"),
                     "path": c.get("path", "/"),
-                    "httpOnly": c.get("httpOnly", False),
-                    "secure": c.get("secure", True),
+                    "httpOnly": bool(c.get("httpOnly", False)),
+                    "secure": bool(c.get("secure", True)),
                     "sameSite": c.get("sameSite", "Lax"),
                 }
                 for c in cookies
