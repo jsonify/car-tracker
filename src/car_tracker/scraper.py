@@ -17,6 +17,7 @@ from pathlib import Path
 os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from dotenv import load_dotenv
+from typing import Any
 from playwright.async_api import Page, async_playwright
 
 from car_tracker.config import BookingConfig
@@ -501,9 +502,24 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
         await _slow_pause(3, 5)
         print("done")
 
+        # Capture API calls made during the search to diagnose silent failures
+        api_requests: list[str] = []
+        def _on_request(req: Any) -> None:
+            if "rental" in req.url.lower() or "search" in req.url.lower() or "vehicle" in req.url.lower() or "car" in req.url.lower():
+                api_requests.append(f"{req.method} {req.url}")
+        page.on("request", _on_request)
+
         print("  Filling search form...", end=" ", flush=True)
         await _fill_search_form(page, booking)
         print("submitted")
+
+        await _slow_pause(2, 3)
+        if api_requests:
+            print(f"\n  [net-debug] API calls captured ({len(api_requests)}):", flush=True)
+            for r in api_requests[:10]:
+                print(f"    {r}", flush=True)
+        else:
+            print(f"\n  [net-debug] No relevant API calls captured after Search click", flush=True)
 
         print("  Waiting for results...", end=" ", flush=True)
         results = await _extract_results(page, booking)
