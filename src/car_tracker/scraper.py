@@ -36,6 +36,7 @@ _CHROME_UA = (
     "Chrome/146.0.0.0 Safari/537.36"
 )
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
+_COOKIE_CACHE_PATH = Path("data/cookies.json")
 
 # Costco login selectors — updated for 2026 unified login (costco.com + costcotravel.com merged)
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
@@ -48,6 +49,61 @@ _LOGIN_SUBMIT_SELECTOR = "button:has-text('Sign In'), button#next, button[type='
 
 class LoginError(RuntimeError):
     """Raised when Costco login fails or member pricing is not detected."""
+
+
+async def _load_cookies(ctx) -> bool:  # pragma: no cover
+    """Load cookies from disk cache or COSTCO_COOKIES env var into browser context.
+
+    Disk cache takes precedence over the env var so that fresh cookies saved
+    after a login are reused on the next run without any manual secret update.
+    Returns True if cookies were loaded.
+    """
+    import json as _json
+
+    source: list | None = None
+
+    if _COOKIE_CACHE_PATH.exists():
+        try:
+            source = _json.loads(_COOKIE_CACHE_PATH.read_text())
+        except Exception:
+            pass
+
+    if source is None:
+        raw = os.environ.get("COSTCO_COOKIES", "").strip()
+        if raw:
+            try:
+                source = _json.loads(raw)
+            except Exception:
+                pass
+
+    if not source:
+        return False
+
+    await ctx.add_cookies([
+        {
+            "name": c["name"],
+            "value": c["value"],
+            "domain": c.get("domain", ".costcotravel.com"),
+            "path": c.get("path", "/"),
+            "httpOnly": bool(c.get("httpOnly", False)),
+            "secure": bool(c.get("secure", True)),
+            "sameSite": c.get("sameSite", "Lax"),
+        }
+        for c in source
+    ])
+    return True
+
+
+async def _save_cookies(ctx) -> None:  # pragma: no cover
+    """Save current browser cookies to disk so the next run can skip login."""
+    import json as _json
+
+    cookies = await ctx.cookies(["https://www.costcotravel.com", "https://signin.costco.com"])
+    if not cookies:
+        return
+    _COOKIE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _COOKIE_CACHE_PATH.write_text(_json.dumps(cookies))
+    print(f"  Saved {len(cookies)} cookie(s) to cache.", flush=True)
 
 
 def load_costco_config() -> tuple[str, str]:
@@ -450,6 +506,21 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     return results
 
 
+async def _login_and_navigate(page: Page, ctx) -> None:  # pragma: no cover
+    """Log in to Costco Travel, save fresh cookies, then navigate to the rental cars page."""
+    username, password = load_costco_config()
+    print("  Logging in...", end=" ", flush=True)
+    await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+    await _slow_pause(3, 5)
+    await _login(page, username, password)
+    print("done")
+    await _save_cookies(ctx)
+    print("  Navigating to rental cars...", end=" ", flush=True)
+    await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+    await _slow_pause(2, 3)
+    print("done")
+
+
 async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
@@ -465,41 +536,24 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
             window.chrome = { runtime: {} };
         """)
 
-        # Inject pre-authenticated cookies if available, bypassing the login flow.
-        # Export cookies from a real browser session and store as COSTCO_COOKIES env var
-        # (JSON array in Netscape/EditThisCookie format). Falls back to interactive login.
-        raw_cookies = os.environ.get("COSTCO_COOKIES", "").strip()
-        if raw_cookies:
-            import json
-            cookies = json.loads(raw_cookies)
-            # Playwright expects: {name, value, domain, path, httpOnly, secure, sameSite}
-            playwright_cookies = [
-                {
-                    "name": c["name"],
-                    "value": c["value"],
-                    "domain": c.get("domain", ".costcotravel.com"),
-                    "path": c.get("path", "/"),
-                    "httpOnly": bool(c.get("httpOnly", False)),
-                    "secure": bool(c.get("secure", True)),
-                    "sameSite": c.get("sameSite", "Lax"),
-                }
-                for c in cookies
-            ]
-            await ctx.add_cookies(playwright_cookies)
-            print("  Loaded pre-authenticated cookies.")
+        # Try cached cookies first (disk cache, then COSTCO_COOKIES env var).
+        # Only fall back to login when the cache is cold or cookies have expired.
+        # After login, cookies are saved to disk so the next run skips login entirely.
+        if await _load_cookies(ctx):
+            print("  Loaded cached cookies.", flush=True)
+            print("  Navigating to rental cars...", end=" ", flush=True)
+            try:
+                await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+                if "signin" in page.url:
+                    raise RuntimeError("cookies expired — redirected to login")
+                await _slow_pause(2, 3)
+                print("done")
+            except Exception as exc:
+                print(f"stale ({exc!s:.80}), logging in...", flush=True)
+                await ctx.clear_cookies()
+                await _login_and_navigate(page, ctx)
         else:
-            username, password = load_costco_config()
-            print("  Logging in...", end=" ", flush=True)
-            # Navigate to the site first so the login link is accessible
-            await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-            await _slow_pause(3, 5)
-            await _login(page, username, password)
-            print("done")
-
-        print("  Navigating to rental cars...", end=" ", flush=True)
-        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-        await _slow_pause(2, 3)
-        print("done")
+            await _login_and_navigate(page, ctx)
 
         print("  Filling search form...", end=" ", flush=True)
         await _fill_search_form(page, booking)
