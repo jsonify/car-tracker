@@ -42,8 +42,8 @@ _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 # New unified login uses input[type="email"]; old Azure B2C page used input#signInName
 _LOGIN_EMAIL_SELECTOR = "input[type='email'], input#signInName, input#email"
 _LOGIN_PASSWORD_SELECTOR = "input[type='password'], input#password"
-# New unified login uses button[type="submit"]; old Azure B2C page used button#next
-_LOGIN_SUBMIT_SELECTOR = "button[type='submit'], button#next"
+# Use text-based selector for the Sign In button — more robust than id/type across login page versions
+_LOGIN_SUBMIT_SELECTOR = "button:has-text('Sign In'), button#next, button[type='submit']"
 
 
 class LoginError(RuntimeError):
@@ -296,8 +296,14 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     try:
         await submit_btn.wait_for(state="visible", timeout=10000)
     except Exception as exc:
+        await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
         raise LoginError("Login submit button not found — check _LOGIN_SUBMIT_SELECTOR") from exc
+
+    btn_text = await submit_btn.text_content()
+    print(f"\n  [login-debug] Clicking submit button: '{btn_text}' url={page.url}", flush=True)
+    await page.screenshot(path="/tmp/car-tracker-pre-click.png", full_page=True)
     await submit_btn.click()
+    print(f"  [login-debug] Post-click url={page.url}", flush=True)
 
     # Wait for redirect away from signin.costco.com as the success indicator.
     # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
@@ -307,6 +313,7 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
             re.compile(r"^https?://(?:www\.)?(?:costcotravel|costco)\.com/"),
             timeout=30000,
         )
+        print(f"  [login-debug] Redirect success: {page.url}", flush=True)
     except Exception as exc:
         try:
             print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
