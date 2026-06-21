@@ -37,11 +37,13 @@ _CHROME_UA = (
 )
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 
-# Costco login selectors — verified via debug_login.py
+# Costco login selectors — updated for 2026 unified login (costco.com + costcotravel.com merged)
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
-_LOGIN_EMAIL_SELECTOR = "input#signInName"
-_LOGIN_PASSWORD_SELECTOR = "input#password"
-_LOGIN_SUBMIT_SELECTOR = "button#next"
+# New unified login uses input[type="email"]; old Azure B2C page used input#signInName
+_LOGIN_EMAIL_SELECTOR = "input[type='email'], input#signInName, input#email"
+_LOGIN_PASSWORD_SELECTOR = "input[type='password'], input#password"
+# New unified login uses button[type="submit"]; old Azure B2C page used button#next
+_LOGIN_SUBMIT_SELECTOR = "button[type='submit'], button#next"
 
 
 class LoginError(RuntimeError):
@@ -283,9 +285,19 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
 
     await email_field.fill(username)
     await _slow_pause(0.5, 1.0)
-    await page.locator(_LOGIN_PASSWORD_SELECTOR).first.fill(password)
+    password_field = page.locator(_LOGIN_PASSWORD_SELECTOR).first
+    try:
+        await password_field.wait_for(state="visible", timeout=10000)
+    except Exception as exc:
+        raise LoginError("Login password field not found — check _LOGIN_PASSWORD_SELECTOR") from exc
+    await password_field.fill(password)
     await _slow_pause(0.5, 1.0)
-    await page.locator(_LOGIN_SUBMIT_SELECTOR).first.click()
+    submit_btn = page.locator(_LOGIN_SUBMIT_SELECTOR).first
+    try:
+        await submit_btn.wait_for(state="visible", timeout=10000)
+    except Exception as exc:
+        raise LoginError("Login submit button not found — check _LOGIN_SUBMIT_SELECTOR") from exc
+    await submit_btn.click()
 
     # Wait for redirect away from signin.costco.com as the success indicator.
     # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
