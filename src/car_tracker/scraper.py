@@ -440,10 +440,19 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         await suggestion.click()
     await _slow_pause()
 
-    # Dates (MM/DD/YYYY format for form)
-    await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(booking.pickup_date))
+    # Dates — use Playwright's .fill() so the browser dispatches InputEvent/change at
+    # the CDP level. This triggers React's synthetic event system (unlike setting
+    # el.value via JS + jQuery, which updates the DOM but not React's internal state).
+    pickup_field = page.locator("#pickUpDateWidget")
+    await pickup_field.click(force=True)
+    await pickup_field.fill(_to_mmddyyyy(booking.pickup_date))
+    await page.keyboard.press("Tab")
     await _slow_pause(0.5, 1.0)
-    await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date))
+
+    dropoff_field = page.locator("#dropOffDateWidget")
+    await dropoff_field.click(force=True)
+    await dropoff_field.fill(_to_mmddyyyy(booking.dropoff_date))
+    await page.keyboard.press("Tab")
     await _slow_pause(0.5, 1.0)
 
     # Times
@@ -452,10 +461,7 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
-    # Age checkbox — "Yes, I am at least 25 years old" must be checked or the
-    # Search button does nothing (form validation silently blocks submission).
-    # Use JS to force-check all unchecked boxes; the Playwright .check() method
-    # can fail silently in Xvfb when the element is obscured by an overlay.
+    # Age checkbox — force-check via JS so form validation always passes.
     checked = await page.evaluate("""
         () => {
             const boxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
@@ -477,12 +483,14 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     # Screenshot before submit so failures show the final form state.
     await page.screenshot(path="/tmp/car-tracker-before-submit.png")
 
-    # Use JS click on the Search button — identical to the login flow where
-    # Playwright's synthesized events were ignored by the form handler.
+    # Use Playwright's native .click() (CDP-level, isTrusted=true) so the form
+    # handler's trusted-event check passes. JS element.click() sets isTrusted=false
+    # and may be rejected by the form's submit guard.
     search_btn = page.locator("#findMyCarButton")
     await search_btn.wait_for(state="visible", timeout=10000)
-    await page.evaluate("btn => btn.click()", await search_btn.element_handle())
-    print(f"  [form] search button clicked via JS, url={page.url}", flush=True)
+    await search_btn.scroll_into_view_if_needed()
+    await search_btn.click()
+    print(f"  [form] search button clicked (CDP), url={page.url}", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
