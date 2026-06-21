@@ -303,17 +303,18 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
         raise LoginError("Login submit button not found — check _LOGIN_SUBMIT_SELECTOR") from exc
 
     btn_text = await submit_btn.text_content()
-    print(f"\n  [login-debug] Submitting via Enter key: '{btn_text}' url={page.url}", flush=True)
+    print(f"\n  [login-debug] Submitting '{btn_text}' via JS click, url={page.url}", flush=True)
 
-    # Press Enter on the password field — keyboard submission bypasses the JS
-    # click-suppression that bot detection hooks onto button mouse events.
-    await password_field.press("Enter")
+    # Use JS .click() on the button — this calls the DOM method directly and
+    # bypasses Playwright's event dispatch, which bot detection often hooks.
+    await page.evaluate(
+        "btn => btn.click()",
+        await submit_btn.element_handle(),
+    )
     await _slow_pause(1.0, 1.5)
     print(f"  [login-debug] Post-submit url={page.url}", flush=True)
 
     # Wait for redirect away from signin.costco.com as the success indicator.
-    # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
-    # costco.com. Accept either — _run_scrape navigates back to COSTCO_RENTAL_URL anyway.
     try:
         await page.wait_for_url(
             re.compile(r"^https?://(?:www\.)?(?:costcotravel|costco)\.com/"),
@@ -321,12 +322,8 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
         )
         print(f"  [login-debug] Redirect success: {page.url}", flush=True)
     except Exception as exc:
-        try:
-            print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
-            print(f"  [login-debug] All requests made: {requests_made}", flush=True)
-            await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
-        except Exception:
-            pass
+        await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
+        print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
         raise LoginError(
             "Costco login failed — check COSTCO_USERNAME / COSTCO_PASSWORD in .env"
         ) from exc
