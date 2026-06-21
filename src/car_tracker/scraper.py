@@ -468,7 +468,11 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
     # Wait for at least one result card
-    await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+    try:
+        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+    except Exception as exc:
+        await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
+        raise exc
     await _slow_pause(2.0, 3.0)
 
     # Check whether member pricing is active; log a warning if absent but continue.
