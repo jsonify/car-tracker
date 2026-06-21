@@ -155,8 +155,7 @@ class ChromeManager:  # pragma: no cover
             # real browser session.
             args.extend([
                 "--window-size=1920,1080",
-                "--window-position=-9999,0",
-                "--start-minimized",
+                "--window-position=0,0",
                 f"--user-agent={_CHROME_UA}",
                 "--disable-background-timer-throttling",
                 "--disable-renderer-backgrounding",
@@ -283,14 +282,18 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     except Exception as exc:
         raise LoginError("Login email field not found — check _LOGIN_EMAIL_SELECTOR") from exc
 
-    await email_field.fill(username)
+    # Use type() instead of fill() so React's onChange synthetic events fire and
+    # the form's internal state actually receives the credentials.
+    await email_field.click()
+    await email_field.type(username, delay=50)
     await _slow_pause(0.5, 1.0)
     password_field = page.locator(_LOGIN_PASSWORD_SELECTOR).first
     try:
         await password_field.wait_for(state="visible", timeout=10000)
     except Exception as exc:
         raise LoginError("Login password field not found — check _LOGIN_PASSWORD_SELECTOR") from exc
-    await password_field.fill(password)
+    await password_field.click()
+    await password_field.type(password, delay=50)
     await _slow_pause(0.5, 1.0)
     submit_btn = page.locator(_LOGIN_SUBMIT_SELECTOR).first
     try:
@@ -444,10 +447,10 @@ async def _run_scrape(booking: BookingConfig, username: str, password: str) -> l
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
         page = ctx.pages[0] if ctx.pages else await ctx.new_page()
 
-        # Mask navigator.webdriver so the new Costco unified login doesn't detect automation.
-        # --disable-blink-features=AutomationControlled removes the Chrome flag but Playwright
-        # still sets navigator.webdriver=true via CDP; this init script overrides it.
-        await page.add_init_script("""
+        # Mask navigator.webdriver on the context so it applies to ALL pages/origins including
+        # the signin.costco.com cross-origin redirect. Page-level init scripts don't survive
+        # cross-origin navigations reliably when connecting via CDP.
+        await ctx.add_init_script("""
             Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
             Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3]});
             window.chrome = { runtime: {} };
