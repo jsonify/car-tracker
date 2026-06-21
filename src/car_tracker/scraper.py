@@ -522,16 +522,24 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
         List of VehicleResult in the order they appear on the page.
 
     Raises:
-        RuntimeError: If Chrome fails to start or results cannot be scraped.
+        RuntimeError: If all retries are exhausted without a successful scrape.
     """
-    chrome = ChromeManager(debug=debug)
-    chrome.start()
-    try:
-        results = asyncio.run(_run_scrape(booking))
-    finally:
-        chrome.stop()
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        chrome = ChromeManager(debug=debug)
+        chrome.start()
+        try:
+            results = asyncio.run(_run_scrape(booking))
+            if not results:
+                raise RuntimeError("Scrape completed but returned no vehicle results.")
+            return results
+        except Exception as exc:
+            last_exc = exc
+        finally:
+            chrome.stop()
 
-    if not results:
-        raise RuntimeError("Scrape completed but returned no vehicle results.")
+        if attempt < MAX_RETRIES:
+            print(f"  Attempt {attempt}/{MAX_RETRIES} failed: {last_exc}. Retrying in {RETRY_DELAY}s...", flush=True)
+            time.sleep(RETRY_DELAY)
 
-    return results
+    raise RuntimeError(f"All {MAX_RETRIES} scrape attempts failed") from last_exc
