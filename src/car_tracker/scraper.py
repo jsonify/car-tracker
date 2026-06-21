@@ -302,6 +302,9 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     btn_text = await submit_btn.text_content()
     print(f"\n  [login-debug] Clicking submit button: '{btn_text}' url={page.url}", flush=True)
     await page.screenshot(path="/tmp/car-tracker-pre-click.png", full_page=True)
+    # Hover first to simulate natural mouse movement, then click
+    await submit_btn.hover()
+    await _slow_pause(0.3, 0.6)
     await submit_btn.click()
     print(f"  [login-debug] Post-click url={page.url}", flush=True)
 
@@ -440,6 +443,15 @@ async def _run_scrape(booking: BookingConfig, username: str, password: str) -> l
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
         ctx = browser.contexts[0] if browser.contexts else await browser.new_context()
         page = ctx.pages[0] if ctx.pages else await ctx.new_page()
+
+        # Mask navigator.webdriver so the new Costco unified login doesn't detect automation.
+        # --disable-blink-features=AutomationControlled removes the Chrome flag but Playwright
+        # still sets navigator.webdriver=true via CDP; this init script overrides it.
+        await page.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+            Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3]});
+            window.chrome = { runtime: {} };
+        """)
 
         print("  Loading Costco Travel...", end=" ", flush=True)
         await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
