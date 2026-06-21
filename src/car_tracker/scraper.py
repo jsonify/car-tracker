@@ -461,15 +461,36 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
             window.chrome = { runtime: {} };
         """)
 
-        print("  Loading Costco Travel...", end=" ", flush=True)
-        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-        await _slow_pause(3, 5)
-        print("done")
-
-        username, password = load_costco_config()
-        print("  Logging in...", end=" ", flush=True)
-        await _login(page, username, password)
-        print("done")
+        # Inject pre-authenticated cookies if available, bypassing the login flow.
+        # Export cookies from a real browser session and store as COSTCO_COOKIES env var
+        # (JSON array in Netscape/EditThisCookie format). Falls back to interactive login.
+        raw_cookies = os.environ.get("COSTCO_COOKIES", "").strip()
+        if raw_cookies:
+            import json
+            cookies = json.loads(raw_cookies)
+            # Playwright expects: {name, value, domain, path, httpOnly, secure, sameSite}
+            playwright_cookies = [
+                {
+                    "name": c["name"],
+                    "value": c["value"],
+                    "domain": c.get("domain", ".costcotravel.com"),
+                    "path": c.get("path", "/"),
+                    "httpOnly": c.get("httpOnly", False),
+                    "secure": c.get("secure", True),
+                    "sameSite": c.get("sameSite", "Lax"),
+                }
+                for c in cookies
+            ]
+            await ctx.add_cookies(playwright_cookies)
+            print("  Loaded pre-authenticated cookies.")
+        else:
+            username, password = load_costco_config()
+            print("  Logging in...", end=" ", flush=True)
+            # Navigate to the site first so the login link is accessible
+            await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+            await _slow_pause(3, 5)
+            await _login(page, username, password)
+            print("done")
 
         print("  Navigating to rental cars...", end=" ", flush=True)
         await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
