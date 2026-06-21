@@ -305,11 +305,19 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     btn_text = await submit_btn.text_content()
     print(f"\n  [login-debug] Clicking submit button: '{btn_text}' url={page.url}", flush=True)
     await page.screenshot(path="/tmp/car-tracker-pre-click.png", full_page=True)
+
+    # Capture network requests made during the submit to distinguish
+    # "click fully suppressed by JS" from "request made but rejected by server".
+    requests_made: list[str] = []
+    page.on("request", lambda r: requests_made.append(f"{r.method} {r.url[:120]}"))
+
     # Hover first to simulate natural mouse movement, then click
     await submit_btn.hover()
     await _slow_pause(0.3, 0.6)
     await submit_btn.click()
+    await _slow_pause(1.0, 1.5)  # give JS time to fire any async handlers
     print(f"  [login-debug] Post-click url={page.url}", flush=True)
+    print(f"  [login-debug] Requests after click ({len(requests_made)}): {requests_made[:5]}", flush=True)
 
     # Wait for redirect away from signin.costco.com as the success indicator.
     # Old flow redirected to costcotravel.com; new unified login (2026) redirects to
@@ -323,6 +331,7 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     except Exception as exc:
         try:
             print(f"\n  [login-debug] URL at failure: {page.url}", flush=True)
+            print(f"  [login-debug] All requests made: {requests_made}", flush=True)
             await page.screenshot(path="/tmp/car-tracker-login-failure.png", full_page=True)
         except Exception:
             pass
