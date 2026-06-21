@@ -31,6 +31,7 @@ jobs:
           CAR_TRACKER_CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
           COSTCO_USERNAME: ${{ secrets.COSTCO_USERNAME }}
           COSTCO_PASSWORD: ${{ secrets.COSTCO_PASSWORD }}
+          COSTCO_COOKIES: ${{ secrets.COSTCO_COOKIES }}
 
       - name: Upload failure screenshots
         if: failure()
