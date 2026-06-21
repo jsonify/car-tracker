@@ -366,29 +366,40 @@ def _to_mmddyyyy(iso_date: str) -> str:
 
 async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # pragma: no cover
     """Fill and submit the Costco Travel rental car search form."""
+    print(f"\n  [form-step] page url before fill: {page.url}", flush=True)
+    await page.screenshot(path="/tmp/car-tracker-before-fill.png")
+    print(f"  [form-step] screenshot saved", flush=True)
+
     # Location autocomplete
+    print(f"  [form-step] clicking #pickupLocationTextWidget ...", flush=True)
     await page.click("#pickupLocationTextWidget")
+    print(f"  [form-step] clicked, pausing ...", flush=True)
     await _slow_pause()
     location = booking.pickup_location
+    print(f"  [form-step] typing location '{location}' ...", flush=True)
     for ch in location:
         await page.type(
             "#pickupLocationTextWidget",
             ch,
             delay=random.randint(120, 280),
         )
+    print(f"  [form-step] typed location, pausing ...", flush=True)
     await _slow_pause(2.5, 3.5)
 
     # Click first matching autocomplete suggestion.
     # Use :visible to skip the hidden pre-selected airport item (class="airport selected")
     # which Playwright resolves first but can never become visible.
+    print(f"  [form-step] waiting for autocomplete suggestion ...", flush=True)
     suggestion = page.locator("ul.ui-list li:visible").first
     await suggestion.wait_for(state="visible", timeout=10000)
     # Try exact airport match first (visible items only)
     airport_item = page.locator(f'ul.ui-list li[data-value="{location}"]:visible').first
     try:
         await airport_item.wait_for(state="visible", timeout=3000)
+        print(f"  [form-step] clicking exact airport match ...", flush=True)
         await airport_item.click()
     except Exception:
+        print(f"  [form-step] clicking first suggestion ...", flush=True)
         await suggestion.click()
     await _slow_pause()
 
