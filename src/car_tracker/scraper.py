@@ -36,6 +36,7 @@ _CHROME_UA = (
     "Chrome/146.0.0.0 Safari/537.36"
 )
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
+_COOKIE_CACHE_PATH = Path("data/cookies.json")
 
 # Costco login selectors — updated for 2026 unified login (costco.com + costcotravel.com merged)
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
@@ -48,6 +49,61 @@ _LOGIN_SUBMIT_SELECTOR = "button:has-text('Sign In'), button#next, button[type='
 
 class LoginError(RuntimeError):
     """Raised when Costco login fails or member pricing is not detected."""
+
+
+async def _load_cookies(ctx) -> bool:  # pragma: no cover
+    """Load cookies from disk cache or COSTCO_COOKIES env var into browser context.
+
+    Disk cache takes precedence over the env var so that fresh cookies saved
+    after a login are reused on the next run without any manual secret update.
+    Returns True if cookies were loaded.
+    """
+    import json as _json
+
+    source: list | None = None
+
+    if _COOKIE_CACHE_PATH.exists():
+        try:
+            source = _json.loads(_COOKIE_CACHE_PATH.read_text())
+        except Exception:
+            pass
+
+    if source is None:
+        raw = os.environ.get("COSTCO_COOKIES", "").strip()
+        if raw:
+            try:
+                source = _json.loads(raw)
+            except Exception:
+                pass
+
+    if not source:
+        return False
+
+    await ctx.add_cookies([
+        {
+            "name": c["name"],
+            "value": c["value"],
+            "domain": c.get("domain", ".costcotravel.com"),
+            "path": c.get("path", "/"),
+            "httpOnly": bool(c.get("httpOnly", False)),
+            "secure": bool(c.get("secure", True)),
+            "sameSite": c.get("sameSite", "Lax"),
+        }
+        for c in source
+    ])
+    return True
+
+
+async def _save_cookies(ctx) -> None:  # pragma: no cover
+    """Save current browser cookies to disk so the next run can skip login."""
+    import json as _json
+
+    cookies = await ctx.cookies(["https://www.costcotravel.com", "https://signin.costco.com"])
+    if not cookies:
+        return
+    _COOKIE_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    _COOKIE_CACHE_PATH.write_text(_json.dumps(cookies))
+    print(f"  Saved {len(cookies)} cookie(s) to cache.", flush=True)
 
 
 def load_costco_config() -> tuple[str, str]:
@@ -163,6 +219,9 @@ class ChromeManager:  # pragma: no cover
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
+                # Force HTTP/1.1 — GitHub Actions runners can trigger ERR_HTTP2_PROTOCOL_ERROR
+                # from Costco's CDN when negotiating HTTP/2, but HTTP/1.1 passes through fine.
+                "--disable-http2",
             ])
         return args
 
@@ -395,21 +454,45 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
 
     # Age checkbox — "Yes, I am at least 25 years old" must be checked or the
     # Search button does nothing (form validation silently blocks submission).
-    age_checkbox = page.locator("input[type='checkbox']").first
-    try:
-        if not await age_checkbox.is_checked():
-            await age_checkbox.check()
-    except Exception:
-        pass
+    # Use JS to force-check all unchecked boxes; the Playwright .check() method
+    # can fail silently in Xvfb when the element is obscured by an overlay.
+    checked = await page.evaluate("""
+        () => {
+            const boxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+            let n = 0;
+            boxes.forEach(b => {
+                if (!b.checked) {
+                    b.checked = true;
+                    b.dispatchEvent(new Event('change', {bubbles: true}));
+                    b.dispatchEvent(new Event('click', {bubbles: true}));
+                    n++;
+                }
+            });
+            return n;
+        }
+    """)
+    print(f"  [form] checked {checked} checkbox(es)", flush=True)
     await _slow_pause(0.3, 0.7)
 
-    await page.locator("#findMyCarButton").click()
+    # Screenshot before submit so failures show the final form state.
+    await page.screenshot(path="/tmp/car-tracker-before-submit.png")
+
+    # Use JS click on the Search button — identical to the login flow where
+    # Playwright's synthesized events were ignored by the form handler.
+    search_btn = page.locator("#findMyCarButton")
+    await search_btn.wait_for(state="visible", timeout=10000)
+    await page.evaluate("btn => btn.click()", await search_btn.element_handle())
+    print("  [form] search button clicked via JS", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
     # Wait for at least one result card
-    await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+    try:
+        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+    except Exception as exc:
+        await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
+        raise exc
     await _slow_pause(2.0, 3.0)
 
     # Check whether member pricing is active; log a warning if absent but continue.
@@ -447,6 +530,21 @@ async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleRe
     return results
 
 
+async def _login_and_navigate(page: Page, ctx) -> None:  # pragma: no cover
+    """Log in to Costco Travel, save fresh cookies, then navigate to the rental cars page."""
+    username, password = load_costco_config()
+    print("  Logging in...", end=" ", flush=True)
+    await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+    await _slow_pause(3, 5)
+    await _login(page, username, password)
+    print("done")
+    await _save_cookies(ctx)
+    print("  Navigating to rental cars...", end=" ", flush=True)
+    await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+    await _slow_pause(2, 3)
+    print("done")
+
+
 async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     async with async_playwright() as p:
         browser = await p.chromium.connect_over_cdp(f"http://127.0.0.1:{CDP_PORT}")
@@ -462,41 +560,24 @@ async def _run_scrape(booking: BookingConfig) -> list[VehicleResult]:  # pragma:
             window.chrome = { runtime: {} };
         """)
 
-        # Inject pre-authenticated cookies if available, bypassing the login flow.
-        # Export cookies from a real browser session and store as COSTCO_COOKIES env var
-        # (JSON array in Netscape/EditThisCookie format). Falls back to interactive login.
-        raw_cookies = os.environ.get("COSTCO_COOKIES", "").strip()
-        if raw_cookies:
-            import json
-            cookies = json.loads(raw_cookies)
-            # Playwright expects: {name, value, domain, path, httpOnly, secure, sameSite}
-            playwright_cookies = [
-                {
-                    "name": c["name"],
-                    "value": c["value"],
-                    "domain": c.get("domain", ".costcotravel.com"),
-                    "path": c.get("path", "/"),
-                    "httpOnly": bool(c.get("httpOnly", False)),
-                    "secure": bool(c.get("secure", True)),
-                    "sameSite": c.get("sameSite", "Lax"),
-                }
-                for c in cookies
-            ]
-            await ctx.add_cookies(playwright_cookies)
-            print("  Loaded pre-authenticated cookies.")
+        # Try cached cookies first (disk cache, then COSTCO_COOKIES env var).
+        # Only fall back to login when the cache is cold or cookies have expired.
+        # After login, cookies are saved to disk so the next run skips login entirely.
+        if await _load_cookies(ctx):
+            print("  Loaded cached cookies.", flush=True)
+            print("  Navigating to rental cars...", end=" ", flush=True)
+            try:
+                await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
+                if "signin" in page.url:
+                    raise RuntimeError("cookies expired — redirected to login")
+                await _slow_pause(2, 3)
+                print("done")
+            except Exception as exc:
+                print(f"stale ({exc!s:.80}), logging in...", flush=True)
+                await ctx.clear_cookies()
+                await _login_and_navigate(page, ctx)
         else:
-            username, password = load_costco_config()
-            print("  Logging in...", end=" ", flush=True)
-            # Navigate to the site first so the login link is accessible
-            await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-            await _slow_pause(3, 5)
-            await _login(page, username, password)
-            print("done")
-
-        print("  Navigating to rental cars...", end=" ", flush=True)
-        await page.goto(COSTCO_RENTAL_URL, timeout=60000, wait_until="domcontentloaded")
-        await _slow_pause(2, 3)
-        print("done")
+            await _login_and_navigate(page, ctx)
 
         print("  Filling search form...", end=" ", flush=True)
         await _fill_search_form(page, booking)
@@ -522,16 +603,24 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
         List of VehicleResult in the order they appear on the page.
 
     Raises:
-        RuntimeError: If Chrome fails to start or results cannot be scraped.
+        RuntimeError: If all retries are exhausted without a successful scrape.
     """
-    chrome = ChromeManager(debug=debug)
-    chrome.start()
-    try:
-        results = asyncio.run(_run_scrape(booking))
-    finally:
-        chrome.stop()
+    last_exc: Exception | None = None
+    for attempt in range(1, MAX_RETRIES + 1):
+        chrome = ChromeManager(debug=debug)
+        chrome.start()
+        try:
+            results = asyncio.run(_run_scrape(booking))
+            if not results:
+                raise RuntimeError("Scrape completed but returned no vehicle results.")
+            return results
+        except Exception as exc:
+            last_exc = exc
+        finally:
+            chrome.stop()
 
-    if not results:
-        raise RuntimeError("Scrape completed but returned no vehicle results.")
+        if attempt < MAX_RETRIES:
+            print(f"  Attempt {attempt}/{MAX_RETRIES} failed: {last_exc}. Retrying in {RETRY_DELAY}s...", flush=True)
+            time.sleep(RETRY_DELAY)
 
-    return results
+    raise RuntimeError(f"All {MAX_RETRIES} scrape attempts failed") from last_exc

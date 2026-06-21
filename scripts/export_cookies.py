@@ -2,12 +2,10 @@
 """Export costcotravel.com cookies from Chrome for use as COSTCO_COOKIES secret.
 
 Usage:
-    uv run python scripts/export_cookies.py
+    uv run --with browser-cookie3 python scripts/export_cookies.py | pbcopy
 
 Prints a JSON array to stdout. Pipe it to pbcopy or redirect to a file,
 then paste as the COSTCO_COOKIES GitHub secret value.
-
-Requirements: browser-cookie3 (added as a dev dependency or run with uv --with)
 """
 from __future__ import annotations
 
@@ -19,10 +17,8 @@ def main() -> int:
     try:
         import browser_cookie3
     except ImportError:
-        print("Installing browser-cookie3...", file=sys.stderr)
-        import subprocess
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "browser-cookie3"])
-        import browser_cookie3  # noqa: F811
+        print("browser-cookie3 not found. Run with: uv run --with browser-cookie3 python scripts/export_cookies.py", file=sys.stderr)
+        return 1
 
     domains = (".costcotravel.com", "www.costcotravel.com", "costcotravel.com")
 
