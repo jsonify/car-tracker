@@ -415,17 +415,22 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
-    # Submit — wait for navigation away from /rental-cars to confirm the form was accepted
-    await page.locator("#findMyCarButton").click()
+    # Age checkbox — "Yes, I am at least 25 years old" must be checked or the
+    # Search button does nothing (form validation silently blocks submission).
+    age_checkbox = page.locator("input[type='checkbox']").first
     try:
-        await page.wait_for_url(
-            re.compile(r"costcotravel\.com/(?!rental-cars$)"),
-            timeout=15000,
-        )
-        print(f"\n  [form-debug] navigated to: {page.url}", flush=True)
-    except Exception:
-        await page.screenshot(path="/tmp/car-tracker-form-submit.png", full_page=True)
-        print(f"\n  [form-debug] no navigation after submit — still at: {page.url}", flush=True)
+        is_checked = await age_checkbox.is_checked()
+        if not is_checked:
+            print(f"\n  [form-step] checking age checkbox ...", flush=True)
+            await age_checkbox.check()
+    except Exception as exc:
+        print(f"\n  [form-step] age checkbox not found: {exc}", flush=True)
+    await _slow_pause(0.3, 0.7)
+
+    # Submit — results load via AJAX on the same /rental-cars URL
+    print(f"\n  [form-step] clicking Search ...", flush=True)
+    await page.locator("#findMyCarButton").click()
+    print(f"\n  [form-step] clicked Search, url={page.url}", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
