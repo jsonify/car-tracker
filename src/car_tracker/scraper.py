@@ -482,14 +482,23 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     search_btn = page.locator("#findMyCarButton")
     await search_btn.wait_for(state="visible", timeout=10000)
     await page.evaluate("btn => btn.click()", await search_btn.element_handle())
-    print("  [form] search button clicked via JS", flush=True)
+    print(f"  [form] search button clicked via JS, url={page.url}", flush=True)
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
+    # After the search button click, wait for the network to settle so the
+    # results response has arrived before we look for DOM elements.
+    try:
+        await page.wait_for_load_state("networkidle", timeout=90000)
+    except Exception:
+        pass  # networkidle may never fully settle; fall through to DOM check
+
+    print(f"  [results] url={page.url}", flush=True)
+
     # Wait for at least one result card
     try:
-        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=90000)
     except Exception as exc:
         await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
         raise exc
