@@ -163,6 +163,9 @@ class ChromeManager:  # pragma: no cover
                 "--no-sandbox",
                 "--disable-setuid-sandbox",
                 "--disable-dev-shm-usage",
+                # Force HTTP/1.1 — GitHub Actions runners can trigger ERR_HTTP2_PROTOCOL_ERROR
+                # from Costco's CDN when negotiating HTTP/2, but HTTP/1.1 passes through fine.
+                "--disable-http2",
             ])
         return args
 
