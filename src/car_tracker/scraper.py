@@ -39,6 +39,11 @@ _CHROME_UA = (
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _COOKIE_CACHE_PATH = Path("data/cookies.json")
 
+
+def _headless_enabled() -> bool:
+    """True when CAR_TRACKER_HEADLESS=1 — invisible unattended mode."""
+    return os.environ.get("CAR_TRACKER_HEADLESS") == "1"
+
 # Costco login selectors — updated for 2026 unified login (costco.com + costcotravel.com merged)
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 # New unified login uses input[type="email"]; old Azure B2C page used input#signInName
@@ -217,7 +222,24 @@ class ChromeManager:  # pragma: no cover
             "--disable-blink-features=AutomationControlled",
             "--disable-features=AutomationControlled",
         ]
-        if not self.debug:
+        if _headless_enabled():
+            # Headless mode (CAR_TRACKER_HEADLESS=1) — for unattended local
+            # scheduled runs. Chrome's modern headless renders entirely off-screen:
+            # no window, no Dock icon, no GUI session needed, and it never touches
+            # the user's own Chrome windows. Verified to pass Costco's Akamai bot
+            # detection from a residential IP when valid cookies are cached.
+            # NOTE: headless does NOT work for interactive login (Azure B2C blocks
+            # it) — it relies on cached cookies in data/cookies.json.
+            args.extend([
+                "--headless=new",
+                f"--user-agent={_CHROME_UA}",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-http2",
+                "--window-size=1920,1080",
+            ])
+        elif not self.debug:
             # Run headed but off-screen: Costco's Azure AD B2C blocks headless Chrome
             # logins ("We are having trouble signing you in"). Headed mode with the
             # window positioned off-screen passes their bot detection identically to a
@@ -246,7 +268,12 @@ class ChromeManager:  # pragma: no cover
 
     def start(self) -> None:
         self._kill_stale()
-        mode = "headed (debug)" if self.debug else "headless"
+        if self.debug:
+            mode = "headed (debug)"
+        elif _headless_enabled():
+            mode = "headless (new)"
+        else:
+            mode = "headed (hidden)"
         print(f"  Starting Chrome ({mode})...", end=" ", flush=True)
         self._chrome_log = open("/tmp/car-tracker-chrome-stderr.log", "a")
         self._proc = subprocess.Popen(
@@ -261,7 +288,9 @@ class ChromeManager:  # pragma: no cover
                 import urllib.request
                 urllib.request.urlopen(f"http://127.0.0.1:{CDP_PORT}/json/version", timeout=1)
                 print("ready")
-                if not self.debug:
+                # Headless has no window to hide; the hider's app-wide AppleScript
+                # "hide" would also hide the user's own Chrome, so skip it entirely.
+                if not self.debug and not _headless_enabled():
                     self._start_hider_thread()
                 return
             except Exception:
