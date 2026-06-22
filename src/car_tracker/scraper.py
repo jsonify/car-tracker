@@ -18,6 +18,7 @@ os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from dotenv import load_dotenv
 from playwright.async_api import Page, async_playwright
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from car_tracker.config import BookingConfig
 
@@ -49,6 +50,18 @@ _LOGIN_SUBMIT_SELECTOR = "button:has-text('Sign In'), button#next, button[type='
 
 class LoginError(RuntimeError):
     """Raised when Costco login fails or member pricing is not detected."""
+
+
+class SearchBlockedError(RuntimeError):
+    """Raised when the search submits but Costco rejects it server-side.
+
+    Symptom: the page shows "Something went wrong while performing the search"
+    and the URL never advances to the results page. Caused by Akamai bot
+    detection blocking the request — typically because the request originates
+    from a datacenter IP (e.g. a GitHub Actions runner) rather than a
+    residential one. Retrying from the same IP does not help, so this is
+    treated as non-retryable.
+    """
 
 
 async def _load_cookies(ctx) -> bool:  # pragma: no cover
@@ -518,32 +531,24 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await search_btn.click()
     print(f"  [form] search button clicked, url={page.url}", flush=True)
 
-    # Brief window to detect if the search actually fired: a loading spinner or
-    # network request should appear within ~3 s of a real submission.
+    # Detect a server-side bot block fast. A successful search makes the
+    # "Something went wrong while performing the search" banner visible within
+    # a couple of seconds (and leaves the URL on /rental-cars). Poll briefly for
+    # it so we can fail in seconds rather than waiting out the 90 s result
+    # timeout three times. Note: this banner exists in the DOM even on success,
+    # so we must check VISIBILITY, not mere presence.
+    blocked = page.locator(
+        "text=Something went wrong while performing the search"
+    ).first
     try:
-        await page.locator(".loading, .spinner, [class*='loading'], [class*='spinner']").first.wait_for(
-            state="visible", timeout=3000
+        await blocked.wait_for(state="visible", timeout=8000)
+        await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
+        raise SearchBlockedError(
+            "Costco rejected the search (\"Something went wrong\") — likely Akamai "
+            "bot detection on this IP. Works from residential IPs but not datacenter ones."
         )
-        print("  [form] loading spinner detected — search is in flight", flush=True)
-    except Exception:
-        print("  [form] no spinner detected within 3s — form may not have submitted", flush=True)
-
-    # If the form didn't submit, dump any visible validation/error text so the
-    # next run can see exactly which field the form rejected.
-    try:
-        errors = await page.evaluate("""
-            () => {
-                const sel = '.error, .errorMessage, .error-message, .validation-error, ' +
-                            '[class*="error"], [class*="invalid"], .field-error';
-                return Array.from(document.querySelectorAll(sel))
-                    .map(e => (e.innerText || '').trim())
-                    .filter(t => t.length > 0 && t.length < 200);
-            }
-        """)
-        if errors:
-            print(f"  [form] validation messages on page: {errors[:8]}", flush=True)
-    except Exception:
-        pass
+    except PlaywrightTimeoutError:
+        pass  # banner not visible → search is proceeding normally
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
@@ -684,6 +689,9 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
             if not results:
                 raise RuntimeError("Scrape completed but returned no vehicle results.")
             return results
+        except SearchBlockedError:
+            # IP-based bot block — retrying from the same runner won't help.
+            raise  # chrome.stop() runs via finally below
         except Exception as exc:
             last_exc = exc
         finally:
