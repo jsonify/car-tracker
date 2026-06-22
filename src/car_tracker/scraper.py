@@ -390,17 +390,40 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     await _slow_pause(1.0, 2.0)
 
 
-async def _set_date_field(page: Page, field_id: str, value: str) -> None:  # pragma: no cover
-    """Set a jQuery datepicker field value via JavaScript."""
-    await page.evaluate(
+async def _set_date_field(page: Page, field_id: str, value: str) -> str:  # pragma: no cover
+    """Set a jQuery UI datepicker field and update its internal date model.
+
+    Costco's rental form uses a jQuery UI datepicker. The form's submit handler
+    reads the datepicker's *internal* selected date (via $.datepicker('getDate')),
+    not the input's DOM `value`. Typing or fill()-ing the input only changes the
+    DOM value — the widget snaps back to its default date — so submission fails
+    validation silently. The reliable path is to call the datepicker's own
+    `setDate` API with a real Date object, which updates both the model and the
+    displayed value.
+
+    `value` is MM/DD/YYYY. Returns the field's resulting DOM value for logging.
+    """
+    return await page.evaluate(
         """([id, val]) => {
             const el = document.getElementById(id);
-            el.value = val;
-            if (window.$) {
-                window.$(el).trigger('change');
-                try { window.$(el).datepicker('setDate', val); } catch(e) {}
+            if (!el) return 'NO_ELEMENT';
+            // Datepicker inputs are often readonly to force calendar use.
+            el.removeAttribute('readonly');
+            const [m, d, y] = val.split('/').map(s => parseInt(s, 10));
+            const dateObj = new Date(y, m - 1, d);
+            if (window.$ && window.$(el).datepicker) {
+                try {
+                    // setDate updates the widget's internal model AND the input value.
+                    window.$(el).datepicker('setDate', dateObj);
+                } catch (e) { /* fall through to manual set */ }
             }
+            // Belt-and-suspenders: ensure the DOM value is set too.
+            if (!el.value) el.value = val;
+            window.$ && window.$(el).trigger('change');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
             el.dispatchEvent(new Event('change', {bubbles: true}));
+            el.dispatchEvent(new Event('blur', {bubbles: true}));
+            return el.value;
         }""",
         [field_id, value],
     )
@@ -440,33 +463,18 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         await suggestion.click()
     await _slow_pause()
 
-    # Dates — use page.type() to simulate real keystrokes character-by-character.
-    # fill() sends a CDP insertText call that writes the DOM value but bypasses the
-    # keyboard events (keydown/keypress/keyup) that React's datepicker is listening
-    # for. type() generates the full chain of keyboard events, so React's synthetic
-    # event system sees each keystroke and updates its internal form state.
-    pickup_field = page.locator("#pickUpDateWidget")
-    await pickup_field.click(force=True)
-    await page.keyboard.press("Control+a")  # select-all so we overwrite any placeholder
-    await page.keyboard.press("Delete")
-    await page.type("#pickUpDateWidget", _to_mmddyyyy(booking.pickup_date), delay=80)
-    await page.keyboard.press("Escape")  # close any datepicker popup
-    await page.keyboard.press("Tab")
+    # Dates — drive the jQuery UI datepicker's internal model via its setDate API.
+    # (See _set_date_field: typing/fill only changes the DOM value, which the
+    # widget overwrites with its default; the form reads the widget's internal date.)
+    pickup_val = await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(booking.pickup_date))
     await _slow_pause(0.5, 1.0)
-
-    dropoff_field = page.locator("#dropOffDateWidget")
-    await dropoff_field.click(force=True)
-    await page.keyboard.press("Control+a")
-    await page.keyboard.press("Delete")
-    await page.type("#dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date), delay=80)
-    await page.keyboard.press("Escape")  # close any datepicker popup
-    await page.keyboard.press("Tab")
+    dropoff_val = await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date))
     await _slow_pause(0.5, 1.0)
-
-    # Log what React actually sees in the date fields to confirm state sync.
-    pickup_val = await page.eval_on_selector("#pickUpDateWidget", "el => el.value")
-    dropoff_val = await page.eval_on_selector("#dropOffDateWidget", "el => el.value")
-    print(f"  [form] date fields: pickup={pickup_val!r} dropoff={dropoff_val!r}", flush=True)
+    print(
+        f"  [form] date fields: pickup={pickup_val!r} (want {_to_mmddyyyy(booking.pickup_date)!r}) "
+        f"dropoff={dropoff_val!r} (want {_to_mmddyyyy(booking.dropoff_date)!r})",
+        flush=True,
+    )
 
     # Times
     await page.select_option("#pickupTimeWidget", label=to_12h(booking.pickup_time))
@@ -474,17 +482,24 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
-    # Age checkbox — use Playwright's native check() so isTrusted events fire and
-    # React's synthetic event system picks them up (JS dispatchEvent is not trusted).
-    checkboxes = await page.locator("input[type='checkbox']").all()
-    checked = 0
-    for cb in checkboxes:
-        try:
-            if not await cb.is_checked():
-                await cb.check()
-                checked += 1
-        except Exception:
-            pass
+    # Age checkbox — "Yes, I am at least 25 years old" must be checked or the form
+    # silently refuses to submit. Native Playwright .check() hangs and fails on
+    # Costco's custom-styled checkboxes, so set checked + fire change via JS.
+    checked = await page.evaluate("""
+        () => {
+            const boxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+            let n = 0;
+            boxes.forEach(b => {
+                if (!b.checked) {
+                    b.checked = true;
+                    b.dispatchEvent(new Event('change', {bubbles: true}));
+                    b.dispatchEvent(new Event('click', {bubbles: true}));
+                    n++;
+                }
+            });
+            return n;
+        }
+    """)
     print(f"  [form] checked {checked} checkbox(es)", flush=True)
     await _slow_pause(0.3, 0.7)
 
@@ -512,6 +527,23 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         print("  [form] loading spinner detected — search is in flight", flush=True)
     except Exception:
         print("  [form] no spinner detected within 3s — form may not have submitted", flush=True)
+
+    # If the form didn't submit, dump any visible validation/error text so the
+    # next run can see exactly which field the form rejected.
+    try:
+        errors = await page.evaluate("""
+            () => {
+                const sel = '.error, .errorMessage, .error-message, .validation-error, ' +
+                            '[class*="error"], [class*="invalid"], .field-error';
+                return Array.from(document.querySelectorAll(sel))
+                    .map(e => (e.innerText || '').trim())
+                    .filter(t => t.length > 0 && t.length < 200);
+            }
+        """)
+        if errors:
+            print(f"  [form] validation messages on page: {errors[:8]}", flush=True)
+    except Exception:
+        pass
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
