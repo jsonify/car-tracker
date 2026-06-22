@@ -182,18 +182,65 @@ On scrape failure for a booking, a failure notification email is sent for that b
 
 After a booking's pick-up date passes, it is automatically removed from `config.yaml` on the next run and the change is committed and pushed to git. If the last booking expires (or the bookings list is otherwise empty), a single **"Monitoring Paused"** notification email is sent — subsequent runs are silent until a new booking is added, at which point monitoring resumes automatically.
 
-## Scheduling with cron
+## Scheduling on macOS (recommended: launchd, headless)
 
-To run automatically twice a week (e.g. Monday and Thursday at 8 AM):
+For unattended runs, use the bundled LaunchAgent rather than cron — cron jobs
+run outside your GUI login session, but this scraper drives a real Chrome and
+needs that session. The one-command installer sets everything up:
+
+```bash
+./scripts/setup-macos.sh
+```
+
+It checks prerequisites (`uv`, `git`, Google Chrome), runs `uv sync`, creates a
+`.env` template if needed, optionally seeds cookies with a one-time headed login,
+then installs and loads a LaunchAgent that runs **headless every Monday and
+Thursday at 04:00**. Finally it prints the `pmset` command to wake a sleeping
+Mac in time.
+
+### Headless mode
+
+Scheduled runs set `CAR_TRACKER_HEADLESS=1`, which launches Chrome with
+`--headless=new`: **no window, no Dock icon, no GUI disruption** — it never
+touches your own Chrome windows. Headless relies on the cached session in
+`data/cookies.json` (which each successful run refreshes); interactive login is
+*not* available headless, so if the session ever lapses, re-seed once with a
+headed run:
+
+```bash
+uv run python -m car_tracker --debug
+```
+
+### Sleeping Mac
+
+`launchd` won't wake a sleeping Mac on its own. Schedule a wake ~2 minutes
+before each run (requires sudo):
+
+```bash
+sudo pmset repeat wake MR 03:58:00   # MR = Monday + Thursday
+```
+
+A user must stay logged in (the screen may be locked). On wake, the job runs
+headless and the Mac returns to sleep.
+
+### Moving to another Mac
+
+The setup is portable: clone the repo, check out this branch, then run
+`./scripts/setup-macos.sh` and copy your `.env` across. Only the LaunchAgent's
+absolute paths are machine-specific, and the installer fills those in from the
+template at `deploy/com.cartracker.plist.template`. Optionally copy
+`data/results.db` to carry your price history.
+
+### cron alternative
+
+If you prefer cron (note the GUI-session caveat above), run twice a week:
 
 ```bash
 crontab -e
 ```
 
-Add:
-
 ```
-0 8 * * 1,4 /usr/sbin/lsof -ti tcp:9222 | xargs kill -9 2>/dev/null; /Users/<you>/code/car-tracker/run.sh
+0 4 * * 1,4 /usr/sbin/lsof -ti tcp:9222 | xargs kill -9 2>/dev/null; CAR_TRACKER_HEADLESS=1 /Users/<you>/code/car-tracker/run.sh
 ```
 
 ## Project Structure

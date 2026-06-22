@@ -18,6 +18,7 @@ os.environ.setdefault("NODE_OPTIONS", "--no-deprecation")
 
 from dotenv import load_dotenv
 from playwright.async_api import Page, async_playwright
+from playwright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from car_tracker.config import BookingConfig
 
@@ -38,6 +39,11 @@ _CHROME_UA = (
 _ENV_PATH = Path(__file__).parent.parent.parent / ".env"
 _COOKIE_CACHE_PATH = Path("data/cookies.json")
 
+
+def _headless_enabled() -> bool:
+    """True when CAR_TRACKER_HEADLESS=1 — invisible unattended mode."""
+    return os.environ.get("CAR_TRACKER_HEADLESS") == "1"
+
 # Costco login selectors — updated for 2026 unified login (costco.com + costcotravel.com merged)
 _LOGIN_LINK_SELECTOR = "a[data-hook='top_link_login']:visible"
 # New unified login uses input[type="email"]; old Azure B2C page used input#signInName
@@ -49,6 +55,18 @@ _LOGIN_SUBMIT_SELECTOR = "button:has-text('Sign In'), button#next, button[type='
 
 class LoginError(RuntimeError):
     """Raised when Costco login fails or member pricing is not detected."""
+
+
+class SearchBlockedError(RuntimeError):
+    """Raised when the search submits but Costco rejects it server-side.
+
+    Symptom: the page shows "Something went wrong while performing the search"
+    and the URL never advances to the results page. Caused by Akamai bot
+    detection blocking the request — typically because the request originates
+    from a datacenter IP (e.g. a GitHub Actions runner) rather than a
+    residential one. Retrying from the same IP does not help, so this is
+    treated as non-retryable.
+    """
 
 
 async def _load_cookies(ctx) -> bool:  # pragma: no cover
@@ -204,7 +222,24 @@ class ChromeManager:  # pragma: no cover
             "--disable-blink-features=AutomationControlled",
             "--disable-features=AutomationControlled",
         ]
-        if not self.debug:
+        if _headless_enabled():
+            # Headless mode (CAR_TRACKER_HEADLESS=1) — for unattended local
+            # scheduled runs. Chrome's modern headless renders entirely off-screen:
+            # no window, no Dock icon, no GUI session needed, and it never touches
+            # the user's own Chrome windows. Verified to pass Costco's Akamai bot
+            # detection from a residential IP when valid cookies are cached.
+            # NOTE: headless does NOT work for interactive login (Azure B2C blocks
+            # it) — it relies on cached cookies in data/cookies.json.
+            args.extend([
+                "--headless=new",
+                f"--user-agent={_CHROME_UA}",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-http2",
+                "--window-size=1920,1080",
+            ])
+        elif not self.debug:
             # Run headed but off-screen: Costco's Azure AD B2C blocks headless Chrome
             # logins ("We are having trouble signing you in"). Headed mode with the
             # window positioned off-screen passes their bot detection identically to a
@@ -233,7 +268,12 @@ class ChromeManager:  # pragma: no cover
 
     def start(self) -> None:
         self._kill_stale()
-        mode = "headed (debug)" if self.debug else "headless"
+        if self.debug:
+            mode = "headed (debug)"
+        elif _headless_enabled():
+            mode = "headless (new)"
+        else:
+            mode = "headed (hidden)"
         print(f"  Starting Chrome ({mode})...", end=" ", flush=True)
         self._chrome_log = open("/tmp/car-tracker-chrome-stderr.log", "a")
         self._proc = subprocess.Popen(
@@ -248,7 +288,9 @@ class ChromeManager:  # pragma: no cover
                 import urllib.request
                 urllib.request.urlopen(f"http://127.0.0.1:{CDP_PORT}/json/version", timeout=1)
                 print("ready")
-                if not self.debug:
+                # Headless has no window to hide; the hider's app-wide AppleScript
+                # "hide" would also hide the user's own Chrome, so skip it entirely.
+                if not self.debug and not _headless_enabled():
                     self._start_hider_thread()
                 return
             except Exception:
@@ -390,17 +432,40 @@ async def _login(page: Page, username: str, password: str) -> None:  # pragma: n
     await _slow_pause(1.0, 2.0)
 
 
-async def _set_date_field(page: Page, field_id: str, value: str) -> None:  # pragma: no cover
-    """Set a jQuery datepicker field value via JavaScript."""
-    await page.evaluate(
+async def _set_date_field(page: Page, field_id: str, value: str) -> str:  # pragma: no cover
+    """Set a jQuery UI datepicker field and update its internal date model.
+
+    Costco's rental form uses a jQuery UI datepicker. The form's submit handler
+    reads the datepicker's *internal* selected date (via $.datepicker('getDate')),
+    not the input's DOM `value`. Typing or fill()-ing the input only changes the
+    DOM value — the widget snaps back to its default date — so submission fails
+    validation silently. The reliable path is to call the datepicker's own
+    `setDate` API with a real Date object, which updates both the model and the
+    displayed value.
+
+    `value` is MM/DD/YYYY. Returns the field's resulting DOM value for logging.
+    """
+    return await page.evaluate(
         """([id, val]) => {
             const el = document.getElementById(id);
-            el.value = val;
-            if (window.$) {
-                window.$(el).trigger('change');
-                try { window.$(el).datepicker('setDate', val); } catch(e) {}
+            if (!el) return 'NO_ELEMENT';
+            // Datepicker inputs are often readonly to force calendar use.
+            el.removeAttribute('readonly');
+            const [m, d, y] = val.split('/').map(s => parseInt(s, 10));
+            const dateObj = new Date(y, m - 1, d);
+            if (window.$ && window.$(el).datepicker) {
+                try {
+                    // setDate updates the widget's internal model AND the input value.
+                    window.$(el).datepicker('setDate', dateObj);
+                } catch (e) { /* fall through to manual set */ }
             }
+            // Belt-and-suspenders: ensure the DOM value is set too.
+            if (!el.value) el.value = val;
+            window.$ && window.$(el).trigger('change');
+            el.dispatchEvent(new Event('input', {bubbles: true}));
             el.dispatchEvent(new Event('change', {bubbles: true}));
+            el.dispatchEvent(new Event('blur', {bubbles: true}));
+            return el.value;
         }""",
         [field_id, value],
     )
@@ -440,11 +505,18 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
         await suggestion.click()
     await _slow_pause()
 
-    # Dates (MM/DD/YYYY format for form)
-    await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(booking.pickup_date))
+    # Dates — drive the jQuery UI datepicker's internal model via its setDate API.
+    # (See _set_date_field: typing/fill only changes the DOM value, which the
+    # widget overwrites with its default; the form reads the widget's internal date.)
+    pickup_val = await _set_date_field(page, "pickUpDateWidget", _to_mmddyyyy(booking.pickup_date))
     await _slow_pause(0.5, 1.0)
-    await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date))
+    dropoff_val = await _set_date_field(page, "dropOffDateWidget", _to_mmddyyyy(booking.dropoff_date))
     await _slow_pause(0.5, 1.0)
+    print(
+        f"  [form] date fields: pickup={pickup_val!r} (want {_to_mmddyyyy(booking.pickup_date)!r}) "
+        f"dropoff={dropoff_val!r} (want {_to_mmddyyyy(booking.dropoff_date)!r})",
+        flush=True,
+    )
 
     # Times
     await page.select_option("#pickupTimeWidget", label=to_12h(booking.pickup_time))
@@ -452,24 +524,76 @@ async def _fill_search_form(page: Page, booking: BookingConfig) -> None:  # prag
     await page.select_option("#dropoffTimeWidget", label=to_12h(booking.dropoff_time))
     await _slow_pause()
 
-    # Age checkbox — "Yes, I am at least 25 years old" must be checked or the
-    # Search button does nothing (form validation silently blocks submission).
-    age_checkbox = page.locator("input[type='checkbox']").first
-    try:
-        if not await age_checkbox.is_checked():
-            await age_checkbox.check()
-    except Exception:
-        pass
+    # Age checkbox — "Yes, I am at least 25 years old" must be checked or the form
+    # silently refuses to submit. Native Playwright .check() hangs and fails on
+    # Costco's custom-styled checkboxes, so set checked + fire change via JS.
+    checked = await page.evaluate("""
+        () => {
+            const boxes = Array.from(document.querySelectorAll('input[type="checkbox"]'));
+            let n = 0;
+            boxes.forEach(b => {
+                if (!b.checked) {
+                    b.checked = true;
+                    b.dispatchEvent(new Event('change', {bubbles: true}));
+                    b.dispatchEvent(new Event('click', {bubbles: true}));
+                    n++;
+                }
+            });
+            return n;
+        }
+    """)
+    print(f"  [form] checked {checked} checkbox(es)", flush=True)
     await _slow_pause(0.3, 0.7)
 
-    await page.locator("#findMyCarButton").click()
+    # Screenshot before submit so failures show the final form state.
+    await page.screenshot(path="/tmp/car-tracker-before-submit.png")
+
+    search_btn = page.locator("#findMyCarButton")
+    await search_btn.wait_for(state="visible", timeout=10000)
+    await search_btn.scroll_into_view_if_needed()
+
+    # Log button state before clicking to detect silent form-validation blocks.
+    is_disabled = await search_btn.is_disabled()
+    btn_classes = await search_btn.get_attribute("class") or ""
+    print(f"  [form] search button disabled={is_disabled} classes={btn_classes!r}", flush=True)
+
+    await search_btn.click()
+    print(f"  [form] search button clicked, url={page.url}", flush=True)
+
+    # Detect a server-side bot block fast. A successful search makes the
+    # "Something went wrong while performing the search" banner visible within
+    # a couple of seconds (and leaves the URL on /rental-cars). Poll briefly for
+    # it so we can fail in seconds rather than waiting out the 90 s result
+    # timeout three times. Note: this banner exists in the DOM even on success,
+    # so we must check VISIBILITY, not mere presence.
+    blocked = page.locator(
+        "text=Something went wrong while performing the search"
+    ).first
+    try:
+        await blocked.wait_for(state="visible", timeout=8000)
+        await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
+        raise SearchBlockedError(
+            "Costco rejected the search (\"Something went wrong\") — likely Akamai "
+            "bot detection on this IP. Works from residential IPs but not datacenter ones."
+        )
+    except PlaywrightTimeoutError:
+        pass  # banner not visible → search is proceeding normally
 
 
 async def _extract_results(page: Page, booking: BookingConfig) -> list[VehicleResult]:  # pragma: no cover
     """Wait for results then extract vehicle cards."""
+    # After the search button click, wait for the network to settle so the
+    # results response has arrived before we look for DOM elements.
+    try:
+        await page.wait_for_load_state("networkidle", timeout=90000)
+    except Exception:
+        pass  # networkidle may never fully settle; fall through to DOM check
+
+    print(f"  [results] url={page.url}", flush=True)
+
     # Wait for at least one result card
     try:
-        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=30000)
+        await page.locator(".car-result-card").first.wait_for(state="attached", timeout=90000)
     except Exception as exc:
         await page.screenshot(path="/tmp/car-tracker-results-failure.png", full_page=True)
         raise exc
@@ -594,6 +718,9 @@ def scrape(booking: BookingConfig, debug: bool = False) -> list[VehicleResult]: 
             if not results:
                 raise RuntimeError("Scrape completed but returned no vehicle results.")
             return results
+        except SearchBlockedError:
+            # IP-based bot block — retrying from the same runner won't help.
+            raise  # chrome.stop() runs via finally below
         except Exception as exc:
             last_exc = exc
         finally:

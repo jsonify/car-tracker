@@ -69,3 +69,5 @@ test-results/
 # config.yaml  ← intentionally not ignored; no secrets in it
 data/price_histories_rows.csv
 data/app_state.json
+# Cached Costco session cookies — sensitive, never commit
+data/cookies.json
